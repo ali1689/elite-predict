@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Global resets ─────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-background text-on-surface font-sans overflow-x-hidden antialiased;
+  }
+
+  /* Material Symbols helper — filled variant */
+  .material-symbols-outlined.fill {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  ::selection {
+    background-color: #39ff14;
+    color: #053900;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0e0e0e; }
+  ::-webkit-scrollbar-thumb { background: #3c4b35; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #39ff14; }
+}
+
+/* ── Design-system utilities ───────────────────────────────── */
+@layer components {
+  /* Frosted-glass card */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Neon green glow helpers */
+  .neon-glow  { box-shadow: 0 0 15px rgba(57, 255, 20, 0.25); }
+  .neon-glow-lg { box-shadow: 0 0 35px rgba(57, 255, 20, 0.4); }
+
+  /* Progress bar glow fill */
+  .progress-fill-glow { box-shadow: 0 0 10px #39FF14; }
+
+  /* Confidence progress bar */
+  .confidence-bar {
+    @apply w-full bg-zinc-800 h-2 rounded-full overflow-hidden;
+  }
+  .confidence-bar-fill {
+    @apply bg-primary-container h-full rounded-full transition-all duration-700 progress-fill-glow;
+  }
+}
+
+/* ── Keyframe animations ───────────────────────────────────── */
+@layer utilities {
+  .animate-pulse-dot {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
