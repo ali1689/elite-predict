@@ -10,6 +10,16 @@ const STATUS_CONFIG = {
 };
 
 const SIGNAL_COLOR = {
+  // v2 signals
+  "Home Over 0.5 Goals": "text-emerald-400",
+  "Home Over 1.5 Goals": "text-primary-container",
+  "Away Over 0.5 Goals": "text-sky-400",
+  "Away Over 1.5 Goals": "text-blue-400",
+  "Over 2.5 Goals":      "text-primary-container",
+  "Under 2.5 Goals":     "text-violet-400",
+  "Both Teams to Score": "text-blue-400",
+  "No strong signal":    "text-on-surface-variant",
+  // Legacy fallbacks
   "HIGH SCORING": "text-primary-container",
   "BTTS + O2.5":  "text-primary-container",
   "BTTS":         "text-blue-400",

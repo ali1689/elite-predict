@@ -1,10 +1,32 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PredictionCard from "@/components/PredictionCard";
 import FeatureCard from "@/components/FeatureCard";
 import TestimonialCard from "@/components/TestimonialCard";
-import { heroCards, testimonials } from "@/data/matches";
+import { testimonials, abbr, fmtTime } from "@/data/matches";
+import { useAllPredictions } from "@/lib/usePredictions";
+
+// Transform a normalized Supabase row → PredictionCard-compatible card object
+function toHeroCard(m) {
+  return {
+    id:         m.id,
+    home:       { abbr: abbr(m.home), name: m.home, logo: null },
+    away:       { abbr: abbr(m.away), name: m.away, logo: null },
+    prediction: m.signal,
+    confidence: m.conf,
+    status:     m.tier === "A" ? "optimized" : m.tier === "B" ? "live" : "finalizing",
+    league:     m.comp,
+    time:       fmtTime(m.utcDate),
+    btts:       m.btts,
+    over25:     m.over25,
+    homeScore:  m.homeOver05,
+    awayScore:  m.awayOver05,
+    lH:         m.lH,
+    lA:         m.lA,
+  };
+}
 
 const STADIUM_IMG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuC7mr9iVGiClXRxel-urcHQjdBa7cHDVc6BJzIwwUob8QMRyNz2r_Qn2vuwuZGuHU4eikl26YAE1PY7xLh_qtDipp7k4CXQ8t4TJp0pEwy_zt2h8c8V1masqYth_4uzMBhR2mycPN9FeRevauIhcyGdllXVHsPkvZ0MEbkE2RHhpsNRy4A-8KNqgC_Tb-9TBICJDtQgAHcEIR7Aa57kM026fDgekdshgVvWi6-JuJsurObxcUCRUl2q_CiMuRSpcIObjQQUMgha2A";
@@ -38,7 +60,36 @@ const COMMUNITY_PERKS = [
   ["Bankroll Management Advice", "Exclusive Telegram Discussion", "Live Injury & Lineup Updates"],
 ];
 
+// Skeleton placeholder for a PredictionCard while loading
+function CardSkeleton() {
+  return (
+    <div className="glass-card p-8 rounded-2xl animate-pulse space-y-5">
+      <div className="h-4 bg-white/5 rounded w-1/2" />
+      <div className="flex justify-between items-center">
+        <div className="h-16 w-16 bg-white/5 rounded-full" />
+        <div className="h-6 w-8 bg-white/5 rounded" />
+        <div className="h-16 w-16 bg-white/5 rounded-full" />
+      </div>
+      <div className="h-16 bg-white/5 rounded-xl" />
+      <div className="space-y-2">
+        <div className="h-2 bg-white/5 rounded w-full" />
+        <div className="h-2 bg-white/5 rounded w-4/5" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-14 bg-white/5 rounded-lg" />
+        <div className="h-14 bg-white/5 rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
+  const { data: allMatches, loading } = useAllPredictions();
+  const heroCards = useMemo(
+    () => [...allMatches].sort((a, b) => b.conf - a.conf).slice(0, 3).map(toHeroCard),
+    [allMatches]
+  );
+
   return (
     <>
       {/* HERO */}
@@ -113,9 +164,12 @@ export default function Home() {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {heroCards.map((card) => (
-            <PredictionCard key={card.id} card={card} />
-          ))}
+          {loading
+            ? [...Array(3)].map((_, i) => <CardSkeleton key={i} />)
+            : heroCards.length > 0
+              ? heroCards.map((card) => <PredictionCard key={card.id} card={card} />)
+              : <p className="col-span-3 text-on-surface-variant font-['Lexend'] text-sm">No predictions available right now — check back soon.</p>
+          }
         </div>
       </section>
 

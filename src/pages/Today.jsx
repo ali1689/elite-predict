@@ -1,62 +1,67 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Progress } from "@/components/ui/progress";
 import TeamAvatar from "@/components/TeamAvatar";
-import { schedule, abbr } from "@/data/matches";
+import { useTodayPredictions } from "@/lib/usePredictions";
+import { sigStyle, tierStyle, fmtTime, abbr, SIGNAL_DONUT_COLORS } from "@/data/matches";
 import { cn } from "@/lib/utils";
 
-// ── helpers ────────────────────────────────────────────────────────────────
-const SIG_COLOR = {
-  "HIGH SCORING": { text: "text-primary-container", bg: "bg-primary-container/10", dot: "bg-primary-container" },
-  "BTTS + O2.5":  { text: "text-primary-container", bg: "bg-primary-container/10", dot: "bg-primary-container" },
-  "BTTS":         { text: "text-blue-400",           bg: "bg-blue-500/10",          dot: "bg-blue-400"          },
-  "OVER 2.5":     { text: "text-blue-400",           bg: "bg-blue-500/10",          dot: "bg-blue-400"          },
-  "BALANCED":     { text: "text-on-surface-variant", bg: "bg-white/5",              dot: "bg-zinc-500"          },
-};
-
-function sigStyle(signal) {
-  return SIG_COLOR[signal] ?? SIG_COLOR["BALANCED"];
+// ── Loading skeleton ──────────────────────────────────────────────────────
+function Skeleton({ className }) {
+  return <div className={cn("animate-pulse bg-white/5 rounded-lg", className)} />;
 }
 
-function fmtTime(utcDate) {
-  try {
-    return new Date(utcDate).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
-  } catch { return "TBD"; }
+function CardSkeleton() {
+  return (
+    <div className="glass-card p-5 rounded-xl border border-white/5 space-y-4">
+      <div className="flex justify-between">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-4 w-28" />
+      </div>
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-14 w-14 rounded-full" />
+        <Skeleton className="h-10 w-16" />
+        <Skeleton className="h-14 w-14 rounded-full" />
+      </div>
+      <Skeleton className="h-2 w-full" />
+      <Skeleton className="h-2 w-4/5" />
+      <div className="grid grid-cols-4 gap-2">
+        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12" />)}
+      </div>
+    </div>
+  );
 }
 
-// ── Stat card ───────────────────────────────────────────────────────────────
-function StatCard({ icon, label, value, sub }) {
+// ── Stat card ─────────────────────────────────────────────────────────────
+function StatCard({ icon, label, value, sub, loading }) {
   return (
     <div className="glass-card rounded-xl p-5 flex flex-col gap-1">
       <div className="flex items-center gap-2 mb-1">
         <span className="material-symbols-outlined text-primary-container text-[20px]">{icon}</span>
         <span className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant">{label}</span>
       </div>
-      <div className="font-black text-2xl text-on-surface leading-none">{value}</div>
+      {loading
+        ? <Skeleton className="h-7 w-16 mt-1" />
+        : <div className="font-black text-2xl text-on-surface leading-none">{value}</div>
+      }
       {sub && <div className="font-['Lexend'] text-[10px] text-on-surface-variant">{sub}</div>}
     </div>
   );
 }
 
-// ── Signal Donut ────────────────────────────────────────────────────────────
+// ── Signal Donut ──────────────────────────────────────────────────────────
 function SignalDonut({ counts, total }) {
-  const COLORS = {
-    "HIGH SCORING": "#39FF14",
-    "BTTS + O2.5":  "#7FFF00",
-    "BTTS":         "#60A5FA",
-    "OVER 2.5":     "#3B82F6",
-    "BALANCED":     "#52525B",
-  };
   const R = 54, CX = 70, CY = 70, STROKE = 14;
   const circ = 2 * Math.PI * R;
   let offset = 0;
-  const slices = Object.entries(counts).map(([sig, cnt]) => {
-    const pct = total > 0 ? cnt / total : 0;
-    const dash = pct * circ;
-    const el = { sig, cnt, pct, dash, offset, color: COLORS[sig] || "#52525B" };
-    offset += dash;
-    return el;
-  });
+  const slices = Object.entries(counts)
+    .filter(([, c]) => c > 0)
+    .map(([sig, cnt]) => {
+      const pct  = total > 0 ? cnt / total : 0;
+      const dash = pct * circ;
+      const el   = { sig, cnt, pct, dash, offset, color: SIGNAL_DONUT_COLORS[sig] || "#52525B" };
+      offset += dash;
+      return el;
+    });
 
   return (
     <div className="glass-card rounded-xl p-5">
@@ -65,13 +70,14 @@ function SignalDonut({ counts, total }) {
         Signal Breakdown
       </div>
       <div className="flex items-center gap-6">
-        <svg width="140" height="140" viewBox="0 0 140 140">
+        <svg width="140" height="140" viewBox="0 0 140 140" className="flex-shrink-0">
+          {slices.length === 0 && (
+            <circle cx={CX} cy={CY} r={R} fill="none" stroke="#27272a" strokeWidth={STROKE} />
+          )}
           {slices.map(s => (
             <circle key={s.sig}
-              cx={CX} cy={CY} r={R}
-              fill="none"
-              stroke={s.color}
-              strokeWidth={STROKE}
+              cx={CX} cy={CY} r={R} fill="none"
+              stroke={s.color} strokeWidth={STROKE}
               strokeDasharray={`${s.dash} ${circ - s.dash}`}
               strokeDashoffset={-s.offset}
               strokeLinecap="round"
@@ -81,36 +87,36 @@ function SignalDonut({ counts, total }) {
           <text x={CX} y={CY - 6} textAnchor="middle" fill="#E8EAED" fontSize="22" fontWeight="900">{total}</text>
           <text x={CX} y={CY + 14} textAnchor="middle" fill="#9AA0A6" fontSize="9" fontWeight="600" letterSpacing="1">PICKS</text>
         </svg>
-        <div className="flex flex-col gap-2 flex-1">
+        <div className="flex flex-col gap-2 flex-1 min-w-0">
           {slices.map(s => (
             <div key={s.sig} className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-wider flex-1 truncate">{s.sig}</span>
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+              <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-wider flex-1 truncate">{s.sig}</span>
               <span className="font-['Lexend'] text-[11px] font-bold text-on-surface">{s.cnt}</span>
-              <span className="font-['Lexend'] text-[10px] text-on-surface-variant w-8 text-right">{Math.round(s.pct * 100)}%</span>
+              <span className="font-['Lexend'] text-[9px] text-on-surface-variant w-7 text-right">{Math.round(s.pct * 100)}%</span>
             </div>
           ))}
+          {slices.length === 0 && (
+            <span className="font-['Lexend'] text-[10px] text-on-surface-variant">No picks today</span>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ── Win Chance Bar Chart ────────────────────────────────────────────────────
-function WinChanceChart({ matches }) {
+// ── Confidence distribution chart ─────────────────────────────────────────
+function ConfChart({ matches }) {
   const buckets = [
-    { label: "< 50%",   range: [0,  50]  },
-    { label: "50–59%",  range: [50, 60]  },
-    { label: "60–69%",  range: [60, 70]  },
-    { label: "70–79%",  range: [70, 80]  },
-    { label: "80%+",    range: [80, 101] },
+    { label: "< 55%",   range: [0,   55] },
+    { label: "55–64%",  range: [55,  65] },
+    { label: "65–74%",  range: [65,  75] },
+    { label: "75–84%",  range: [75,  85] },
+    { label: "85%+",    range: [85, 101] },
   ];
   const counts = buckets.map(b => ({
     ...b,
-    count: matches.filter(m => {
-      const w = Math.max(m.homeScore || 0, m.awayScore || 0);
-      return w >= b.range[0] && w < b.range[1];
-    }).length,
+    count: matches.filter(m => m.conf >= b.range[0] && m.conf < b.range[1]).length,
   }));
   const max = Math.max(...counts.map(c => c.count), 1);
 
@@ -118,7 +124,7 @@ function WinChanceChart({ matches }) {
     <div className="glass-card rounded-xl p-5">
       <div className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant mb-4 flex items-center gap-2">
         <span className="w-1.5 h-4 bg-blue-400 rounded-full inline-block" />
-        Win Chance Distribution
+        Confidence Distribution
       </div>
       <div className="space-y-3">
         {counts.map(b => (
@@ -130,7 +136,7 @@ function WinChanceChart({ matches }) {
                 style={{ width: `${(b.count / max) * 100}%` }}
               />
             </div>
-            <span className="font-['Lexend'] text-[11px] font-bold text-on-surface w-6 text-right">{b.count}</span>
+            <span className="font-['Lexend'] text-[11px] font-bold text-on-surface w-5 text-right">{b.count}</span>
           </div>
         ))}
       </div>
@@ -138,116 +144,154 @@ function WinChanceChart({ matches }) {
   );
 }
 
-// ── Match Card ──────────────────────────────────────────────────────────────
-function MatchCard({ match }) {
-  const sig = sigStyle(match.signal);
-  const homeTeam = { abbr: abbr(match.home), logo: null };
-  const awayTeam = { abbr: abbr(match.away), logo: null };
-  const winChance = Math.max(match.homeScore || 0, match.awayScore || 0);
-  const confColor = match.conf >= 70 ? "text-primary-container" : match.conf >= 60 ? "text-blue-400" : "text-on-surface-variant";
-
+// ── Prob bar row ──────────────────────────────────────────────────────────
+function ProbBar({ label, value, color = "bg-primary-container" }) {
   return (
-    <div className="glass-card p-5 rounded-xl border border-white/5 hover:border-primary-container/20 transition-all duration-300 group">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <span className={cn("px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-tighter", sig.bg, sig.text)}>
-          {match.signal}
-        </span>
-        <div className="flex items-center gap-1.5">
-          <span className={cn("w-1.5 h-1.5 rounded-full", sig.dot)} />
-          <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">
-            {match.league} · {fmtTime(match.utcDate)}
-          </span>
-        </div>
+    <div>
+      <div className="flex justify-between mb-1">
+        <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">{label}</span>
+        <span className={cn("font-['Lexend'] text-[9px] font-bold tabular-nums",
+          color === "bg-primary-container" ? "text-primary-container" :
+          color === "bg-blue-400"          ? "text-blue-400"          :
+          color === "bg-violet-400"        ? "text-violet-400"        : "text-on-surface-variant"
+        )}>{value}%</span>
       </div>
-
-      {/* Teams */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex flex-col items-center gap-1.5 flex-1">
-          <TeamAvatar team={homeTeam} size="md" />
-          <span className="font-bold text-xs text-on-surface text-center leading-tight">{match.home}</span>
-          <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-wider">Home</span>
-        </div>
-
-        {/* Center score display */}
-        <div className="flex flex-col items-center px-4">
-          <span className="font-black text-xl text-on-surface-variant italic">VS</span>
-          <div className="mt-1 flex items-baseline gap-0.5">
-            <span className={cn("font-black text-2xl leading-none", confColor)}>{match.conf}</span>
-            <span className="text-on-surface-variant text-xs">%</span>
-          </div>
-          <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest">Conf.</span>
-        </div>
-
-        <div className="flex flex-col items-center gap-1.5 flex-1">
-          <TeamAvatar team={awayTeam} size="md" />
-          <span className="font-bold text-xs text-on-surface text-center leading-tight">{match.away}</span>
-          <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-wider">Away</span>
-        </div>
-      </div>
-
-      {/* Win % bars */}
-      <div className="space-y-2 mb-4">
-        <div>
-          <div className="flex justify-between mb-1">
-            <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">Home Win %</span>
-            <span className="font-['Lexend'] text-[9px] font-bold text-primary-container">{match.homeScore}%</span>
-          </div>
-          <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-            <div className="h-full bg-primary-container rounded-full" style={{ width: `${match.homeScore}%` }} />
-          </div>
-        </div>
-        <div>
-          <div className="flex justify-between mb-1">
-            <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">Away Win %</span>
-            <span className="font-['Lexend'] text-[9px] font-bold text-blue-400">{match.awayScore}%</span>
-          </div>
-          <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-400 rounded-full" style={{ width: `${match.awayScore}%` }} />
-          </div>
-        </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white/[0.03] rounded-lg p-2 text-center border border-white/5">
-          <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-0.5">BTTS</div>
-          <div className="font-['Lexend'] text-sm font-bold text-on-surface">{match.btts}%</div>
-        </div>
-        <div className="bg-white/[0.03] rounded-lg p-2 text-center border border-white/5">
-          <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-0.5">O2.5</div>
-          <div className="font-['Lexend'] text-sm font-bold text-on-surface">{match.over25}%</div>
-        </div>
-        <div className="bg-white/[0.03] rounded-lg p-2 text-center border border-white/5">
-          <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-0.5">xG</div>
-          <div className="font-['Lexend'] text-sm font-bold text-on-surface">{((match.lH || 0) + (match.lA || 0)).toFixed(1)}</div>
-        </div>
+      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+        <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(value, 100)}%` }} />
       </div>
     </div>
   );
 }
 
-// ── Page ────────────────────────────────────────────────────────────────────
+// ── Stat chip ─────────────────────────────────────────────────────────────
+function StatChip({ label, value, accent }) {
+  return (
+    <div className="bg-white/[0.03] rounded-lg p-2 text-center border border-white/5">
+      <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-0.5">{label}</div>
+      <div className={cn("font-['Lexend'] text-sm font-bold tabular-nums", accent ? "text-primary-container" : "text-on-surface")}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+// ── Match card ────────────────────────────────────────────────────────────
+function MatchCard({ match }) {
+  const sig  = sigStyle(match.signal);
+  const tier = tierStyle(match.tier);
+  const homeTeam = { abbr: abbr(match.home), name: match.home, logo: null };
+  const awayTeam = { abbr: abbr(match.away), name: match.away, logo: null };
+  const xg   = ((match.lH || 0) + (match.lA || 0)).toFixed(2);
+  const confColor =
+    match.conf >= 75 ? "text-primary-container" :
+    match.conf >= 65 ? "text-blue-400"          : "text-on-surface-variant";
+
+  // All signals as pills
+  const extraSignals = (match.allSignals || []).slice(1, 4); // skip primary
+
+  return (
+    <div className="glass-card p-5 rounded-xl border border-white/5 hover:border-primary-container/20 transition-all duration-300 group flex flex-col gap-4">
+
+      {/* Header: tier badge + signal + time */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col gap-1.5">
+          <span className={cn(
+            "inline-block px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider w-fit border",
+            tier.bg, tier.text, tier.border
+          )}>
+            {tier.label}
+          </span>
+          <span className={cn("px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-tighter w-fit", sig.bg, sig.text)}>
+            {match.signal}
+          </span>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">{match.comp}</div>
+          <div className="font-['Lexend'] text-[10px] font-semibold text-on-surface mt-0.5">{fmtTime(match.utcDate)}</div>
+        </div>
+      </div>
+
+      {/* Teams + confidence */}
+      <div className="flex items-center justify-between">
+        {/* Home */}
+        <div className="flex flex-col items-center gap-1.5 flex-1">
+          <TeamAvatar team={homeTeam} size="md" />
+          <span className="font-bold text-xs text-on-surface text-center leading-tight">{match.home}</span>
+          <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-wider">
+            {match.homeElo} elo
+          </span>
+        </div>
+
+        {/* Center */}
+        <div className="flex flex-col items-center px-3">
+          <span className="font-black text-lg text-on-surface-variant italic">VS</span>
+          <span className={cn("font-black text-2xl leading-none mt-1", confColor)}>{match.conf}</span>
+          <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest">% Conf</span>
+        </div>
+
+        {/* Away */}
+        <div className="flex flex-col items-center gap-1.5 flex-1">
+          <TeamAvatar team={awayTeam} size="md" />
+          <span className="font-bold text-xs text-on-surface text-center leading-tight">{match.away}</span>
+          <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-wider">
+            {match.awayElo} elo
+          </span>
+        </div>
+      </div>
+
+      {/* Probability bars */}
+      <div className="space-y-2">
+        <ProbBar label="Home to score (0.5+)" value={match.homeOver05} color="bg-primary-container" />
+        <ProbBar label="Home 2+ goals (1.5+)"  value={match.homeOver15} color="bg-emerald-400" />
+        <ProbBar label="Away to score (0.5+)"  value={match.awayOver05} color="bg-blue-400" />
+        <ProbBar label="Away 2+ goals (1.5+)"  value={match.awayOver15} color="bg-sky-400" />
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-4 gap-1.5">
+        <StatChip label="BTTS"   value={`${match.btts}%`} />
+        <StatChip label="O2.5"   value={`${match.over25}%`} accent />
+        <StatChip label="U2.5"   value={`${match.under25}%`} />
+        <StatChip label="xG"     value={xg} />
+      </div>
+
+      {/* Extra signal pills */}
+      {extraSignals.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
+          {extraSignals.map(s => {
+            const ss = sigStyle(s.label ?? s.type);
+            return (
+              <span key={s.type}
+                className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
+                {s.label ?? s.type} · {s.prob}%
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────
 export default function Today() {
-  const today = useMemo(() => {
-    // Since data is historical, show the earliest date's matches as "today"
-    if (schedule.length === 0) return [];
-    const dates = [...new Set(schedule.map(m => m.utcDate.slice(0, 10)))].sort();
-    const firstDate = dates[0];
-    return schedule.filter(m => m.utcDate.startsWith(firstDate));
-  }, []);
+  const { data: matches, loading, error, lastFetch } = useTodayPredictions();
 
   const signalCounts = useMemo(() => {
-    const order = ["HIGH SCORING", "BTTS + O2.5", "BTTS", "OVER 2.5", "BALANCED"];
     const counts = {};
-    order.forEach(s => { counts[s] = 0; });
-    today.forEach(m => { if (counts[m.signal] !== undefined) counts[m.signal]++; else counts[m.signal] = 1; });
+    matches.forEach(m => {
+      counts[m.signal] = (counts[m.signal] || 0) + 1;
+    });
     return counts;
-  }, [today]);
+  }, [matches]);
 
-  const avgConf  = today.length ? Math.round(today.reduce((s, m) => s + m.conf,  0) / today.length) : 0;
-  const avgXg    = today.length ? ((today.reduce((s, m) => s + (m.lH || 0) + (m.lA || 0), 0) / today.length)).toFixed(2) : "0.00";
-  const highConf = today.filter(m => m.conf >= 70).length;
+  const avgConf  = matches.length ? Math.round(matches.reduce((s, m) => s + m.conf,    0) / matches.length) : 0;
+  const avgXg    = matches.length ? (matches.reduce((s, m) => s + (m.xgTotal || 0),    0) / matches.length).toFixed(2) : "0.00";
+  const tierA    = matches.filter(m => m.tier === "A").length;
+  const highConf = matches.filter(m => m.conf >= 70).length;
+
+  // Sort by confidence desc
+  const sorted = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
 
   return (
     <main className="pt-32 pb-24 max-w-[1280px] mx-auto px-8">
@@ -256,28 +300,49 @@ export default function Today() {
       <section className="mb-12 animate-fade-up">
         <div className="flex items-center gap-3 mb-3">
           <span className="w-1.5 h-6 bg-primary-container rounded-full inline-block" />
-          <span className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-primary-container">AI Engine Active</span>
+          <span className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-primary-container">
+            AI Engine · Live from Supabase
+          </span>
         </div>
         <h1 className="text-display-xl font-black text-on-surface mb-3 leading-tight">
           Today's <span className="text-primary-container">Picks</span>
         </h1>
         <p className="text-on-surface-variant text-headline-md font-semibold leading-relaxed max-w-2xl">
-          {today.length} matches analysed by our neural engine — sorted by highest confidence signal.
+          {loading
+            ? "Loading today's predictions…"
+            : matches.length > 0
+              ? `${matches.length} match${matches.length !== 1 ? "es" : ""} analysed — sorted by confidence.`
+              : "No predictions scheduled for today. Check back later or browse the full schedule."}
         </p>
+        {lastFetch && !loading && (
+          <p className="font-['Lexend'] text-[10px] text-on-surface-variant mt-2 uppercase tracking-widest">
+            Updated {lastFetch.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+          </p>
+        )}
+        {error && (
+          <div className="mt-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-['Lexend']">
+            ⚠️ Could not load predictions — check Supabase connection.
+          </div>
+        )}
       </section>
 
-      {/* Stats row */}
+      {/* Stat cards */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-        <StatCard icon="calendar_today"   label="Today's Matches"  value={today.length}          sub="Total scheduled"    />
-        <StatCard icon="bolt"             label="High Conf Picks"  value={highConf}               sub="Confidence ≥ 70%"   />
-        <StatCard icon="percent"          label="Avg Confidence"   value={`${avgConf}%`}          sub="Across all picks"   />
-        <StatCard icon="sports_soccer"    label="Avg xG"           value={avgXg}                  sub="Goals expected"     />
+        <StatCard icon="calendar_today"  label="Today's Picks"    value={matches.length} sub="Total matches"       loading={loading} />
+        <StatCard icon="grade"           label="Tier A Picks"     value={tierA}          sub="Strongest signals"   loading={loading} />
+        <StatCard icon="percent"         label="Avg Confidence"   value={`${avgConf}%`}  sub="Across all picks"   loading={loading} />
+        <StatCard icon="sports_soccer"   label="Avg xG / match"   value={avgXg}          sub="Expected goals"     loading={loading} />
       </section>
 
       {/* Charts row */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <SignalDonut counts={signalCounts} total={today.length} />
-        <WinChanceChart matches={today} />
+        {loading
+          ? <><Skeleton className="h-48" /><Skeleton className="h-48" /></>
+          : <>
+              <SignalDonut counts={signalCounts} total={matches.length} />
+              <ConfChart matches={matches} />
+            </>
+        }
       </section>
 
       {/* Match cards */}
@@ -285,19 +350,33 @@ export default function Today() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-headline-md font-semibold text-on-surface uppercase tracking-wider flex items-center gap-3">
             <span className="w-1.5 h-6 bg-primary-container rounded-full inline-block" />
-            Match Cards
+            Today's Match Cards
           </h2>
           <Link to="/predictions"
             className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary-container transition-colors flex items-center gap-1.5">
-            Full Schedule <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            Full Schedule
+            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
           </Link>
         </div>
 
-        {today.length === 0 ? (
-          <div className="text-center py-20 text-on-surface-variant">No matches found for today.</div>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {[...Array(6)].map((_, i) => <CardSkeleton key={i} />)}
+          </div>
+        ) : sorted.length === 0 ? (
+          <div className="text-center py-20 glass-card rounded-xl border border-white/5">
+            <span className="material-symbols-outlined text-[48px] text-on-surface-variant mb-4 block">sports_soccer</span>
+            <div className="text-on-surface font-bold text-lg mb-2">No picks for today</div>
+            <div className="text-on-surface-variant text-sm mb-6">The AI engine found no strong signals for today's matches.</div>
+            <Link to="/predictions"
+              className="inline-flex items-center gap-2 bg-primary-container text-on-primary px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-tight neon-glow">
+              Browse All Predictions
+              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </Link>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {today.map(m => <MatchCard key={m.id} match={m} />)}
+            {sorted.map(m => <MatchCard key={m.id} match={m} />)}
           </div>
         )}
       </section>

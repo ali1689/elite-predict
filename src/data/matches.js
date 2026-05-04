@@ -1,26 +1,24 @@
-import raw from "./predictions.json";
-
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Shared helpers (no static JSON — data now comes from Supabase) ─────────
 
 export function fmtDate(utcDate) {
   const d = new Date(utcDate);
   return d.toLocaleDateString("en-GB", {
     month: "short",
     day:   "2-digit",
-    timeZone: "UTC",
+    timeZone: "Europe/Warsaw",
   }).toUpperCase();
 }
 
 export function fmtTime(utcDate) {
   const d = new Date(utcDate);
   return d.toLocaleTimeString("en-GB", {
-    hour:   "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-  }) + " UTC";
+    hour:     "2-digit",
+    minute:   "2-digit",
+    timeZone: "Europe/Warsaw",
+  });
 }
 
-export function abbr(name) {
+export function abbr(name = "") {
   const stop = new Set(["FC", "AC", "SC", "RC", "EC", "CA", "CR", "FK", "NK",
                          "VfL", "VfB", "RB", "1.", "SV", "AS", "SS", "CD", "CF",
                          "UD", "SD", "GD", "RCD", "FSV"]);
@@ -33,68 +31,50 @@ export function abbr(name) {
   return words.slice(0, 3).map(w => w[0]).join("").toUpperCase();
 }
 
-function signalToStatus(signal) {
-  if (signal === "HIGH SCORING" || signal === "BTTS + O2.5") return "optimized";
-  if (signal === "BTTS")      return "live";
-  if (signal === "OVER 2.5")  return "live";
-  return "finalizing";
+// ── Signal visual config ───────────────────────────────────────────────────
+export const SIG_STYLE = {
+  "Home Over 0.5 Goals": { bg: "bg-emerald-500/15", text: "text-emerald-400",          dot: "bg-emerald-400"          },
+  "Home Over 1.5 Goals": { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container"  },
+  "Away Over 0.5 Goals": { bg: "bg-sky-500/15",     text: "text-sky-400",              dot: "bg-sky-400"              },
+  "Away Over 1.5 Goals": { bg: "bg-blue-500/15",    text: "text-blue-400",             dot: "bg-blue-400"             },
+  "Over 2.5 Goals":      { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container" },
+  "Under 2.5 Goals":     { bg: "bg-violet-500/15",  text: "text-violet-400",           dot: "bg-violet-400"           },
+  "Both Teams to Score": { bg: "bg-blue-500/15",    text: "text-blue-400",             dot: "bg-blue-400"             },
+  "No strong signal":    { bg: "bg-white/5",        text: "text-on-surface-variant",   dot: "bg-zinc-500"             },
+  // Legacy fallbacks
+  "HIGH SCORING":        { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container" },
+  "BTTS + O2.5":         { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container" },
+  "BTTS":                { bg: "bg-blue-500/15",    text: "text-blue-400",             dot: "bg-blue-400"             },
+  "OVER 2.5":            { bg: "bg-blue-500/15",    text: "text-blue-400",             dot: "bg-blue-400"             },
+  "BALANCED":            { bg: "bg-white/5",        text: "text-on-surface-variant",   dot: "bg-zinc-500"             },
+};
+
+export function sigStyle(signal) {
+  return SIG_STYLE[signal] ?? SIG_STYLE["No strong signal"];
 }
 
-// ── Sort all matches by date ────────────────────────────────────────────────
-const upcoming = [...raw].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
-const byConf   = [...upcoming].sort((a, b) => b.conf - a.conf);
+// ── Signal tier config ─────────────────────────────────────────────────────
+export const TIER_STYLE = {
+  A: { bg: "bg-primary-container/15", text: "text-primary-container", border: "border-primary-container/30", label: "Strong Pick" },
+  B: { bg: "bg-blue-500/15",          text: "text-blue-400",          border: "border-blue-500/30",          label: "Good Pick"   },
+  C: { bg: "bg-white/5",              text: "text-on-surface-variant", border: "border-white/10",            label: "Speculative" },
+};
 
-// ── Transformers ────────────────────────────────────────────────────────────
-function toCard(m) {
-  return {
-    id:         `${m.home}-${m.away}-${m.utcDate}`,
-    home:       { abbr: abbr(m.home), name: m.home, logo: null },
-    away:       { abbr: abbr(m.away), name: m.away, logo: null },
-    prediction: m.signal,
-    confidence: m.conf,
-    status:     signalToStatus(m.signal),
-    league:     m.comp,
-    time:       fmtTime(m.utcDate),
-    btts:       m.btts,
-    over25:     m.over25,
-    homeScore:  m.homeScore,
-    awayScore:  m.awayScore,
-    lH:         m.lH,
-    lA:         m.lA,
-    utcDate:    m.utcDate,
-  };
+export function tierStyle(tier) {
+  return TIER_STYLE[tier] ?? TIER_STYLE["B"];
 }
 
-function toFeatureCard(m) {
-  const card = toCard(m);
-  const isHigh = m.conf >= 70;
-  card.badge      = isHigh ? "ELITE PICK" : m.signal === "BTTS + O2.5" ? "TOP SIGNAL" : "DATA SYNCED";
-  card.badgeStyle = isHigh ? "neon"       : m.conf >= 60               ? "blue"       : "neutral";
-  return card;
-}
-
-// ── Public exports ──────────────────────────────────────────────────────────
-export const heroCards    = byConf.slice(0, 3).map(toCard);
-export const featureCards = byConf.slice(0, 3).map(toFeatureCard);
-
-export const schedule = upcoming.map(m => ({
-  id:        `${m.home}-${m.away}-${m.utcDate}`,
-  utcDate:   m.utcDate,
-  date:      fmtDate(m.utcDate),
-  time:      fmtTime(m.utcDate),
-  home:      m.home,
-  away:      m.away,
-  league:    m.comp,
-  market:    m.signal,
-  signal:    m.signal,
-  conf:      m.conf,
-  btts:      m.btts,
-  over25:    m.over25,
-  homeScore: m.homeScore,
-  awayScore: m.awayScore,
-  lH:        m.lH,
-  lA:        m.lA,
-}));
+// ── Donut chart colours for signal breakdown ───────────────────────────────
+export const SIGNAL_DONUT_COLORS = {
+  "Home Over 0.5 Goals": "#34d399",
+  "Home Over 1.5 Goals": "#39FF14",
+  "Away Over 0.5 Goals": "#38bdf8",
+  "Away Over 1.5 Goals": "#60A5FA",
+  "Over 2.5 Goals":      "#7FFF00",
+  "Under 2.5 Goals":     "#a78bfa",
+  "Both Teams to Score": "#3B82F6",
+  "No strong signal":    "#52525B",
+};
 
 export const testimonials = [
   {
