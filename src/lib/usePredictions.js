@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-// ── Normalise Supabase snake_case → camelCase ─────────────────────────────
+// Normalise Supabase snake_case to camelCase
 function normalize(row) {
   let allSignals = [];
   try {
@@ -34,15 +34,14 @@ function normalize(row) {
     lA:          row.l_a            ?? 0,
     xgTotal:     row.xg_total       ?? 0,
     allSignals,
-    // Legacy compat keys used in older components
     homeScore:   row.home_over05    ?? 0,
     awayScore:   row.away_over05    ?? 0,
     league:      row.comp,
   };
 }
 
-// ── Generic hook ──────────────────────────────────────────────────────────
-export function usePredictions({ dateFilter = null, limit = 300 } = {}) {
+// Generic hook
+export function usePredictions({ dateFilter = null, limit = 300, futureOnly = false } = {}) {
   const [data,    setData]    = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -57,11 +56,16 @@ export function usePredictions({ dateFilter = null, limit = 300 } = {}) {
         let query = supabase
           .from("predictions")
           .select("*")
-          .order("conf", { ascending: false })
+          .order("utc_date", { ascending: true })
           .limit(limit);
 
         if (dateFilter) {
           query = query.eq("match_date", dateFilter);
+        }
+
+        if (futureOnly) {
+          const todayWarsaw = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
+          query = query.gte("match_date", todayWarsaw);
         }
 
         const { data: rows, error: err } = await query;
@@ -77,19 +81,18 @@ export function usePredictions({ dateFilter = null, limit = 300 } = {}) {
     }
     load();
     return () => { cancelled = true; };
-  }, [dateFilter, limit]);
+  }, [dateFilter, limit, futureOnly]);
 
   return { data, loading, error, lastFetch };
 }
 
-// ── Today's hook — Warsaw timezone ────────────────────────────────────────
+// Today hook - Warsaw timezone
 export function useTodayPredictions() {
-  // YYYY-MM-DD in Europe/Warsaw
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
   return usePredictions({ dateFilter: today });
 }
 
-// ── All upcoming hook ─────────────────────────────────────────────────────
+// All upcoming hook - only future matches, ordered by date ascending
 export function useAllPredictions() {
-  return usePredictions({ limit: 400 });
+  return usePredictions({ limit: 500, futureOnly: true });
 }
