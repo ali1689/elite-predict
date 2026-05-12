@@ -294,20 +294,20 @@ export default function Today() {
   const sorted = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
 
   return (
-    <main className="pt-32 pb-24 max-w-[1280px] mx-auto px-8">
+    <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
 
       {/* Header */}
-      <section className="mb-12 animate-fade-up">
+      <section className="mb-8 md:mb-12 animate-fade-up">
         <div className="flex items-center gap-3 mb-3">
           <span className="w-1.5 h-6 bg-primary-container rounded-full inline-block" />
           <span className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-primary-container">
             AI Engine · Live from Supabase
           </span>
         </div>
-        <h1 className="text-display-xl font-black text-on-surface mb-3 leading-tight">
+        <h1 className="text-[2.25rem] sm:text-5xl md:text-display-xl font-black text-on-surface mb-3 leading-tight tracking-tight md:tracking-[-0.04em]">
           Today's <span className="text-primary-container">Picks</span>
         </h1>
-        <p className="text-on-surface-variant text-headline-md font-semibold leading-relaxed max-w-2xl">
+        <p className="text-on-surface-variant text-base sm:text-lg md:text-headline-md font-semibold leading-relaxed max-w-2xl">
           {loading
             ? "Loading today's predictions…"
             : matches.length > 0
@@ -327,7 +327,7 @@ export default function Today() {
       </section>
 
       {/* Stat cards */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-12">
         <StatCard icon="calendar_today"  label="Today's Picks"    value={matches.length} sub="Total matches"       loading={loading} />
         <StatCard icon="grade"           label="Tier A Picks"     value={tierA}          sub="Strongest signals"   loading={loading} />
         <StatCard icon="percent"         label="Avg Confidence"   value={`${avgConf}%`}  sub="Across all picks"   loading={loading} />
@@ -335,7 +335,7 @@ export default function Today() {
       </section>
 
       {/* Charts row */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-12">
         {loading
           ? <><Skeleton className="h-48" /><Skeleton className="h-48" /></>
           : <>
@@ -347,9 +347,9 @@ export default function Today() {
 
       {/* Match cards */}
       <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-headline-md font-semibold text-on-surface uppercase tracking-wider flex items-center gap-3">
-            <span className="w-1.5 h-6 bg-primary-container rounded-full inline-block" />
+        <div className="flex items-center justify-between mb-5 md:mb-6">
+          <h2 className="text-base md:text-headline-md font-semibold text-on-surface uppercase tracking-wider flex items-center gap-2 md:gap-3">
+            <span className="w-1.5 h-5 md:h-6 bg-primary-container rounded-full inline-block" />
             Today's Match Cards
           </h2>
           <Link to="/predictions"
@@ -360,14 +360,14 @@ export default function Today() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
             {[...Array(6)].map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : sorted.length === 0 ? (
-          <div className="text-center py-20 glass-card rounded-xl border border-white/5">
+          <div className="text-center py-14 md:py-20 glass-card rounded-xl border border-white/5">
             <span className="material-symbols-outlined text-[48px] text-on-surface-variant mb-4 block">sports_soccer</span>
             <div className="text-on-surface font-bold text-lg mb-2">No picks for today</div>
-            <div className="text-on-surface-variant text-sm mb-6">The AI engine found no strong signals for today's matches.</div>
+            <div className="text-on-surface-variant text-sm mb-6 px-4">The AI engine found no strong signals for today's matches.</div>
             <Link to="/predictions"
               className="inline-flex items-center gap-2 bg-primary-container text-on-primary px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-tight neon-glow">
               Browse All Predictions
@@ -375,22 +375,22 @@ export default function Today() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
             {sorted.map(m => <MatchCard key={m.id} match={m} />)}
           </div>
         )}
       </section>
 
       {/* Telegram CTA */}
-      <section className="mt-16">
-        <div className="relative rounded-2xl overflow-hidden p-8 bg-zinc-950 border border-primary-container/20 flex flex-col md:flex-row items-center gap-6">
+      <section className="mt-10 md:mt-16">
+        <div className="relative rounded-2xl overflow-hidden p-5 sm:p-8 bg-zinc-950 border border-primary-container/20 flex flex-col gap-5 md:flex-row md:items-center md:gap-6">
           <div className="flex-1">
             <div className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-primary-container mb-2">Live Alerts</div>
-            <h3 className="text-headline-md font-black text-on-surface mb-2">Get Instant Signal Alerts on Telegram</h3>
+            <h3 className="text-lg md:text-headline-md font-black text-on-surface mb-1 md:mb-2">Get Instant Signal Alerts on Telegram</h3>
             <p className="text-on-surface-variant text-sm">Lineup news, late-value drops, and picks — directly on your phone.</p>
           </div>
           <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer"
-            className="flex-shrink-0 flex items-center gap-2 bg-primary-container text-on-primary px-6 py-3 rounded-xl font-black text-sm uppercase tracking-tight neon-glow hover:scale-105 active:scale-95 transition-all">
+            className="flex items-center justify-center gap-2 bg-primary-container text-on-primary px-6 py-3.5 rounded-xl font-black text-sm uppercase tracking-tight neon-glow hover:scale-105 active:scale-95 transition-all w-full md:w-auto flex-shrink-0">
             <span className="material-symbols-outlined text-[18px]">send</span>
             Join Telegram
           </a>

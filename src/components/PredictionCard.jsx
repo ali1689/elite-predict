@@ -32,7 +32,7 @@ export default function PredictionCard({ card, className }) {
   const sigColor = SIGNAL_COLOR[card.prediction] ?? "text-primary-container";
 
   return (
-    <div className={cn("glass-card p-8 rounded-2xl relative overflow-hidden group hover:border-primary-container/30 transition-all duration-300", className)}>
+    <div className={cn("glass-card p-5 md:p-8 rounded-2xl relative overflow-hidden group hover:border-primary-container/30 transition-all duration-300", className)}>
       <div className="absolute top-0 right-0 p-4">
         <span className={cn("flex items-center gap-2 font-bold text-xs uppercase", status.labelClass)}>
           <span className={cn("w-2 h-2 rounded-full", status.dot, status.pulse && "animate-pulse-dot")} />

@@ -93,32 +93,32 @@ export default function Home() {
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center pt-20">
+      <section className="relative min-h-screen flex items-center pt-16 md:pt-20">
         <div className="absolute inset-0 z-0">
           <img src={STADIUM_IMG} alt="Football stadium at night"
             className="w-full h-full object-cover opacity-30 grayscale" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
         </div>
-        <div className="relative z-10 max-w-[1280px] mx-auto px-8 w-full py-24">
+        <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-8 w-full py-12 md:py-24">
           <div className="max-w-4xl animate-fade-up">
-            <Badge variant="neon" className="mb-6">
+            <Badge variant="neon" className="mb-4 md:mb-6">
               AI-Engine Activated &bull; Now 100% Free
             </Badge>
-            <h1 className="text-display-xl font-black text-on-surface mb-8 leading-[1.05]">
+            <h1 className="text-[2.25rem] sm:text-5xl md:text-display-xl font-black text-on-surface mb-5 md:mb-8 leading-[1.05] tracking-tight md:tracking-[-0.04em]">
               MASTER THE MATCH WITH{" "}
               <span className="text-primary-container">PRO-LEVEL</span> PRECISION
             </h1>
-            <p className="text-headline-md font-semibold text-on-surface-variant mb-12 max-w-2xl leading-relaxed">
+            <p className="text-base sm:text-lg md:text-headline-md font-semibold text-on-surface-variant mb-8 md:mb-12 max-w-2xl leading-relaxed">
               Join the world's most accurate AI football prediction engine. Now free for the
               community. Real-time data, expert analytics, and 85%+ win rates.
             </p>
-            <div className="flex flex-col sm:flex-row gap-5">
-              <Button size="lg" variant="primary" className="neon-glow" asChild>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-5">
+              <Button size="lg" variant="primary" className="neon-glow w-full sm:w-auto" asChild>
                 <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer">
                   Join Telegram Channel
                 </a>
               </Button>
-              <Button size="lg" variant="ghost" asChild>
+              <Button size="lg" variant="ghost" className="w-full sm:w-auto" asChild>
                 <Link to="/predictions">Access Free Predictions</Link>
               </Button>
             </div>
@@ -127,14 +127,14 @@ export default function Home() {
       </section>
 
       {/* SOCIAL PROOF */}
-      <section className="bg-surface-container-low border-y border-white/5 py-14">
-        <div className="max-w-[1280px] mx-auto px-8 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+      <section className="bg-surface-container-low border-y border-white/5 py-10 md:py-14">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 grid grid-cols-3 gap-4 md:gap-12 text-center">
           {STATS.map(({ value, label }) => (
             <div key={label}>
-              <div className="font-['Lexend'] text-display-xl font-extrabold text-primary-container mb-2 leading-none">
+              <div className="font-['Lexend'] text-3xl sm:text-5xl md:text-display-xl font-extrabold text-primary-container mb-1 md:mb-2 leading-none">
                 {value}
               </div>
-              <div className="font-['Lexend'] text-[12px] text-on-surface-variant uppercase tracking-widest">
+              <div className="font-['Lexend'] text-[9px] sm:text-[11px] md:text-[12px] text-on-surface-variant uppercase tracking-widest">
                 {label}
               </div>
             </div>
@@ -143,18 +143,18 @@ export default function Home() {
       </section>
 
       {/* PREDICTION FEED */}
-      <section className="py-32 max-w-[1280px] mx-auto px-8">
-        <div className="flex justify-between items-end mb-16">
+      <section className="py-16 md:py-32 max-w-[1280px] mx-auto px-4 sm:px-8">
+        <div className="flex justify-between items-start md:items-end mb-8 md:mb-16 gap-4">
           <div>
-            <h2 className="text-headline-lg font-bold text-on-surface mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-3 md:mb-4">
               Upcoming High-Confidence Predictions
             </h2>
-            <p className="text-on-surface-variant max-w-xl">
+            <p className="text-on-surface-variant max-w-xl text-sm md:text-base">
               Our neural networks have flagged these matches with extreme probability scoring.
               Join our Telegram for full breakdowns.
             </p>
           </div>
-          <div className="hidden md:flex gap-3">
+          <div className="hidden md:flex gap-3 flex-shrink-0">
             {["chevron_left", "chevron_right"].map((icon) => (
               <button key={icon} aria-label={icon}
                 className="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-colors">
@@ -163,7 +163,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8">
           {loading
             ? [...Array(3)].map((_, i) => <CardSkeleton key={i} />)
             : heroCards.length > 0
@@ -174,18 +174,18 @@ export default function Home() {
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="bg-surface-container py-32">
-        <div className="max-w-[1280px] mx-auto px-8">
-          <div className="text-center mb-20 max-w-2xl mx-auto">
-            <h2 className="text-headline-lg font-bold text-on-surface mb-6">
+      <section id="features" className="bg-surface-container py-16 md:py-32">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
+          <div className="text-center mb-10 md:mb-20 max-w-2xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-4 md:mb-6">
               Unrivaled AI Precision, Free Forever
             </h2>
-            <p className="text-on-surface-variant">
+            <p className="text-on-surface-variant text-sm md:text-base">
               We've opened our vault. Our proprietary algorithms process historical trends and
               real-time news to deliver surgical precision directly to your phone.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
             {FEATURES.map(({ icon, title, description }) => (
               <FeatureCard key={icon} icon={icon} title={title} description={description} />
             ))}
@@ -194,11 +194,11 @@ export default function Home() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-32 max-w-[1280px] mx-auto px-8">
-        <h2 className="text-headline-lg font-bold text-on-surface mb-16 text-center">
+      <section className="py-16 md:py-32 max-w-[1280px] mx-auto px-4 sm:px-8">
+        <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-8 md:mb-16 text-center">
           Success Stories from Our Channel
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
           {testimonials.map((t) => (
             <TestimonialCard key={t.id} testimonial={t} />
           ))}
@@ -206,25 +206,25 @@ export default function Home() {
       </section>
 
       {/* COMMUNITY CTA */}
-      <section className="py-32 bg-zinc-950">
-        <div className="max-w-[1280px] mx-auto px-8 text-center">
-          <div className="max-w-4xl mx-auto p-12 rounded-3xl bg-primary-container text-on-primary shadow-2xl shadow-primary-container/20">
-            <span className="inline-block bg-on-primary text-primary-container text-[10px] font-bold uppercase tracking-[0.15em] py-1 px-4 rounded-full mb-6">
+      <section className="py-16 md:py-32 bg-zinc-950">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 text-center">
+          <div className="max-w-4xl mx-auto p-6 sm:p-8 md:p-12 rounded-2xl md:rounded-3xl bg-primary-container text-on-primary shadow-2xl shadow-primary-container/20">
+            <span className="inline-block bg-on-primary text-primary-container text-[10px] font-bold uppercase tracking-[0.15em] py-1 px-4 rounded-full mb-4 md:mb-6">
               100% Free Lifetime Access
             </span>
-            <h2 className="text-display-xl font-black mb-6 text-on-primary leading-tight">
+            <h2 className="text-[2rem] sm:text-5xl md:text-display-xl font-black mb-4 md:mb-6 text-on-primary leading-tight">
               JOIN OUR FREE COMMUNITY
             </h2>
-            <p className="text-headline-md font-semibold mb-10 opacity-90 max-w-xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-headline-md font-semibold mb-7 md:mb-10 opacity-90 max-w-xl mx-auto leading-relaxed">
               Get instant access to our Elite AI engine and Pro-level predictions. No
               subscriptions, no hidden fees. Just winning insights.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-12 max-w-lg mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 text-left mb-7 md:mb-12 max-w-lg mx-auto">
               {COMMUNITY_PERKS.map((col, ci) => (
-                <ul key={ci} className="space-y-3">
+                <ul key={ci} className="space-y-2 md:space-y-3">
                   {col.map((perk) => (
-                    <li key={perk} className="flex items-center gap-3 font-semibold text-on-primary">
-                      <span className="material-symbols-outlined text-on-primary text-xl">check_circle</span>
+                    <li key={perk} className="flex items-center gap-2 md:gap-3 font-semibold text-on-primary text-sm md:text-base">
+                      <span className="material-symbols-outlined text-on-primary text-lg md:text-xl flex-shrink-0">check_circle</span>
                       {perk}
                     </li>
                   ))}
@@ -232,13 +232,13 @@ export default function Home() {
               ))}
             </div>
             <Button size="xl"
-              className="bg-on-primary text-primary-container rounded-xl font-black text-2xl hover:scale-105 active:scale-95 neon-glow"
+              className="bg-on-primary text-primary-container rounded-xl font-black text-lg md:text-2xl hover:scale-105 active:scale-95 neon-glow w-full sm:w-auto"
               asChild>
               <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer">
                 FOLLOW ON TELEGRAM
               </a>
             </Button>
-            <p className="mt-6 text-sm opacity-70">
+            <p className="mt-4 md:mt-6 text-sm opacity-70">
               Join 5,000+ members already winning with Elite Predict
             </p>
           </div>

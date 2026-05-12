@@ -10,7 +10,7 @@ const LEGAL_LINKS = [
 export default function Footer() {
   return (
     <footer className="bg-zinc-950 w-full py-12 border-t border-white/5">
-      <div className="max-w-[1280px] mx-auto px-8 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-start">
         <div>
           <Link to="/" className="text-lg font-black italic text-zinc-100 tracking-tighter block mb-2">
             ELITE PREDICT

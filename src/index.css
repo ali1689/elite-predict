@@ -60,6 +60,23 @@
   .animate-pulse-dot {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
+
+  /* Hide scrollbar but keep scrolling functional */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Improve tap target sizes on mobile */
+  @media (max-width: 768px) {
+    .mobile-tap-safe {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
 }
 
 @keyframes pulse-dot {

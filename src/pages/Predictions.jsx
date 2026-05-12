@@ -174,14 +174,14 @@ export default function Predictions() {
   [allMatches]);
 
   return (
-    <main className="pt-32 pb-24 max-w-[1280px] mx-auto px-8">
+    <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
 
       {/* Hero */}
-      <section className="mb-16 animate-fade-up">
-        <h1 className="text-display-xl font-black text-on-surface mb-4 leading-tight">
+      <section className="mb-8 md:mb-16 animate-fade-up">
+        <h1 className="text-[2.25rem] sm:text-5xl md:text-display-xl font-black text-on-surface mb-3 md:mb-4 leading-tight tracking-tight md:tracking-[-0.04em]">
           Upcoming <span className="text-primary-container">Precision</span> Picks
         </h1>
-        <p className="text-on-surface-variant max-w-2xl text-headline-md font-semibold leading-relaxed">
+        <p className="text-on-surface-variant max-w-2xl text-base sm:text-lg md:text-headline-md font-semibold leading-relaxed">
           {loading
             ? "Loading predictions from AI engine…"
             : `${allMatches.length} real predictions across ${leagues.length - 1} league${leagues.length - 1 !== 1 ? "s" : ""} — powered by Elo ratings, Poisson xG, and calibrated ML.`}
@@ -194,32 +194,32 @@ export default function Predictions() {
       </section>
 
       {/* Top Picks */}
-      <section className="mb-16">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-headline-md font-semibold text-on-surface uppercase tracking-wider flex items-center gap-3">
-            <span className="w-1.5 h-6 bg-primary-container rounded-full inline-block" />
+      <section className="mb-10 md:mb-16">
+        <div className="flex items-center justify-between mb-5 md:mb-8">
+          <h2 className="text-base md:text-headline-md font-semibold text-on-surface uppercase tracking-wider flex items-center gap-2 md:gap-3">
+            <span className="w-1.5 h-5 md:h-6 bg-primary-container rounded-full inline-block" />
             Highest Confidence Picks
           </h2>
         </div>
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-96" />)}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-80 md:h-96" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {topPicks.map(m => <FeaturedCard key={m.id} match={m} />)}
           </div>
         )}
       </section>
 
       {/* Filters */}
-      <section className="mb-8 space-y-4">
-        {/* League tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      <section className="mb-6 md:mb-8 space-y-3 md:space-y-4">
+        {/* League tabs — horizontally scrollable on all screens */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {leagues.map(l => (
             <button key={l} onClick={() => setActiveLeague(l)}
               className={cn(
-                "px-4 py-1.5 rounded-full font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest whitespace-nowrap transition-all flex-shrink-0",
+                "px-3 py-1.5 md:px-4 rounded-full font-['Lexend'] text-[10px] md:text-[11px] font-semibold uppercase tracking-widest whitespace-nowrap transition-all flex-shrink-0",
                 activeLeague === l
                   ? "bg-primary-container text-on-primary"
                   : "border border-white/10 text-on-surface-variant hover:border-primary-container/50 hover:text-on-surface"
@@ -229,123 +229,125 @@ export default function Predictions() {
           ))}
         </div>
 
-        {/* Tier + search + sort row */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Search — full width on mobile */}
+        <div className="flex items-center bg-surface-container-high border border-white/5 rounded-lg px-4 py-2.5 gap-2">
+          <span className="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+          <input
+            type="text" placeholder="Search teams…" value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="bg-transparent text-on-surface placeholder-on-surface-variant text-sm outline-none w-full font-sans"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="text-on-surface-variant hover:text-on-surface transition-colors">
+              <span className="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          )}
+        </div>
+
+        {/* Tier + Sort row — scrollable on mobile */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
           {/* Tier filter */}
-          <div className="flex gap-1.5">
-            {TIER_FILTER_OPTIONS.map(({ key, label }) => (
-              <button key={key} onClick={() => setActiveTier(key)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest transition-all",
-                  activeTier === key
-                    ? "bg-primary-container text-on-primary"
-                    : "border border-white/10 text-on-surface-variant hover:border-primary-container/40"
-                )}>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Search */}
-          <div className="flex items-center bg-surface-container-high border border-white/5 rounded-lg px-4 py-2 gap-2 flex-1 min-w-[180px]">
-            <span className="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
-            <input
-              type="text" placeholder="Search teams…" value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="bg-transparent text-on-surface placeholder-on-surface-variant text-sm outline-none w-full font-sans"
-            />
-          </div>
-
+          {TIER_FILTER_OPTIONS.map(({ key, label }) => (
+            <button key={key} onClick={() => setActiveTier(key)}
+              className={cn(
+                "px-3 py-1.5 rounded-lg font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest transition-all flex-shrink-0",
+                activeTier === key
+                  ? "bg-primary-container text-on-primary"
+                  : "border border-white/10 text-on-surface-variant hover:border-primary-container/40"
+              )}>
+              {label}
+            </button>
+          ))}
+          {/* Divider */}
+          <div className="w-px bg-white/10 self-stretch flex-shrink-0 mx-1" />
           {/* Sort */}
-          <div className="flex gap-2">
-            {SORT_OPTIONS.map(({ key, label }) => (
-              <button key={key} onClick={() => setSortBy(key)}
-                className={cn(
-                  "px-4 py-2 rounded-lg font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest transition-all",
-                  sortBy === key ? "bg-primary-container text-on-primary" : "border border-white/10 text-on-surface-variant hover:border-primary-container/40"
-                )}>
-                {label}
-              </button>
-            ))}
-          </div>
+          {SORT_OPTIONS.map(({ key, label }) => (
+            <button key={key} onClick={() => setSortBy(key)}
+              className={cn(
+                "px-3 py-1.5 md:px-4 rounded-lg font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest transition-all flex-shrink-0",
+                sortBy === key ? "bg-primary-container text-on-primary" : "border border-white/10 text-on-surface-variant hover:border-primary-container/40"
+              )}>
+              {label}
+            </button>
+          ))}
         </div>
       </section>
 
       {/* Full schedule table */}
-      <section className="mb-24">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-headline-md font-semibold text-on-surface uppercase tracking-wider">Full Schedule</h2>
+      <section className="mb-16 md:mb-24">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-base md:text-headline-md font-semibold text-on-surface uppercase tracking-wider">Full Schedule</h2>
           <div className="font-['Lexend'] text-[11px] text-on-surface-variant uppercase tracking-widest">
             {filtered.length} Match{filtered.length !== 1 ? "es" : ""}
           </div>
         </div>
 
         <div className="w-full overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full text-left border-collapse min-w-[900px]">
-            <thead>
-              <tr className="bg-white/5 border-b border-white/10">
-                {[
-                  "Date / Time",
-                  "Matchup + Elo",
-                  "League",
-                  "Tier · Signal",
-                  "Home Goals",
-                  "Away Goals",
-                  "BTTS",
-                  "O2.5",
-                  "U2.5",
-                  "xG",
-                  "Conf",
-                ].map(h => (
-                  <th key={h} className="px-5 py-4 font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading
-                ? [...Array(8)].map((_, i) => (
-                    <tr key={i} className="border-b border-white/5">
-                      {[...Array(11)].map((_, j) => (
-                        <td key={j} className="px-5 py-4">
-                          <div className="animate-pulse h-4 bg-white/5 rounded w-full" />
+          <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-white/5 border-b border-white/10">
+                  {[
+                    "Date / Time",
+                    "Matchup + Elo",
+                    "League",
+                    "Tier · Signal",
+                    "Home Goals",
+                    "Away Goals",
+                    "BTTS",
+                    "O2.5",
+                    "U2.5",
+                    "xG",
+                    "Conf",
+                  ].map(h => (
+                    <th key={h} className="px-3 md:px-5 py-3 md:py-4 font-['Lexend'] text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading
+                  ? [...Array(8)].map((_, i) => (
+                      <tr key={i} className="border-b border-white/5">
+                        {[...Array(11)].map((_, j) => (
+                          <td key={j} className="px-3 md:px-5 py-3 md:py-4">
+                            <div className="animate-pulse h-4 bg-white/5 rounded w-full" />
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  : filtered.length > 0
+                    ? filtered.map(m => <MatchRow key={m.id} match={m} />)
+                    : (
+                      <tr>
+                        <td colSpan={11} className="px-6 py-16 text-center text-on-surface-variant font-['Lexend'] text-sm">
+                          No matches found for the selected filters.
                         </td>
-                      ))}
-                    </tr>
-                  ))
-                : filtered.length > 0
-                  ? filtered.map(m => <MatchRow key={m.id} match={m} />)
-                  : (
-                    <tr>
-                      <td colSpan={11} className="px-6 py-16 text-center text-on-surface-variant font-['Lexend'] text-sm">
-                        No matches found for the selected filters.
-                      </td>
-                    </tr>
-                  )
-              }
-            </tbody>
+                      </tr>
+                    )
+                }
+              </tbody>
           </table>
         </div>
       </section>
 
       {/* Telegram CTA */}
       <section>
-        <div className="relative rounded-3xl overflow-hidden p-12 bg-zinc-950 border border-white/10">
+        <div className="relative rounded-2xl md:rounded-3xl overflow-hidden p-6 sm:p-8 md:p-12 bg-zinc-950 border border-white/10">
           <div className="absolute inset-0 opacity-20 pointer-events-none">
             <img src={CTA_BG} alt="" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
           </div>
           <div className="relative z-10 md:w-2/3">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="w-12 h-[1px] bg-primary-container" />
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
+              <span className="w-8 md:w-12 h-[1px] bg-primary-container" />
               <span className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-primary-container">Live Community Updates</span>
             </div>
-            <h3 className="text-display-xl font-black text-on-surface mb-6 leading-tight">Join 50k+ Sharp Bettors on Telegram</h3>
-            <p className="text-on-surface-variant mb-10 text-headline-md font-semibold leading-relaxed">
+            <h3 className="text-[1.75rem] sm:text-4xl md:text-display-xl font-black text-on-surface mb-4 md:mb-6 leading-tight">Join 50k+ Sharp Bettors on Telegram</h3>
+            <p className="text-on-surface-variant mb-6 md:mb-10 text-base md:text-headline-md font-semibold leading-relaxed">
               Get instant signal alerts, Elo-ranked picks, and late-market value drops directly on your phone.
             </p>
-            <Button size="lg" variant="primary" className="neon-glow font-black uppercase tracking-tight flex items-center gap-3 group" asChild>
+            <Button size="lg" variant="primary" className="neon-glow font-black uppercase tracking-tight flex items-center gap-3 group w-full sm:w-auto" asChild>
               <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer">
                 JOIN OUR TELEGRAM
                 <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">send</span>
