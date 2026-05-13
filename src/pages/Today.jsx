@@ -248,8 +248,9 @@ function MatchCard({ match }) {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-5 gap-1.5">
         <StatChip label="BTTS"   value={`${match.btts}%`} />
+        <StatChip label="O1.5"   value={`${match.over15}%`} accent />
         <StatChip label="O2.5"   value={`${match.over25}%`} accent />
         <StatChip label="U2.5"   value={`${match.under25}%`} />
         <StatChip label="xG"     value={xg} />

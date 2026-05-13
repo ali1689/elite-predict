@@ -37,6 +37,7 @@ export const SIG_STYLE = {
   "Home Over 1.5 Goals": { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container"  },
   "Away Over 0.5 Goals": { bg: "bg-sky-500/15",     text: "text-sky-400",              dot: "bg-sky-400"              },
   "Away Over 1.5 Goals": { bg: "bg-blue-500/15",    text: "text-blue-400",             dot: "bg-blue-400"             },
+  "Over 1.5 Goals":      { bg: "bg-yellow-500/15",  text: "text-yellow-400",           dot: "bg-yellow-400"           },
   "Over 2.5 Goals":      { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container" },
   "Under 2.5 Goals":     { bg: "bg-violet-500/15",  text: "text-violet-400",           dot: "bg-violet-400"           },
   "Both Teams to Score": { bg: "bg-blue-500/15",    text: "text-blue-400",             dot: "bg-blue-400"             },
@@ -70,6 +71,7 @@ export const SIGNAL_DONUT_COLORS = {
   "Home Over 1.5 Goals": "#39FF14",
   "Away Over 0.5 Goals": "#38bdf8",
   "Away Over 1.5 Goals": "#60A5FA",
+  "Over 1.5 Goals":      "#facc15",   // yellow-400
   "Over 2.5 Goals":      "#7FFF00",
   "Under 2.5 Goals":     "#a78bfa",
   "Both Teams to Score": "#3B82F6",

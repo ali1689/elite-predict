@@ -28,6 +28,7 @@ function normalize(row) {
     awayOver05:  row.away_over05    ?? 0,
     awayOver15:  row.away_over15    ?? 0,
     btts:        row.btts           ?? 0,
+    over15:      row.over15         ?? 0,   // Over 1.5 Goals
     over25:      row.over25         ?? 0,
     under25:     row.under25        ?? 0,
     lH:          row.l_h            ?? 0,

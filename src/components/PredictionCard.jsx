@@ -15,6 +15,7 @@ const SIGNAL_COLOR = {
   "Home Over 1.5 Goals": "text-primary-container",
   "Away Over 0.5 Goals": "text-sky-400",
   "Away Over 1.5 Goals": "text-blue-400",
+  "Over 1.5 Goals":      "text-yellow-400",
   "Over 2.5 Goals":      "text-primary-container",
   "Under 2.5 Goals":     "text-violet-400",
   "Both Teams to Score": "text-blue-400",

@@ -145,9 +145,10 @@ function FeaturedCard({ match }) {
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         {[
           { label: "BTTS", value: `${match.btts}%`    },
+          { label: "O1.5", value: `${match.over15}%`  },
           { label: "O2.5", value: `${match.over25}%`  },
           { label: "U2.5", value: `${match.under25}%` },
         ].map(({ label, value }) => (
