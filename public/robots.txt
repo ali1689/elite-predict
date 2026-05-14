@@ -1,0 +1,7 @@
+# robots.txt — elitepredicts.com
+User-agent: *
+Allow: /
+Disallow: /login
+
+# Sitemap
+Sitemap: https://elitepredicts.com/sitemap.xml
