@@ -23,6 +23,7 @@ const SCHEDULE_COLS = [
   { id: "homeG",  label: "Home Goals",    width: 118 },
   { id: "awayG",  label: "Away Goals",    width: 118 },
   { id: "btts",   label: "BTTS",          width: 63  },
+  { id: "o15",    label: "O1.5",          width: 63  },
   { id: "o25",    label: "O2.5",          width: 63  },
   { id: "u25",    label: "U2.5",          width: 63  },
   { id: "xg",     label: "xG",            width: 58  },
@@ -45,6 +46,7 @@ const SORT_OPTIONS = [
   { key: "date", label: "By Date"       },
   { key: "conf", label: "By Confidence" },
   { key: "xg",   label: "By xG"         },
+  { key: "o15",  label: "By O1.5"       },
 ];
 
 const TIER_FILTER_OPTIONS = [
@@ -348,6 +350,7 @@ export default function Predictions() {
     }
     if (sortBy === "conf") return [...rows].sort((a, b) => b.conf - a.conf);
     if (sortBy === "xg")   return [...rows].sort((a, b) => (b.xgTotal || 0) - (a.xgTotal || 0));
+    if (sortBy === "o15")  return [...rows].sort((a, b) => (b.over15 || 0) - (a.over15 || 0));
     return [...rows].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
   }, [allMatches, activeLeague, activeTier, activeDateFilter, searchQuery, sortBy]);
 

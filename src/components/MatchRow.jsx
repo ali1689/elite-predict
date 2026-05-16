@@ -115,6 +115,18 @@ export default function MatchRow({ match, className }) {
         <div className="font-['Lexend'] text-sm text-on-surface-variant tabular-nums">{match.btts}%</div>
       </td>
 
+      {/* O1.5 — NEW */}
+      <td className={TD}>
+        <div className={cn(
+          "font-['Lexend'] text-sm font-bold tabular-nums",
+          (match.over15 ?? 0) >= 75 ? "text-primary-container" :
+          (match.over15 ?? 0) >= 60 ? "text-yellow-400"        :
+                                      "text-on-surface-variant"
+        )}>
+          {match.over15 != null ? `${match.over15}%` : "—"}
+        </div>
+      </td>
+
       {/* O2.5 */}
       <td className={TD}>
         <div className="font-['Lexend'] text-sm text-on-surface-variant tabular-nums">{match.over25}%</div>
