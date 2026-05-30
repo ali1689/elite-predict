@@ -41,7 +41,18 @@ export const SIG_STYLE = {
   "Over 2.5 Goals":      { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container" },
   "Under 2.5 Goals":     { bg: "bg-violet-500/15",  text: "text-violet-400",           dot: "bg-violet-400"           },
   "Both Teams to Score": { bg: "bg-blue-500/15",    text: "text-blue-400",             dot: "bg-blue-400"             },
-  "No strong signal":    { bg: "bg-white/5",        text: "text-on-surface-variant",   dot: "bg-zinc-500"             },
+  "No strong signal":    { bg: "bg-surface-container", text: "text-on-surface-variant", dot: "bg-zinc-500"             },
+  // 1X2 match result signals
+  "Home Win":            { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container"    },
+  "Away Win":            { bg: "bg-blue-500/15",    text: "text-blue-400",             dot: "bg-blue-400"             },
+  "Draw":                { bg: "bg-yellow-500/15",  text: "text-yellow-500",           dot: "bg-yellow-500"           },
+  // Double Chance
+  "Double Chance 1X":    { bg: "bg-emerald-500/15", text: "text-emerald-400",          dot: "bg-emerald-400"          },
+  "Double Chance X2":    { bg: "bg-sky-500/15",     text: "text-sky-400",              dot: "bg-sky-400"              },
+  "Double Chance 12":    { bg: "bg-violet-500/15",  text: "text-violet-400",           dot: "bg-violet-400"           },
+  "DC 1X":               { bg: "bg-emerald-500/15", text: "text-emerald-400",          dot: "bg-emerald-400"          },
+  "DC X2":               { bg: "bg-sky-500/15",     text: "text-sky-400",              dot: "bg-sky-400"              },
+  "DC 12":               { bg: "bg-violet-500/15",  text: "text-violet-400",           dot: "bg-violet-400"           },
   // Legacy fallbacks
   "HIGH SCORING":        { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container" },
   "BTTS + O2.5":         { bg: "bg-primary-container/10", text: "text-primary-container", dot: "bg-primary-container" },
@@ -67,11 +78,20 @@ export function tierStyle(tier) {
 
 // ── Donut chart colours for signal breakdown ───────────────────────────────
 export const SIGNAL_DONUT_COLORS = {
+  "Home Win":            "#39FF14",
+  "Away Win":            "#60A5FA",
+  "Draw":                "#facc15",
+  "Double Chance 1X":    "#34d399",
+  "Double Chance X2":    "#38bdf8",
+  "Double Chance 12":    "#a78bfa",
+  "DC 1X":               "#34d399",
+  "DC X2":               "#38bdf8",
+  "DC 12":               "#a78bfa",
   "Home Over 0.5 Goals": "#34d399",
   "Home Over 1.5 Goals": "#39FF14",
   "Away Over 0.5 Goals": "#38bdf8",
   "Away Over 1.5 Goals": "#60A5FA",
-  "Over 1.5 Goals":      "#facc15",   // yellow-400
+  "Over 1.5 Goals":      "#facc15",
   "Over 2.5 Goals":      "#7FFF00",
   "Under 2.5 Goals":     "#a78bfa",
   "Both Teams to Score": "#3B82F6",

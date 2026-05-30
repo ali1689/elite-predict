@@ -54,7 +54,7 @@ export default function PredictionCard({ card, className }) {
           <div className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest mt-2">{card.away.abbr}</div>
         </div>
       </div>
-      <div className="bg-zinc-950/60 rounded-xl p-4 mb-4 border border-white/5 group-hover:border-primary-container/20 transition-colors">
+      <div className="bg-primary-container/10 dark:bg-zinc-950/60 rounded-xl p-4 mb-4 border border-primary-container/25 dark:border-white/5 group-hover:border-primary-container/50 transition-colors">
         <div className="flex justify-between items-center mb-3">
           <span className="text-sm text-on-surface-variant">Signal</span>
           <span className={cn("font-black tracking-wide text-sm", sigColor)}>{card.prediction}</span>
@@ -71,7 +71,7 @@ export default function PredictionCard({ card, className }) {
             <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">Home Scoring Chance</span>
             <span className="font-['Lexend'] text-[9px] font-bold text-primary-container">{card.homeScore}%</span>
           </div>
-          <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="h-1 bg-surface-container rounded-full overflow-hidden">
             <div className="h-full bg-primary-container rounded-full" style={{ width: `${card.homeScore}%` }} />
           </div>
         </div>
@@ -80,17 +80,17 @@ export default function PredictionCard({ card, className }) {
             <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">Away Scoring Chance</span>
             <span className="font-['Lexend'] text-[9px] font-bold text-blue-400">{card.awayScore}%</span>
           </div>
-          <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="h-1 bg-surface-container rounded-full overflow-hidden">
             <div className="h-full bg-blue-400 rounded-full" style={{ width: `${card.awayScore}%` }} />
           </div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 mb-5">
-        <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5 text-center">
+        <div className="bg-surface-container-low rounded-lg p-3 border border-outline-variant/30 text-center">
           <div className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">BTTS</div>
           <div className="font-['Lexend'] text-base font-semibold text-on-surface">{card.btts}%</div>
         </div>
-        <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5 text-center">
+        <div className="bg-surface-container-low rounded-lg p-3 border border-outline-variant/30 text-center">
           <div className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">O2.5</div>
           <div className="font-['Lexend'] text-base font-semibold text-on-surface">{card.over25}%</div>
         </div>

@@ -2,14 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── LIGHT MODE (default) ─────────────────────────────────── */
+:root {
+  --color-bg:               #f5f7fc;
+  --color-on-bg:            #0f1220;
+  --color-surface:          #ffffff;
+  --color-surface-dim:      #e8edf8;
+  --color-surface-bright:   #ffffff;
+  --color-surface-lowest:   #eef1f8;
+  --color-surface-low:      #eef1f8;
+  --color-surface-container:#e8edf8;
+  --color-surface-high:     #dde4f0;
+  --color-surface-highest:  #d2daea;
+  --color-surface-variant:  #dde4f0;
+  --color-on-surface:       #0f1220;
+  --color-on-surface-variant:#3a4460;
+  --color-inverse-surface:  #0f1220;
+  --color-inverse-on-surface:#f0f4ff;
+  --color-outline:          #7a8baa;
+  --color-outline-variant:  #c8d4e8;
+
+  --glass-bg:    rgba(255,255,255,0.75);
+  --glass-border:rgba(0,0,0,0.08);
+  --scrollbar-track:#eef1f8;
+  --scrollbar-thumb:#c8d4e8;
+  --navbar-bg:   rgba(245,247,252,0.92);
+  --navbar-border:rgba(0,0,0,0.07);
+  --zinc-card:   #f0f4fb;
+  --conf-bar-bg: #d2daea;
+}
+
+/* ── DARK MODE ────────────────────────────────────────────── */
+.dark {
+  --color-bg:               #0A0A0A;
+  --color-on-bg:            #e5e2e1;
+  --color-surface:          #131313;
+  --color-surface-dim:      #131313;
+  --color-surface-bright:   #3a3939;
+  --color-surface-lowest:   #0e0e0e;
+  --color-surface-low:      #1c1b1b;
+  --color-surface-container:#201f1f;
+  --color-surface-high:     #2a2a2a;
+  --color-surface-highest:  #353534;
+  --color-surface-variant:  #353534;
+  --color-on-surface:       #e5e2e1;
+  --color-on-surface-variant:#baccb0;
+  --color-inverse-surface:  #e5e2e1;
+  --color-inverse-on-surface:#313030;
+  --color-outline:          #85967c;
+  --color-outline-variant:  #3c4b35;
+
+  --glass-bg:    rgba(255,255,255,0.05);
+  --glass-border:rgba(255,255,255,0.08);
+  --scrollbar-track:#0e0e0e;
+  --scrollbar-thumb:#3c4b35;
+  --navbar-bg:   rgba(10,10,10,0.90);
+  --navbar-border:rgba(255,255,255,0.05);
+  --zinc-card:   #18181b;
+  --conf-bar-bg: #27272a;
+}
+
 /* ── Global resets ─────────────────────────────────────────── */
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
 
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; transition: background 0.2s, color 0.2s; }
 
   body {
     @apply bg-background text-on-surface font-sans overflow-x-hidden antialiased;
+    transition: background 0.25s, color 0.25s;
   }
 
   /* Material Symbols helper — filled variant */
@@ -24,8 +85,8 @@
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #0e0e0e; }
-  ::-webkit-scrollbar-thumb { background: #3c4b35; border-radius: 9999px; }
+  ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 9999px; }
   ::-webkit-scrollbar-thumb:hover { background: #39ff14; }
 }
 
@@ -33,26 +94,64 @@
 @layer components {
   /* Frosted-glass card */
   .glass-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--glass-border);
   }
 
   /* Neon green glow helpers */
-  .neon-glow  { box-shadow: 0 0 15px rgba(57, 255, 20, 0.25); }
-  .neon-glow-lg { box-shadow: 0 0 35px rgba(57, 255, 20, 0.4); }
+  .neon-glow   { box-shadow: 0 0 15px rgba(57, 255, 20, 0.25); }
+  .neon-glow-lg{ box-shadow: 0 0 35px rgba(57, 255, 20, 0.4);  }
 
   /* Progress bar glow fill */
   .progress-fill-glow { box-shadow: 0 0 10px #39FF14; }
 
   /* Confidence progress bar */
   .confidence-bar {
-    @apply w-full bg-zinc-800 h-2 rounded-full overflow-hidden;
+    width: 100%; height: 0.5rem; border-radius: 9999px;
+    overflow: hidden; background: var(--conf-bar-bg);
   }
   .confidence-bar-fill {
     @apply bg-primary-container h-full rounded-full transition-all duration-700 progress-fill-glow;
   }
+
+  /* Navbar adaptive */
+  .navbar-adaptive {
+    background: var(--navbar-bg);
+    border-bottom: 1px solid var(--navbar-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* Zinc card adaptive */
+  .zinc-card-adaptive { background: var(--zinc-card); }
+
+  /* 1X2 result row */
+  .result-trio {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+  }
+  .result-box {
+    background: var(--color-surface-low);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 8px; padding: 8px 4px; text-align: center;
+    transition: border-color 0.2s;
+  }
+  .result-box.top {
+    border-color: #39ff14;
+    background: rgba(57,255,20,0.08);
+  }
+  .result-box-label {
+    display: block; font-size: 8px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--color-on-surface-variant); margin-bottom: 3px;
+  }
+  .result-box-val {
+    display: block; font-size: 18px; font-weight: 900;
+    font-family: 'Lexend', sans-serif; letter-spacing: -0.02em;
+    color: var(--color-on-surface);
+  }
+  .result-box.top .result-box-val { color: #39ff14; }
 }
 
 /* ── Keyframe animations ───────────────────────────────────── */
@@ -61,21 +160,14 @@
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
 
-  /* Hide scrollbar but keep scrolling functional */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-  /* Improve tap target sizes on mobile */
   @media (max-width: 768px) {
-    .mobile-tap-safe {
-      min-height: 44px;
-      min-width: 44px;
-    }
+    .mobile-tap-safe { min-height: 44px; min-width: 44px; }
   }
 }
 

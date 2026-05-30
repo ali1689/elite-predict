@@ -34,6 +34,14 @@ function normalize(row) {
     lH:          row.l_h            ?? 0,
     lA:          row.l_a            ?? 0,
     xgTotal:     row.xg_total       ?? 0,
+    // 1X2 match result probabilities
+    homeWin:     row.home_win       ?? row.p_home_win ?? 0,
+    draw:        row.draw           ?? row.p_draw     ?? 0,
+    awayWin:     row.away_win       ?? row.p_away_win ?? 0,
+    // Double Chance
+    dc1X:        row.dc_1x          ?? row.p_1x       ?? 0,
+    dcX2:        row.dc_x2          ?? row.p_x2       ?? 0,
+    dc12:        row.dc_12          ?? row.p_12       ?? 0,
     allSignals,
     homeScore:   row.home_over05    ?? 0,
     awayScore:   row.away_over05    ?? 0,

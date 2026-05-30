@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useTheme } from "@/App";
 import { Button } from "@/components/ui/button";
 import TeamAvatar from "@/components/TeamAvatar";
 import MatchRow from "@/components/MatchRow";
@@ -117,7 +118,7 @@ function FeaturedCard({ match }) {
           <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase mt-0.5">{match.awayElo} elo</div>
         </div>
       </div>
-      <div className="bg-black/40 p-4 rounded-lg border border-primary-container/20 group-hover:border-primary-container transition-colors">
+      <div className="bg-primary-container/10 dark:bg-black/40 p-4 rounded-lg border border-primary-container/25 group-hover:border-primary-container transition-colors">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest mb-1">Primary Signal</div>
@@ -225,6 +226,7 @@ function BackToTopButton() {
 function ScheduleTable({ loading, visibleMatches, hasMore, filtered, visibleCount, onLoadMore }) {
   const headerRef = useRef(null);
   const bodyRef   = useRef(null);
+  const { theme } = useTheme();
 
   // Sync horizontal scroll: body drives header
   useEffect(() => {
@@ -237,19 +239,19 @@ function ScheduleTable({ loading, visibleMatches, hasMore, filtered, visibleCoun
     return () => body.removeEventListener("scroll", onScroll);
   }, []);
 
-  const HEADER_BG = {
-    background: "rgba(9,9,11,0.97)",
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
-  };
+  // Table header — brand neon green (#39ff14) in light, near-black in dark
+  const HEADER_BG = theme === "dark"
+    ? { background: "rgba(9,9,11,0.97)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }
+    : { background: "#39ff14", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" };
 
-  const TH_CLASS =
-    "px-3 py-3 md:px-5 md:py-[14px] font-['Lexend'] text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant whitespace-nowrap text-left";
+  const TH_CLASS = theme === "dark"
+    ? "px-3 py-3 md:px-5 md:py-[14px] font-['Lexend'] text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-primary-container whitespace-nowrap text-left"
+    : "px-3 py-3 md:px-5 md:py-[14px] font-['Lexend'] text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-[#053900] whitespace-nowrap text-left";
 
   return (
     // Outer wrapper: NO overflow property — this is critical.
     // border + rounded corners rendered here; overflow-hidden intentionally omitted.
-    <div className="rounded-xl border border-white/10">
+    <div className="rounded-xl border border-outline-variant/40">
 
       {/* ── Sticky header ──────────────────────────────────────────────
           This div is sticky relative to the viewport (not a scroll
@@ -259,7 +261,7 @@ function ScheduleTable({ loading, visibleMatches, hasMore, filtered, visibleCoun
       ────────────────────────────────────────────────────────────────── */}
       <div
         ref={headerRef}
-        className="sticky top-16 md:top-20 z-20 overflow-x-auto scrollbar-hide rounded-t-xl border-b border-white/10"
+        className="sticky top-16 md:top-20 z-20 overflow-x-auto scrollbar-hide rounded-t-xl border-b border-primary-container/30"
         style={HEADER_BG}
       >
         <table
@@ -529,10 +531,10 @@ export default function Predictions() {
 
       {/* Telegram CTA */}
       <section>
-        <div className="relative rounded-2xl md:rounded-3xl overflow-hidden p-6 sm:p-8 md:p-12 bg-zinc-950 border border-white/10">
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="relative rounded-2xl md:rounded-3xl overflow-hidden p-6 sm:p-8 md:p-12 bg-surface-container-high border border-primary-container/30 dark:bg-zinc-950 dark:border-white/10">
+          <div className="absolute inset-0 opacity-10 dark:opacity-20 pointer-events-none">
             <img src={CTA_BG} alt="" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+            <div className="absolute inset-0 hidden dark:block bg-gradient-to-r from-black via-black/80 to-transparent" />
           </div>
           <div className="relative z-10 md:w-2/3">
             <div className="flex items-center gap-3 mb-4 md:mb-6">

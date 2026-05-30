@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils";
 
 // ── Loading skeleton ──────────────────────────────────────────────────────
 function Skeleton({ className }) {
-  return <div className={cn("animate-pulse bg-white/5 rounded-lg", className)} />;
+  return <div className={cn("animate-pulse bg-surface-container rounded-lg", className)} />;
 }
 
 function CardSkeleton() {
   return (
-    <div className="glass-card p-5 rounded-xl border border-white/5 space-y-4">
+    <div className="glass-card p-5 rounded-xl space-y-4">
       <div className="flex justify-between">
         <Skeleton className="h-5 w-20" />
         <Skeleton className="h-4 w-28" />
@@ -130,7 +130,7 @@ function ConfChart({ matches }) {
         {counts.map(b => (
           <div key={b.label} className="flex items-center gap-3">
             <span className="font-['Lexend'] text-[10px] text-on-surface-variant w-14 flex-shrink-0">{b.label}</span>
-            <div className="flex-1 h-5 bg-white/5 rounded-full overflow-hidden">
+            <div className="flex-1 h-5 bg-surface-container rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-blue-500/80 to-primary-container/80 transition-all"
                 style={{ width: `${(b.count / max) * 100}%` }}
@@ -156,7 +156,7 @@ function ProbBar({ label, value, color = "bg-primary-container" }) {
           color === "bg-violet-400"        ? "text-violet-400"        : "text-on-surface-variant"
         )}>{value}%</span>
       </div>
-      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+      <div className="h-1 bg-surface-container rounded-full overflow-hidden">
         <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(value, 100)}%` }} />
       </div>
     </div>
@@ -166,10 +166,60 @@ function ProbBar({ label, value, color = "bg-primary-container" }) {
 // ── Stat chip ─────────────────────────────────────────────────────────────
 function StatChip({ label, value, accent }) {
   return (
-    <div className="bg-white/[0.03] rounded-lg p-2 text-center border border-white/5">
+    <div className="bg-surface-container-low rounded-lg p-2 text-center border border-outline-variant/30">
       <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-0.5">{label}</div>
       <div className={cn("font-['Lexend'] text-sm font-bold tabular-nums", accent ? "text-primary-container" : "text-on-surface")}>
         {value}
+      </div>
+    </div>
+  );
+}
+
+// ── 1X2 result trio ───────────────────────────────────────────────────────
+function ResultTrio({ homeWin = 0, draw = 0, awayWin = 0 }) {
+  const top = homeWin >= draw && homeWin >= awayWin ? "home"
+    : draw >= homeWin && draw >= awayWin ? "draw" : "away";
+  return (
+    <div className="result-trio">
+      <div className={cn("result-box", top === "home" && "top")}>
+        <span className="result-box-label">Home</span>
+        <span className="result-box-val">{Math.round(homeWin)}%</span>
+      </div>
+      <div className={cn("result-box", top === "draw" && "top")}>
+        <span className="result-box-label">Draw</span>
+        <span className="result-box-val">{Math.round(draw)}%</span>
+      </div>
+      <div className={cn("result-box", top === "away" && "top")}>
+        <span className="result-box-label">Away</span>
+        <span className="result-box-val">{Math.round(awayWin)}%</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Double Chance trio ────────────────────────────────────────────────────
+function DCTrio({ dc1X = 0, dcX2 = 0, dc12 = 0 }) {
+  if (!dc1X && !dcX2 && !dc12) return null;
+  const topDC = dc1X >= dcX2 && dc1X >= dc12 ? "1X"
+    : dcX2 >= dc1X && dcX2 >= dc12 ? "X2" : "12";
+  return (
+    <div className="pt-2 border-t border-outline-variant/40">
+      <div className="font-['Lexend'] text-[8px] font-semibold uppercase tracking-widest text-on-surface-variant mb-1.5">
+        Double Chance
+      </div>
+      <div className="result-trio">
+        <div className={cn("result-box", topDC === "1X" && "top")}>
+          <span className="result-box-label">1X</span>
+          <span className="result-box-val">{Math.round(dc1X)}%</span>
+        </div>
+        <div className={cn("result-box", topDC === "X2" && "top")}>
+          <span className="result-box-label">X2</span>
+          <span className="result-box-val">{Math.round(dcX2)}%</span>
+        </div>
+        <div className={cn("result-box", topDC === "12" && "top")}>
+          <span className="result-box-label">12</span>
+          <span className="result-box-val">{Math.round(dc12)}%</span>
+        </div>
       </div>
     </div>
   );
@@ -186,11 +236,10 @@ function MatchCard({ match }) {
     match.conf >= 75 ? "text-primary-container" :
     match.conf >= 65 ? "text-blue-400"          : "text-on-surface-variant";
 
-  // All signals as pills
-  const extraSignals = (match.allSignals || []).slice(1, 4); // skip primary
+  const extraSignals = (match.allSignals || []).slice(1, 4);
 
   return (
-    <div className="glass-card p-5 rounded-xl border border-white/5 hover:border-primary-container/20 transition-all duration-300 group flex flex-col gap-4">
+    <div className="glass-card p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-4">
 
       {/* Header: tier badge + signal + time */}
       <div className="flex items-start justify-between gap-2">
@@ -213,7 +262,6 @@ function MatchCard({ match }) {
 
       {/* Teams + confidence */}
       <div className="flex items-center justify-between">
-        {/* Home */}
         <div className="flex flex-col items-center gap-1.5 flex-1">
           <TeamAvatar team={homeTeam} size="md" />
           <span className="font-bold text-xs text-on-surface text-center leading-tight">{match.home}</span>
@@ -221,15 +269,11 @@ function MatchCard({ match }) {
             {match.homeElo} elo
           </span>
         </div>
-
-        {/* Center */}
         <div className="flex flex-col items-center px-3">
           <span className="font-black text-lg text-on-surface-variant italic">VS</span>
           <span className={cn("font-black text-2xl leading-none mt-1", confColor)}>{match.conf}</span>
           <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest">% Conf</span>
         </div>
-
-        {/* Away */}
         <div className="flex flex-col items-center gap-1.5 flex-1">
           <TeamAvatar team={awayTeam} size="md" />
           <span className="font-bold text-xs text-on-surface text-center leading-tight">{match.away}</span>
@@ -239,26 +283,30 @@ function MatchCard({ match }) {
         </div>
       </div>
 
-      {/* Probability bars */}
+      {/* 1X2 result trio */}
+      <ResultTrio homeWin={match.homeWin} draw={match.draw} awayWin={match.awayWin} />
+
+      {/* Goals probability bars */}
       <div className="space-y-2">
         <ProbBar label="Home to score (0.5+)" value={match.homeOver05} color="bg-primary-container" />
-        <ProbBar label="Home 2+ goals (1.5+)"  value={match.homeOver15} color="bg-emerald-400" />
         <ProbBar label="Away to score (0.5+)"  value={match.awayOver05} color="bg-blue-400" />
-        <ProbBar label="Away 2+ goals (1.5+)"  value={match.awayOver15} color="bg-sky-400" />
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-5 gap-1.5">
-        <StatChip label="BTTS"   value={`${match.btts}%`} />
-        <StatChip label="O1.5"   value={`${match.over15}%`} accent />
-        <StatChip label="O2.5"   value={`${match.over25}%`} accent />
-        <StatChip label="U2.5"   value={`${match.under25}%`} />
-        <StatChip label="xG"     value={xg} />
+        <StatChip label="BTTS"  value={`${match.btts}%`} />
+        <StatChip label="O1.5"  value={`${match.over15}%`} accent />
+        <StatChip label="O2.5"  value={`${match.over25}%`} accent />
+        <StatChip label="U2.5"  value={`${match.under25}%`} />
+        <StatChip label="xG"    value={xg} />
       </div>
+
+      {/* Double Chance */}
+      <DCTrio dc1X={match.dc1X} dcX2={match.dcX2} dc12={match.dc12} />
 
       {/* Extra signal pills */}
       {extraSignals.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
+        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-outline-variant/30">
           {extraSignals.map(s => {
             const ss = sigStyle(s.label ?? s.type);
             return (
@@ -365,7 +413,7 @@ export default function Today() {
             {[...Array(6)].map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : sorted.length === 0 ? (
-          <div className="text-center py-14 md:py-20 glass-card rounded-xl border border-white/5">
+          <div className="text-center py-14 md:py-20 glass-card rounded-xl border border-outline-variant/30">
             <span className="material-symbols-outlined text-[48px] text-on-surface-variant mb-4 block">sports_soccer</span>
             <div className="text-on-surface font-bold text-lg mb-2">No picks for today</div>
             <div className="text-on-surface-variant text-sm mb-6 px-4">The AI engine found no strong signals for today's matches.</div>
@@ -384,7 +432,7 @@ export default function Today() {
 
       {/* Telegram CTA */}
       <section className="mt-10 md:mt-16">
-        <div className="relative rounded-2xl overflow-hidden p-5 sm:p-8 bg-zinc-950 border border-primary-container/20 flex flex-col gap-5 md:flex-row md:items-center md:gap-6">
+        <div className="relative rounded-2xl overflow-hidden p-5 sm:p-8 bg-primary-container/10 dark:bg-zinc-950 border border-primary-container/30 flex flex-col gap-5 md:flex-row md:items-center md:gap-6">
           <div className="flex-1">
             <div className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-primary-container mb-2">Live Alerts</div>
             <h3 className="text-lg md:text-headline-md font-black text-on-surface mb-1 md:mb-2">Get Instant Signal Alerts on Telegram</h3>

@@ -8,7 +8,7 @@ function ConfBar({ value }) {
     value >= 60 ? "bg-blue-400"          : "bg-zinc-500";
   return (
     <div className="flex items-center gap-1.5">
-      <div className="w-12 h-1.5 rounded-full bg-zinc-800 overflow-hidden flex-shrink-0">
+      <div className="w-12 h-1.5 rounded-full bg-surface-container-high dark:bg-zinc-800 overflow-hidden flex-shrink-0">
         <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${value}%` }} />
       </div>
       <span className="font-['Lexend'] text-xs font-semibold text-on-surface tabular-nums">{value}%</span>
@@ -53,7 +53,7 @@ export default function MatchRow({ match, className }) {
 
   return (
     <tr className={cn(
-      "hover:bg-white/[0.025] transition-colors group border-b border-white/5 last:border-0",
+      "hover:bg-primary-container/5 dark:hover:bg-white/[0.025] transition-colors group border-b border-outline-variant/20 dark:border-white/5 last:border-0",
       className
     )}>
       {/* Date / Time */}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/App";
 
 const NAV_LINKS = [
   { label: "Today's Predictions",  to: "/today",       icon: "today"          },
@@ -10,11 +11,12 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { theme, toggle } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
+      <header className="fixed top-0 w-full z-50 navbar-adaptive">
         <nav className="max-w-[1280px] mx-auto px-4 sm:px-8 flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
           <Link to="/" onClick={() => setMenuOpen(false)}
@@ -41,6 +43,17 @@ export default function Navbar() {
 
           {/* Desktop right actions */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Theme toggle */}
+            <button
+              onClick={toggle}
+              aria-label="Toggle theme"
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all border border-outline-variant"
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                {theme === "dark" ? "light_mode" : "dark_mode"}
+              </span>
+            </button>
             {user ? (
               <div className="flex items-center gap-3">
                 <span className="font-['Lexend'] text-[11px] text-on-surface-variant">
@@ -64,8 +77,17 @@ export default function Navbar() {
             </Button>
           </div>
 
-          {/* Mobile: Telegram pill + hamburger */}
+          {/* Mobile: theme toggle + Telegram pill + hamburger */}
           <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggle}
+              aria-label="Toggle theme"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant border border-outline-variant"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                {theme === "dark" ? "light_mode" : "dark_mode"}
+              </span>
+            </button>
             <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 bg-primary-container text-on-primary px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-tight neon-glow">
               <span className="material-symbols-outlined text-[14px]">send</span>
@@ -90,7 +112,7 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           {/* Panel */}
           <nav
-            className="absolute top-16 left-0 right-0 bg-zinc-950 border-b border-white/10 shadow-2xl"
+            className="absolute top-16 left-0 right-0 border-b shadow-2xl navbar-adaptive"
             onClick={e => e.stopPropagation()}>
             <div className="px-4 py-4 space-y-1">
               {NAV_LINKS.map(({ label, to, icon }) => (
