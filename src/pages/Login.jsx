@@ -15,25 +15,36 @@ function GoogleIcon() {
   );
 }
 
-function AppleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-on-surface">
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-    </svg>
-  );
-}
 
 export default function Login() {
-  const { login, register } = useAuth();
+  const { login, register, loginWithProvider } = useAuth();
   const navigate = useNavigate();
 
-  const [mode, setMode]           = useState("login"); // "login" | "register"
-  const [name, setName]           = useState("");
-  const [email, setEmail]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [showPwd, setShowPwd]     = useState(false);
-  const [error, setError]         = useState("");
-  const [loading, setLoading]     = useState(false);
+  const [mode, setMode]               = useState("login"); // "login" | "register"
+  const [name, setName]               = useState("");
+  const [email, setEmail]             = useState("");
+  const [password, setPassword]       = useState("");
+  const [showPwd, setShowPwd]         = useState(false);
+  const [error, setError]             = useState("");
+  const [loading, setLoading]         = useState(false);
+  const [oauthLoading, setOAuthLoading] = useState(null); // "google" | "apple" | null
+
+  async function handleOAuth(provider) {
+    setError("");
+    setOAuthLoading(provider);
+    try {
+      await loginWithProvider(provider);
+      // Supabase redirects the page — execution stops here on success
+    } catch (err) {
+      const msg = err.message?.toLowerCase() ?? "";
+      if (msg.includes("not enabled") || msg.includes("unsupported provider")) {
+        setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password for now.`);
+      } else {
+        setError(err.message);
+      }
+      setOAuthLoading(null);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -172,16 +183,17 @@ export default function Login() {
           </div>
 
           {/* Social buttons */}
-          <div className="grid grid-cols-2 gap-3">
-            <button className="flex items-center justify-center gap-2 bg-surface-container-high border border-white/10 hover:border-white/20 rounded-lg px-4 py-3 transition-all group">
-              <GoogleIcon />
-              <span className="font-['Lexend'] text-[11px] font-semibold text-on-surface-variant group-hover:text-on-surface transition-colors">Google</span>
-            </button>
-            <button className="flex items-center justify-center gap-2 bg-surface-container-high border border-white/10 hover:border-white/20 rounded-lg px-4 py-3 transition-all group">
-              <AppleIcon />
-              <span className="font-['Lexend'] text-[11px] font-semibold text-on-surface-variant group-hover:text-on-surface transition-colors">Apple</span>
-            </button>
-          </div>
+          <button
+            onClick={() => handleOAuth("google")}
+            disabled={!!oauthLoading}
+            className="w-full flex items-center justify-center gap-2 bg-surface-container-high border border-white/10 hover:border-primary-container/40 rounded-lg px-4 py-3 transition-all group disabled:opacity-60 disabled:cursor-not-allowed">
+            {oauthLoading === "google"
+              ? <span className="w-4 h-4 border-2 border-on-surface-variant/30 border-t-on-surface-variant rounded-full animate-spin" />
+              : <GoogleIcon />}
+            <span className="font-['Lexend'] text-[11px] font-semibold text-on-surface-variant group-hover:text-on-surface transition-colors">
+              {oauthLoading === "google" ? "Redirecting…" : "Continue with Google"}
+            </span>
+          </button>
 
           {/* Telegram promo */}
           <div className="mt-6 p-4 bg-primary-container/5 border border-primary-container/20 rounded-xl flex items-center gap-3">

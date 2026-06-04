@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { Link } from "react-router-dom";
 import { useTheme } from "@/App";
 import { Button } from "@/components/ui/button";
 import TeamAvatar from "@/components/TeamAvatar";
@@ -6,6 +7,7 @@ import MatchRow from "@/components/MatchRow";
 import { useAllPredictions } from "@/lib/usePredictions";
 import { sigStyle, tierStyle, fmtDate, fmtTime, abbr } from "@/data/matches";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 const CTA_BG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDFSZ87SJRX2aa025ExYPpRA4_nsFny4c9anPKMHcdvtwFtyOobqOi1oN6pill283E0teUZJJhC1T5OqHzMRFuU0Vj0-06UY4cwM7YhmN1R7XcquQ-ksfJm5Vf-sYZLZnWzIkTE6j8uANAJS4ZVeuihMgaaCgI_TVCNlrTGFeLlCZiu1bZWfWECbm3RkAcTmyudBhvmvlqJIt7q0PHlXkEayMvSQojlpcUlMNgCUAejjZYsG5EUQ";
@@ -28,6 +30,8 @@ const SCHEDULE_COLS = [
   { id: "o25",    label: "O2.5",          width: 63  },
   { id: "u25",    label: "U2.5",          width: 63  },
   { id: "xg",     label: "xG",            width: 58  },
+  { id: "1x2",    label: "1 · X · 2",    width: 110 },
+  { id: "dc",     label: "DC",            width: 100 },
   { id: "conf",   label: "Conf",          width: 118 },
 ];
 const TABLE_MIN_W = SCHEDULE_COLS.reduce((s, c) => s + c.width, 0); // ~1159 px
@@ -319,13 +323,71 @@ function ScheduleTable({ loading, visibleMatches, hasMore, filtered, visibleCoun
   );
 }
 
+// ── Auth gate overlay ─────────────────────────────────────────────────────
+function AuthGate({ matchCount }) {
+  return (
+    <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center gap-6 py-20 px-6 text-center
+                    bg-surface-container border-2 border-primary-container/25
+                    shadow-[0_0_60px_rgba(57,255,20,0.08)]">
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(57,255,20,0.05), transparent 60%)" }} />
+      <div className="absolute inset-0 opacity-15 pointer-events-none"
+        style={{ background: "repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(57,255,20,0.012) 12px,rgba(57,255,20,0.012) 24px)" }} />
+
+      {/* Icon */}
+      <div className="relative w-20 h-20 rounded-2xl border-2 border-primary-container/40 bg-primary-container/10 flex items-center justify-center z-10
+                      shadow-[0_0_30px_rgba(57,255,20,0.2)]">
+        <span className="material-symbols-outlined text-primary-container text-4xl">lock</span>
+      </div>
+
+      {/* Text */}
+      <div className="relative z-10">
+        <div className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-primary-container mb-2">
+          Members Only
+        </div>
+        <h3 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">
+          {matchCount} upcoming picks locked<br />
+          <span className="text-primary-container drop-shadow-[0_0_20px_rgba(57,255,20,0.5)]">sign in to unlock</span>
+        </h3>
+        <p className="text-zinc-400 font-['Lexend'] text-sm max-w-sm mx-auto leading-relaxed">
+          Create a free account to access the full schedule, confidence ratings, xG models, and daily AI predictions.
+        </p>
+      </div>
+
+      {/* CTAs */}
+      <div className="relative z-10 flex flex-col sm:flex-row gap-3">
+        <Link to="/login"
+          className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-primary-container text-on-primary font-black text-sm uppercase tracking-widest
+                     shadow-[0_0_30px_rgba(57,255,20,0.5)] hover:shadow-[0_0_50px_rgba(57,255,20,0.8)]
+                     hover:scale-105 active:scale-95 transition-all duration-200">
+          <span className="material-symbols-outlined text-[18px]">login</span>
+          Sign In
+        </Link>
+        <Link to="/open"
+          className="flex items-center gap-2 px-7 py-3.5 rounded-xl border-2 border-primary-container/40 text-primary-container font-black text-sm uppercase tracking-widest
+                     hover:bg-primary-container/10 hover:border-primary-container/70
+                     hover:scale-105 active:scale-95 transition-all duration-200">
+          <span className="material-symbols-outlined text-[18px]">style</span>
+          Get Free Pack
+        </Link>
+      </div>
+
+      <p className="relative z-10 font-['Lexend'] text-[10px] text-zinc-600 uppercase tracking-widest">
+        Free daily pack · full stats for members
+      </p>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────
 export default function Predictions() {
+  const { user } = useAuth();
   const { data: allMatches, loading, error } = useAllPredictions();
 
   const [activeLeague,     setActiveLeague]     = useState(ALL);
   const [activeTier,       setActiveTier]       = useState("ALL");
   const [activeDateFilter, setActiveDateFilter] = useState("ALL");
+  const [minConf,          setMinConf]          = useState(60);
   const [searchQuery,      setSearchQuery]      = useState("");
   const [sortBy,           setSortBy]           = useState("date");
   const [visibleCount,     setVisibleCount]     = useState(PAGE_SIZE);
@@ -338,6 +400,7 @@ export default function Predictions() {
   const filtered = useMemo(() => {
     const nowMs = Date.now();
     let rows = allMatches.filter(m => new Date(m.utcDate).getTime() > nowMs);
+    if (minConf > 0)            rows = rows.filter(m => m.conf >= minConf);
     if (activeLeague !== ALL)   rows = rows.filter(m => m.comp === activeLeague);
     if (activeTier   !== "ALL") rows = rows.filter(m => m.tier === activeTier);
     if (activeDateFilter !== "ALL") {
@@ -356,7 +419,7 @@ export default function Predictions() {
     return [...rows].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
   }, [allMatches, activeLeague, activeTier, activeDateFilter, searchQuery, sortBy]);
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeLeague, activeTier, activeDateFilter, searchQuery, sortBy]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeLeague, activeTier, activeDateFilter, minConf, searchQuery, sortBy]);
 
   const topPicks = useMemo(() => {
     const nowMs = Date.now();
@@ -410,6 +473,28 @@ export default function Predictions() {
 
       {/* Filters */}
       <section className="mb-6 md:mb-8 space-y-3 md:space-y-4">
+        {/* Confidence filter */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+          {[
+            { val: 0,  label: "All"   },
+            { val: 60, label: "60%+"  },
+            { val: 65, label: "65%+"  },
+            { val: 70, label: "70%+"  },
+            { val: 75, label: "75%+"  },
+          ].map(({ val, label }) => (
+            <button key={val} onClick={() => setMinConf(val)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 md:px-4 rounded-full font-['Lexend'] text-[10px] md:text-[11px] font-semibold uppercase tracking-widest whitespace-nowrap transition-all flex-shrink-0 border",
+                minConf === val
+                  ? "bg-primary-container text-on-primary border-primary-container neon-glow"
+                  : "border-white/10 text-on-surface-variant hover:border-primary-container/50 hover:text-on-surface"
+              )}>
+              <span className="material-symbols-outlined text-[12px]">verified</span>
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* Date quick filters */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {DATE_FILTER_OPTIONS.map(({ key, label }) => (
@@ -488,44 +573,50 @@ export default function Predictions() {
           </div>
         </div>
 
-        <ScheduleTable
-          loading={loading}
-          visibleMatches={visibleMatches}
-          hasMore={hasMore}
-          filtered={filtered}
-          visibleCount={visibleCount}
-          onLoadMore={() => setVisibleCount(c => c + PAGE_SIZE)}
-        />
+        {!user ? (
+          <AuthGate matchCount={filtered.length} />
+        ) : (
+          <>
+            <ScheduleTable
+              loading={loading}
+              visibleMatches={visibleMatches}
+              hasMore={hasMore}
+              filtered={filtered}
+              visibleCount={visibleCount}
+              onLoadMore={() => setVisibleCount(c => c + PAGE_SIZE)}
+            />
 
-        {/* Load More */}
-        {!loading && hasMore && (
-          <div className="flex flex-col items-center gap-2 mt-6">
-            <button
-              onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
-              className={cn(
-                "px-8 py-3 rounded-xl font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest",
-                "border border-primary-container/30 text-primary-container",
-                "hover:bg-primary-container/10 hover:border-primary-container hover:shadow-[0_0_16px_rgba(57,255,20,0.2)]",
-                "transition-all duration-200 flex items-center gap-2"
-              )}
-            >
-              <span className="material-symbols-outlined text-[16px]">expand_more</span>
-              Load More — {filtered.length - visibleCount} remaining
-            </button>
-            <div className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest">
-              Showing {visibleCount} of {filtered.length} matches
-            </div>
-          </div>
-        )}
+            {/* Load More */}
+            {!loading && hasMore && (
+              <div className="flex flex-col items-center gap-2 mt-6">
+                <button
+                  onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                  className={cn(
+                    "px-8 py-3 rounded-xl font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest",
+                    "border border-primary-container/30 text-primary-container",
+                    "hover:bg-primary-container/10 hover:border-primary-container hover:shadow-[0_0_16px_rgba(57,255,20,0.2)]",
+                    "transition-all duration-200 flex items-center gap-2"
+                  )}
+                >
+                  <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                  Load More — {filtered.length - visibleCount} remaining
+                </button>
+                <div className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest">
+                  Showing {visibleCount} of {filtered.length} matches
+                </div>
+              </div>
+            )}
 
-        {!loading && !hasMore && filtered.length > PAGE_SIZE && (
-          <div className="flex items-center justify-center gap-3 mt-6">
-            <div className="h-px flex-1 bg-white/5" />
-            <span className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest">
-              All {filtered.length} matches loaded
-            </span>
-            <div className="h-px flex-1 bg-white/5" />
-          </div>
+            {!loading && !hasMore && filtered.length > PAGE_SIZE && (
+              <div className="flex items-center justify-center gap-3 mt-6">
+                <div className="h-px flex-1 bg-white/5" />
+                <span className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest">
+                  All {filtered.length} matches loaded
+                </span>
+                <div className="h-px flex-1 bg-white/5" />
+              </div>
+            )}
+          </>
         )}
       </section>
 

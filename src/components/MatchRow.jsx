@@ -43,7 +43,51 @@ function EloBadge({ diff }) {
   );
 }
 
-// Shared td base class — matches header th padding exactly
+// 1X2 triple pill
+function ResultPills({ homeWin, draw, awayWin }) {
+  const best = Math.max(homeWin || 0, draw || 0, awayWin || 0);
+  return (
+    <div className="flex gap-1">
+      {[
+        { label: "1", value: homeWin || 0, hi: "text-primary-container" },
+        { label: "X", value: draw    || 0, hi: "text-yellow-400"        },
+        { label: "2", value: awayWin || 0, hi: "text-blue-400"          },
+      ].map(({ label, value, hi }) => (
+        <div key={label} className="flex flex-col items-center min-w-[28px]">
+          <span className={cn(
+            "font-['Lexend'] text-[11px] font-bold tabular-nums",
+            value === best && value > 0 ? hi : "text-on-surface-variant"
+          )}>{value}%</span>
+          <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-wider mt-0.5">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Double Chance triple pill
+function DCPills({ dc1X, dcX2, dc12 }) {
+  const best = Math.max(dc1X || 0, dcX2 || 0, dc12 || 0);
+  return (
+    <div className="flex gap-1">
+      {[
+        { label: "1X", value: dc1X || 0, hi: "text-emerald-400" },
+        { label: "X2", value: dcX2 || 0, hi: "text-sky-400"     },
+        { label: "12", value: dc12 || 0, hi: "text-violet-400"  },
+      ].map(({ label, value, hi }) => (
+        <div key={label} className="flex flex-col items-center min-w-[28px]">
+          <span className={cn(
+            "font-['Lexend'] text-[11px] font-bold tabular-nums",
+            value === best && value > 0 ? hi : "text-on-surface-variant"
+          )}>{value}%</span>
+          <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-wider mt-0.5">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Shared td base class
 const TD = "px-3 py-3 md:px-5 md:py-[14px] align-top overflow-hidden";
 
 export default function MatchRow({ match, className }) {
@@ -66,9 +110,7 @@ export default function MatchRow({ match, className }) {
       <td className={TD}>
         <div className="font-semibold text-on-surface text-sm truncate">{match.home}</div>
         <div className="text-on-surface-variant text-xs mt-0.5 truncate">vs {match.away}</div>
-        <div className="mt-1">
-          <EloBadge diff={match.eloDiff ?? 0} />
-        </div>
+        <div className="mt-1"><EloBadge diff={match.eloDiff ?? 0} /></div>
       </td>
 
       {/* League */}
@@ -82,15 +124,11 @@ export default function MatchRow({ match, className }) {
           <span className={cn(
             "inline-block px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider w-fit border",
             tier.bg, tier.text, tier.border
-          )}>
-            {tier.label}
-          </span>
+          )}>{tier.label}</span>
           <span className={cn(
             "inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider w-fit",
             sig.bg, sig.text
-          )}>
-            {match.signal}
-          </span>
+          )}>{match.signal}</span>
         </div>
       </td>
 
@@ -115,7 +153,7 @@ export default function MatchRow({ match, className }) {
         <div className="font-['Lexend'] text-sm text-on-surface-variant tabular-nums">{match.btts}%</div>
       </td>
 
-      {/* O1.5 — NEW */}
+      {/* O1.5 */}
       <td className={TD}>
         <div className={cn(
           "font-['Lexend'] text-sm font-bold tabular-nums",
@@ -140,6 +178,16 @@ export default function MatchRow({ match, className }) {
       {/* xG */}
       <td className={TD}>
         <div className="font-['Lexend'] text-sm text-on-surface-variant tabular-nums">{xg}</div>
+      </td>
+
+      {/* 1X2 Result */}
+      <td className={TD}>
+        <ResultPills homeWin={match.homeWin} draw={match.draw} awayWin={match.awayWin} />
+      </td>
+
+      {/* Double Chance */}
+      <td className={TD}>
+        <DCPills dc1X={match.dc1X} dcX2={match.dcX2} dc12={match.dc12} />
       </td>
 
       {/* Confidence */}

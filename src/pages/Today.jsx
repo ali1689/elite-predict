@@ -1,7 +1,22 @@
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import TeamAvatar from "@/components/TeamAvatar";
+import { useAuth } from "@/context/AuthContext";
 import { useTodayPredictions } from "@/lib/usePredictions";
+
+// ── Daily pack helpers ────────────────────────────────────────────────────
+function packKey(userId) {
+  return `ep_pack_opened_${userId ?? "anon"}`;
+}
+function getTodayStr() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
+}
+export function markPackOpened(userId) {
+  try { localStorage.setItem(packKey(userId), getTodayStr()); } catch (_) {}
+}
+export function isPackOpenedToday(userId) {
+  try { return localStorage.getItem(packKey(userId)) === getTodayStr(); } catch (_) { return false; }
+}
 import { sigStyle, tierStyle, fmtTime, abbr, SIGNAL_DONUT_COLORS } from "@/data/matches";
 import { cn } from "@/lib/utils";
 
@@ -225,6 +240,49 @@ function DCTrio({ dc1X = 0, dcX2 = 0, dc12 = 0 }) {
   );
 }
 
+// ── Animated card wrapper — flips from face-down to face-up ──────────────
+function AnimatedCard({ match, delay }) {
+  const [phase, setPhase] = useState("back"); // back | front
+
+  useEffect(() => {
+    const t = setTimeout(() => setPhase("front"), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  const tier = match?.tier ?? "B";
+  const ringColor =
+    tier === "A" ? "#39FF14" :
+    tier === "B" ? "#60A5FA" : "#A1A1AA";
+  const glowClass =
+    tier === "A" ? "shadow-[0_0_32px_rgba(57,255,20,0.35)] border-[#39FF14]/60" :
+    tier === "B" ? "shadow-[0_0_24px_rgba(96,165,250,0.3)] border-blue-400/50"   :
+                  "border-zinc-600/40";
+
+  if (phase === "back") {
+    return (
+      <div className={cn(
+        "rounded-xl border-2 border-primary-container/30 bg-zinc-950 flex flex-col items-center justify-center gap-3 overflow-hidden",
+        "animate-[scale-in_0.4s_ease-out]",
+        "min-h-[420px]"
+      )}>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-container/5 via-transparent to-blue-500/5 pointer-events-none" />
+        <span className="text-4xl font-black italic text-primary-container tracking-tighter drop-shadow-[0_0_20px_rgba(57,255,20,0.8)]">EP</span>
+        <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-[0.3em]">Elite Predict</span>
+        <div className="flex items-center gap-1.5 mt-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping" />
+          <span className="font-['Lexend'] text-[9px] text-primary-container uppercase tracking-widest">Revealing…</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("border-2 rounded-xl animate-[scale-in_0.35s_ease-out]", glowClass)}>
+      <MatchCard match={match} />
+    </div>
+  );
+}
+
 // ── Match card ────────────────────────────────────────────────────────────
 function MatchCard({ match }) {
   const sig  = sigStyle(match.signal);
@@ -324,6 +382,22 @@ function MatchCard({ match }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────
 export default function Today() {
+  const { user, loading: authLoading } = useAuth();
+  const [packOpened, setPackOpened] = useState(false);
+
+  // Only check once auth has resolved and we have the real user id
+  useEffect(() => {
+    if (!authLoading) {
+      setPackOpened(isPackOpenedToday(user?.id));
+    }
+  }, [authLoading, user?.id]);
+
+  useEffect(() => {
+    const onFocus = () => { if (!authLoading) setPackOpened(isPackOpenedToday(user?.id)); };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [authLoading, user?.id]);
+
   const { data: matches, loading, error, lastFetch } = useTodayPredictions();
 
   const signalCounts = useMemo(() => {
@@ -394,7 +468,7 @@ export default function Today() {
         }
       </section>
 
-      {/* Match cards */}
+      {/* Match cards / Pack gate */}
       <section>
         <div className="flex items-center justify-between mb-5 md:mb-6">
           <h2 className="text-base md:text-headline-md font-semibold text-on-surface uppercase tracking-wider flex items-center gap-2 md:gap-3">
@@ -408,10 +482,114 @@ export default function Today() {
           </Link>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-            {[...Array(6)].map((_, i) => <CardSkeleton key={i} />)}
+        {/* ── Not logged in: sign-in + store gate ── */}
+        {!user && !loading && matches.length > 0 ? (
+          <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center gap-6 py-16 px-6 text-center
+                          bg-surface-container border-2 border-primary-container/35
+                          shadow-[0_0_60px_rgba(57,255,20,0.12)]">
+            <div className="absolute inset-0 pointer-events-none"
+              style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(57,255,20,0.06), transparent 60%)" }} />
+            <div className="absolute inset-0 opacity-20 pointer-events-none"
+              style={{ background: "repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(57,255,20,0.015) 12px,rgba(57,255,20,0.015) 24px)" }} />
+
+            {/* Lock icon */}
+            <div className="relative w-20 h-20 rounded-2xl border-2 border-primary-container/40 bg-primary-container/10 flex items-center justify-center z-10
+                            shadow-[0_0_30px_rgba(57,255,20,0.25)]">
+              <span className="material-symbols-outlined text-primary-container text-4xl">lock</span>
+            </div>
+
+            {/* Text */}
+            <div className="relative z-10">
+              <div className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-primary-container mb-2">
+                Members Only
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">
+                {matches.length} prediction{matches.length !== 1 ? "s" : ""} locked<br />
+                <span className="text-primary-container drop-shadow-[0_0_20px_rgba(57,255,20,0.6)]">sign in to reveal</span>
+              </h3>
+              <p className="text-zinc-400 font-['Lexend'] text-sm max-w-sm mx-auto leading-relaxed">
+                Sign in to open your free daily pack, or upgrade to get premium multi-match predictions every day.
+              </p>
+            </div>
+
+            {/* CTAs */}
+            <div className="relative z-10 flex flex-col sm:flex-row gap-3">
+              <Link to="/login"
+                className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-primary-container text-on-primary font-black text-sm uppercase tracking-widest
+                           shadow-[0_0_30px_rgba(57,255,20,0.5)] hover:shadow-[0_0_50px_rgba(57,255,20,0.8)]
+                           hover:scale-105 active:scale-95 transition-all duration-200">
+                <span className="material-symbols-outlined text-[18px]">login</span>
+                Sign In
+              </Link>
+              <Link to="/open"
+                className="flex items-center gap-2 px-7 py-3.5 rounded-xl border-2 border-primary-container/40 text-primary-container font-black text-sm uppercase tracking-widest
+                           hover:bg-primary-container/10 hover:border-primary-container/70
+                           hover:scale-105 active:scale-95 transition-all duration-200">
+                <span className="material-symbols-outlined text-[18px]">style</span>
+                Get Your Pack
+              </Link>
+            </div>
+
+            <p className="relative z-10 font-['Lexend'] text-[10px] text-zinc-600 uppercase tracking-widest">
+              Free daily pack · resets at midnight
+            </p>
           </div>
+
+        ) : /* ── Pack gate: logged-in user hasn't opened today's pack ── */
+        user && !packOpened && !loading && matches.length > 0 ? (
+          <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center gap-6 py-16 px-6 text-center
+                          bg-surface-container border-2 border-primary-container/35
+                          shadow-[0_0_60px_rgba(57,255,20,0.12)]">
+            <div className="absolute inset-0 pointer-events-none"
+              style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(57,255,20,0.06), transparent 60%)" }} />
+            <div className="absolute inset-0 opacity-20 pointer-events-none"
+              style={{ background: "repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(57,255,20,0.015) 12px,rgba(57,255,20,0.015) 24px)" }} />
+
+            {/* Pack stack visual */}
+            <div className="relative w-28 h-40">
+              {[2,1,0].map(i => (
+                <div key={i} className="absolute inset-0 rounded-xl border-2 border-primary-container/30 bg-zinc-900"
+                  style={{ transform: `translateY(${i * -5}px) translateX(${i * 3}px) rotate(${i * -2}deg)`, zIndex: 3 - i }} />
+              ))}
+              <div className="absolute inset-0 rounded-xl border-2 border-primary-container bg-zinc-950 flex flex-col items-center justify-center z-10
+                              shadow-[0_0_30px_rgba(57,255,20,0.4)]">
+                <span className="text-3xl font-black italic text-primary-container drop-shadow-[0_0_20px_rgba(57,255,20,1)]">EP</span>
+              </div>
+            </div>
+
+            {/* Text */}
+            <div className="relative z-10">
+              <div className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-primary-container mb-2">
+                Daily Free Pack
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">
+                You have {matches.length} prediction{matches.length !== 1 ? "s" : ""}<br />
+                <span className="text-primary-container drop-shadow-[0_0_20px_rgba(57,255,20,0.6)]">waiting inside</span>
+              </h3>
+              <p className="text-zinc-400 font-['Lexend'] text-sm max-w-sm mx-auto leading-relaxed">
+                Every day you get one free prediction pack. Open it to reveal today's AI picks — one card at a time.
+              </p>
+            </div>
+
+            {/* CTA */}
+            <Link to="/open"
+              className="relative z-10 flex items-center gap-3 px-8 py-4 rounded-xl bg-primary-container text-on-primary font-black text-sm uppercase tracking-widest
+                         shadow-[0_0_30px_rgba(57,255,20,0.5)] hover:shadow-[0_0_50px_rgba(57,255,20,0.8)]
+                         hover:scale-105 active:scale-95 transition-all duration-200">
+              <span className="material-symbols-outlined text-[20px]">style</span>
+              Open Today's Pack
+            </Link>
+
+            <p className="relative z-10 font-['Lexend'] text-[10px] text-zinc-600 uppercase tracking-widest">
+              Resets every day at midnight
+            </p>
+          </div>
+
+        ) : loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
+            {[...Array(3)].map((_, i) => <CardSkeleton key={i} />)}
+          </div>
+
         ) : sorted.length === 0 ? (
           <div className="text-center py-14 md:py-20 glass-card rounded-xl border border-outline-variant/30">
             <span className="material-symbols-outlined text-[48px] text-on-surface-variant mb-4 block">sports_soccer</span>
@@ -423,9 +601,12 @@ export default function Today() {
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </Link>
           </div>
+
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-            {sorted.map(m => <MatchCard key={m.id} match={m} />)}
+            {sorted.map((m, i) => (
+              <AnimatedCard key={m.id} match={m} delay={i * 500} />
+            ))}
           </div>
         )}
       </section>

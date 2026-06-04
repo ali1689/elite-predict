@@ -8,6 +8,8 @@ import Home from "./pages/Home";
 import Predictions from "./pages/Predictions";
 import Today from "./pages/Today";
 import Login from "./pages/Login";
+import Players from "./pages/Players";
+import Open from "./pages/Open";
 import { AuthProvider } from "./context/AuthContext";
 
 // ── Theme context ──────────────────────────────────────────────────────────
@@ -49,6 +51,8 @@ export default function App() {
               <Route path="/"            element={<Home />} />
               <Route path="/today"       element={<Today />} />
               <Route path="/predictions" element={<Predictions />} />
+              <Route path="/players"     element={<Players />} />
+              <Route path="/open"        element={<Open />} />
               <Route path="/login"       element={<Login />} />
             </Routes>
           </main>

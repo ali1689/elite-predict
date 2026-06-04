@@ -62,6 +62,18 @@ export function AuthProvider({ children }) {
     return data.user;
   }
 
+  // 🔑 OAUTH — Google / Apple
+  async function loginWithProvider(provider) {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/today`,
+      },
+    });
+    if (error) throw new Error(error.message);
+    // Page will redirect to provider — no return value needed
+  }
+
   // 🚪 LOGOUT
   async function logout() {
     await supabase.auth.signOut();
@@ -69,7 +81,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithProvider, logout }}>
       {children}
     </AuthContext.Provider>
   );
