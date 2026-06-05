@@ -606,3 +606,26 @@ export default function Open() {
       {phase === "revealing" && (
         <div className="mt-8 text-center font-['Lexend'] text-[11px] text-on-surface-variant uppercase tracking-widest animate-pulse">
           Revealing {Math.min(activeReveal + 1, matches.length)} / {matches.length}…
+        </div>
+      )}
+
+      {/* Done — confirm CTA after all cards revealed */}
+      {phase === "done" && (
+        <div className="mt-12 flex flex-col items-center gap-4 animate-fade-up">
+          <p className="font-['Lexend'] text-sm text-on-surface-variant uppercase tracking-widest">
+            All {matches.length} pick{matches.length !== 1 ? "s" : ""} revealed
+          </p>
+          <Link
+            to="/today"
+            className="flex items-center gap-3 px-10 py-4 rounded-xl bg-primary-container text-on-primary font-black text-sm uppercase tracking-widest
+                       shadow-[0_0_30px_rgba(57,255,20,0.5)] hover:shadow-[0_0_50px_rgba(57,255,20,0.8)]
+                       hover:scale-105 active:scale-95 transition-all duration-200"
+          >
+            <span className="material-symbols-outlined text-[20px]">today</span>
+            View Today's Picks
+          </Link>
+        </div>
+      )}
+    </main>
+  );
+}
