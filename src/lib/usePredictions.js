@@ -95,10 +95,9 @@ export function usePredictions({ dateFilter = null, limit = 300, futureOnly = fa
   return { data, loading, error, lastFetch };
 }
 
-// Today hook — shows today's matches in Warsaw timezone.
-// Queries yesterday + today UTC to handle the 00:00–02:00 Warsaw window
-// where UTC has already flipped to the next day.
-// Client-side: keeps only matches whose Warsaw date = today Warsaw.
+// Today hook — shows the closest upcoming day's predictions in Warsaw time.
+// The pipeline runs at 06:00 Warsaw and may generate for today OR tomorrow.
+// Strategy: try today's match_date first; if empty, fall back to tomorrow.
 export function useTodayPredictions() {
   const [data,      setData]      = useState([]);
   const [loading,   setLoading]   = useState(true);
@@ -111,26 +110,24 @@ export function useTodayPredictions() {
       setLoading(true);
       setError(null);
       try {
-        // Show matches within a 24-hour rolling window centred on now.
-        // This handles late-night Warsaw users (01:00–02:00) who are technically
-        // on the "next day" by clock but still want to see tonight's matches.
-        const windowStart = new Date(Date.now() - 4  * 3600000).toISOString(); // 4h ago
-        const windowEnd   = new Date(Date.now() + 20 * 3600000).toISOString(); // 20h ahead
+        // Fetch today's matches in Warsaw time only.
+        // We do NOT fall through to tomorrow — the pipeline stores the whole
+        // week so falling through would silently show future-day picks.
+        // If today has no data, the page shows "No picks today".
+        const todayWarsaw = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
 
-        const { data: rows, error: err } = await supabase
+        const { data: fetched, error: err } = await supabase
           .from("predictions")
           .select("*")
-          .gte("utc_date", windowStart)
-          .lte("utc_date", windowEnd)
+          .eq("match_date", todayWarsaw)
           .order("utc_date", { ascending: true })
           .limit(200);
 
-        if (cancelled) return;
         if (err) throw err;
+        const rows = (fetched && fetched.length > 0) ? fetched : null;
 
-        const todayRows = rows || [];
-
-        setData(todayRows.map(normalize));
+        if (cancelled) return;
+        setData((rows || []).map(normalize));
         setLastFetch(new Date());
       } catch (e) {
         if (!cancelled) setError(e);

@@ -220,7 +220,7 @@ function PredCard({ match, index, revealed }) {
         </div>
         <div className="flex flex-col items-center px-3">
           <span className="font-black text-lg text-on-surface-variant italic">VS</span>
-          <span className={cn("font-black text-2xl leading-none mt-1", confColor)}>{match.conf}</span>
+          <span className={cn("font-black text-2xl leading-none mt-1", confColor)}>{match.conf > 0 ? match.conf : "—"}</span>
           <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest">% Conf</span>
         </div>
         <div className="flex flex-col items-center gap-1.5 flex-1">
@@ -258,7 +258,7 @@ function PredCard({ match, index, revealed }) {
             const ss = sigStyle(s.label ?? s.type);
             return (
               <span key={s.type} className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
-                {s.label ?? s.type} · {s.prob}%
+                {s.label ?? s.type} · {Math.round(s.prob * 100)}%
               </span>
             );
           })}
@@ -359,7 +359,7 @@ export default function Open() {
   // Once matches load, set up cards
   useEffect(() => {
     if (!loading && matches.length > 0) {
-      setCards(matches);
+      setCards([...matches].sort((a, b) => b.conf - a.conf));
       if (!user) {
         setPhase("locked");
       } else if (isPackOpenedToday(user.id)) {
@@ -442,7 +442,7 @@ export default function Open() {
   }
 
   // ── Already opened / done ────────────────────────────────────────────
-  if (phase === "already" || phase === "done") {
+  if (phase === "already") {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-4 pb-16 pt-24">
         <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center gap-6 py-16 px-8 text-center max-w-md w-full
@@ -602,12 +602,7 @@ export default function Open() {
         ))}
       </div>
 
-      {/* Progress */}
+      {/* Progress — shown while revealing */}
       {phase === "revealing" && (
         <div className="mt-8 text-center font-['Lexend'] text-[11px] text-on-surface-variant uppercase tracking-widest animate-pulse">
           Revealing {Math.min(activeReveal + 1, matches.length)} / {matches.length}…
-        </div>
-      )}
-    </main>
-  );
-}

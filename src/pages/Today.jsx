@@ -241,13 +241,14 @@ function DCTrio({ dc1X = 0, dcX2 = 0, dc12 = 0 }) {
 }
 
 // ── Animated card wrapper — flips from face-down to face-up ──────────────
-function AnimatedCard({ match, delay }) {
-  const [phase, setPhase] = useState("back"); // back | front
+function AnimatedCard({ match, delay, instant = false }) {
+  const [phase, setPhase] = useState(instant ? "front" : "back"); // back | front
 
   useEffect(() => {
+    if (instant) return; // pack already opened — show immediately
     const t = setTimeout(() => setPhase("front"), delay);
     return () => clearTimeout(t);
-  }, [delay]);
+  }, [delay, instant]);
 
   const tier = match?.tier ?? "B";
   const ringColor =
@@ -329,7 +330,7 @@ function MatchCard({ match }) {
         </div>
         <div className="flex flex-col items-center px-3">
           <span className="font-black text-lg text-on-surface-variant italic">VS</span>
-          <span className={cn("font-black text-2xl leading-none mt-1", confColor)}>{match.conf}</span>
+          <span className={cn("font-black text-2xl leading-none mt-1", confColor)}>{match.conf > 0 ? match.conf : "—"}</span>
           <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest">% Conf</span>
         </div>
         <div className="flex flex-col items-center gap-1.5 flex-1">
@@ -370,7 +371,7 @@ function MatchCard({ match }) {
             return (
               <span key={s.type}
                 className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
-                {s.label ?? s.type} · {s.prob}%
+                {s.label ?? s.type} · {Math.round(s.prob * 100)}%
               </span>
             );
           })}
@@ -400,21 +401,21 @@ export default function Today() {
 
   const { data: matches, loading, error, lastFetch } = useTodayPredictions();
 
+  // Sort → filter to 75%+ strong signals only
+  const sorted    = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
+  const displayed = useMemo(() => sorted.filter(m => m.signal !== "No strong signal" && m.conf >= 75), [sorted]);
+
+  // Stats computed from displayed (75%+ picks only)
   const signalCounts = useMemo(() => {
     const counts = {};
-    matches.forEach(m => {
-      counts[m.signal] = (counts[m.signal] || 0) + 1;
-    });
+    displayed.forEach(m => { counts[m.signal] = (counts[m.signal] || 0) + 1; });
     return counts;
-  }, [matches]);
+  }, [displayed]);
 
-  const avgConf  = matches.length ? Math.round(matches.reduce((s, m) => s + m.conf,    0) / matches.length) : 0;
-  const avgXg    = matches.length ? (matches.reduce((s, m) => s + (m.xgTotal || 0),    0) / matches.length).toFixed(2) : "0.00";
-  const tierA    = matches.filter(m => m.tier === "A").length;
-  const highConf = matches.filter(m => m.conf >= 70).length;
-
-  // Sort by confidence desc
-  const sorted = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
+  const avgConf  = displayed.length ? Math.round(displayed.reduce((s, m) => s + m.conf,    0) / displayed.length) : 0;
+  const avgXg    = displayed.length ? (displayed.reduce((s, m) => s + (m.xgTotal || 0),    0) / displayed.length).toFixed(2) : "0.00";
+  const tierA    = displayed.filter(m => m.tier === "A").length;
+  const highConf = displayed.filter(m => m.conf >= 75).length;
 
   return (
     <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
@@ -434,7 +435,7 @@ export default function Today() {
           {loading
             ? "Loading today's predictions…"
             : matches.length > 0
-              ? `${matches.length} match${matches.length !== 1 ? "es" : ""} analysed — sorted by confidence.`
+              ? `${displayed.length} high-confidence pick${displayed.length !== 1 ? "s" : ""} today — sorted by confidence.`
               : "No predictions scheduled for today. Check back later or browse the full schedule."}
         </p>
         {lastFetch && !loading && (
@@ -451,7 +452,7 @@ export default function Today() {
 
       {/* Stat cards */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-12">
-        <StatCard icon="calendar_today"  label="Today's Picks"    value={matches.length} sub="Total matches"       loading={loading} />
+        <StatCard icon="calendar_today"  label="Today's Picks"    value={displayed.length} sub="75%+ confidence"    loading={loading} />
         <StatCard icon="grade"           label="Tier A Picks"     value={tierA}          sub="Strongest signals"   loading={loading} />
         <StatCard icon="percent"         label="Avg Confidence"   value={`${avgConf}%`}  sub="Across all picks"   loading={loading} />
         <StatCard icon="sports_soccer"   label="Avg xG / match"   value={avgXg}          sub="Expected goals"     loading={loading} />
@@ -462,8 +463,8 @@ export default function Today() {
         {loading
           ? <><Skeleton className="h-48" /><Skeleton className="h-48" /></>
           : <>
-              <SignalDonut counts={signalCounts} total={matches.length} />
-              <ConfChart matches={matches} />
+              <SignalDonut counts={signalCounts} total={displayed.length} />
+              <ConfChart matches={displayed} />
             </>
         }
       </section>
@@ -590,7 +591,7 @@ export default function Today() {
             {[...Array(3)].map((_, i) => <CardSkeleton key={i} />)}
           </div>
 
-        ) : sorted.length === 0 ? (
+        ) : displayed.length === 0 ? (
           <div className="text-center py-14 md:py-20 glass-card rounded-xl border border-outline-variant/30">
             <span className="material-symbols-outlined text-[48px] text-on-surface-variant mb-4 block">sports_soccer</span>
             <div className="text-on-surface font-bold text-lg mb-2">No picks for today</div>
@@ -604,8 +605,8 @@ export default function Today() {
 
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-            {sorted.map((m, i) => (
-              <AnimatedCard key={m.id} match={m} delay={i * 500} />
+            {displayed.map((m, i) => (
+              <AnimatedCard key={m.id} match={m} delay={i * 500} instant={packOpened} />
             ))}
           </div>
         )}
