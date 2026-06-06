@@ -403,7 +403,7 @@ export default function Today() {
 
   // Sort → filter to 75%+ strong signals only
   const sorted    = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
-  const displayed = useMemo(() => sorted.filter(m => m.signal !== "No strong signal" && m.conf >= 75), [sorted]);
+  const displayed = useMemo(() => sorted.filter(m => m.signal !== "No strong signal" && m.conf >= 60), [sorted]);
 
   // Stats computed from displayed (75%+ picks only)
   const signalCounts = useMemo(() => {
@@ -415,7 +415,7 @@ export default function Today() {
   const avgConf  = displayed.length ? Math.round(displayed.reduce((s, m) => s + m.conf,    0) / displayed.length) : 0;
   const avgXg    = displayed.length ? (displayed.reduce((s, m) => s + (m.xgTotal || 0),    0) / displayed.length).toFixed(2) : "0.00";
   const tierA    = displayed.filter(m => m.tier === "A").length;
-  const highConf = displayed.filter(m => m.conf >= 75).length;
+  const highConf = displayed.filter(m => m.conf >= 60).length;
 
   return (
     <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
@@ -435,7 +435,7 @@ export default function Today() {
           {loading
             ? "Loading today's predictions…"
             : matches.length > 0
-              ? `${displayed.length} high-confidence pick${displayed.length !== 1 ? "s" : ""} today — sorted by confidence.`
+              ? `${displayed.length} pick${displayed.length !== 1 ? "s" : ""} today — sorted by confidence.`
               : "No predictions scheduled for today. Check back later or browse the full schedule."}
         </p>
         {lastFetch && !loading && (
