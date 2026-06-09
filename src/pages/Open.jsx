@@ -185,7 +185,13 @@ function PredCard({ match, index, revealed }) {
   const confColor = match.conf >= 75 ? "text-primary-container"
     : match.conf >= 65 ? "text-blue-400" : "text-on-surface-variant";
   const xg = ((match.lH || 0) + (match.lA || 0)).toFixed(2);
-  const extraSignals = (match.allSignals || []).slice(1, 4);
+  const extraSignals = (match.allSignals || []).slice(1, 5);
+  const storedProb = {
+    home_over05: match.homeOver05, away_over05: match.awayOver05,
+    home_over15: match.homeOver15, away_over15: match.awayOver15,
+    over15: match.over15, over25: match.over25,
+    under25: match.under25, btts: match.btts,
+  };
   const homeTeam = { abbr: abbr(match.home), name: match.home, logo: null };
   const awayTeam = { abbr: abbr(match.away), name: match.away, logo: null };
 
@@ -258,7 +264,7 @@ function PredCard({ match, index, revealed }) {
             const ss = sigStyle(s.label ?? s.type);
             return (
               <span key={s.type} className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
-                {s.label ?? s.type} · {Math.round(s.prob * 100)}%
+                {s.label ?? s.type} · {storedProb[s.type] ?? Math.round(s.prob * 100)}%
               </span>
             );
           })}

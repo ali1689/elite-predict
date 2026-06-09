@@ -295,7 +295,15 @@ function MatchCard({ match }) {
     match.conf >= 75 ? "text-primary-container" :
     match.conf >= 65 ? "text-blue-400"          : "text-on-surface-variant";
 
-  const extraSignals = (match.allSignals || []).slice(1, 4);
+  const extraSignals = (match.allSignals || []).slice(1, 5);
+
+  // Map signal type → stored (Poisson) probability so pills match the stat chips
+  const storedProb = {
+    home_over05: match.homeOver05, away_over05: match.awayOver05,
+    home_over15: match.homeOver15, away_over15: match.awayOver15,
+    over15: match.over15, over25: match.over25,
+    under25: match.under25, btts: match.btts,
+  };
 
   return (
     <div className="glass-card p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-4">
@@ -371,7 +379,7 @@ function MatchCard({ match }) {
             return (
               <span key={s.type}
                 className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
-                {s.label ?? s.type} · {Math.round(s.prob * 100)}%
+                {s.label ?? s.type} · {storedProb[s.type] ?? Math.round(s.prob * 100)}%
               </span>
             );
           })}

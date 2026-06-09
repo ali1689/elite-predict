@@ -1,6 +1,46 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 
+// ── Compute the best displayable signal from stored (Poisson) probabilities ──
+// The backend selects primary_signal using a blended probability (clf + Poisson),
+// but only the Poisson component is stored in the DB. This can cause the displayed
+// signal to contradict the shown percentages. We recompute from stored probs using
+// the same market weights so the UI is always internally consistent.
+// Falls back to primary_signal for markets not covered here (1X2, Double Chance).
+function computeDisplaySignal(row) {
+  const h05  = row.home_over05 ?? 0;
+  const a05  = row.away_over05 ?? 0;
+  const h15  = row.home_over15 ?? 0;
+  const a15  = row.away_over15 ?? 0;
+  const o15  = row.over15      ?? 0;
+  const o25  = row.over25      ?? 0;
+  const u25  = row.under25     ?? 0;
+  const btts = row.btts        ?? 0;
+
+  // Thresholds (matching backend DEFAULT_THRESHOLDS × 100) and market weights
+  const candidates = [
+    { label: "Home Over 0.5 Goals", prob: h05,  thr: 72, w: 1.00 },
+    { label: "Away Over 0.5 Goals", prob: a05,  thr: 68, w: 0.98 },
+    { label: "Over 1.5 Goals",      prob: o15,  thr: 72, w: 0.95 },
+    { label: "Home Over 1.5 Goals", prob: h15,  thr: 58, w: 0.88 },
+    { label: "Away Over 1.5 Goals", prob: a15,  thr: 52, w: 0.85 },
+    { label: "Both Teams to Score", prob: btts, thr: 60, w: 0.78 },
+    { label: "Under 2.5 Goals",     prob: u25,  thr: 57, w: 0.74 },
+    { label: "Over 2.5 Goals",      prob: o25,  thr: 58, w: 0.70 },
+  ];
+
+  // Priority override: Over 1.5 ≥ 80% + strong scoring support → better value than Over 0.5
+  if (o15 >= 80 && (h05 >= 75 || a05 >= 75)) {
+    return "Over 1.5 Goals";
+  }
+
+  const best = candidates
+    .filter(c => c.prob >= c.thr)
+    .sort((a, b) => (b.prob * b.w) - (a.prob * a.w))[0];
+
+  return best?.label ?? (row.primary_signal ?? "No strong signal");
+}
+
 // Normalise Supabase snake_case to camelCase
 function normalize(row) {
   let allSignals = [];
@@ -20,7 +60,7 @@ function normalize(row) {
     homeElo:     row.home_elo  ?? 1500,
     awayElo:     row.away_elo  ?? 1500,
     eloDiff:     (row.home_elo ?? 1500) - (row.away_elo ?? 1500),
-    signal:      row.primary_signal ?? "No strong signal",
+    signal:      computeDisplaySignal(row),
     tier:        row.primary_tier   ?? "B",
     conf:        row.conf           ?? 0,
     homeOver05:  row.home_over05    ?? 0,
