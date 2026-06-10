@@ -421,7 +421,7 @@ export default function Predictions() {
     if (sortBy === "xg")   return [...rows].sort((a, b) => (b.xgTotal || 0) - (a.xgTotal || 0));
     if (sortBy === "o15")  return [...rows].sort((a, b) => (b.over15 || 0) - (a.over15 || 0));
     return [...rows].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
-  }, [allMatches, activeLeague, activeTier, activeDateFilter, searchQuery, sortBy]);
+  }, [allMatches, activeLeague, activeTier, activeDateFilter, filterBtts, filterO25, searchQuery, sortBy]);
 
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeLeague, activeTier, activeDateFilter, minConf, filterBtts, filterO25, searchQuery, sortBy]);
 
