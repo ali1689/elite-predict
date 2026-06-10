@@ -388,6 +388,8 @@ export default function Predictions() {
   const [activeTier,       setActiveTier]       = useState("ALL");
   const [activeDateFilter, setActiveDateFilter] = useState("ALL");
   const [minConf,          setMinConf]          = useState(60);
+  const [filterBtts,       setFilterBtts]       = useState(false);
+  const [filterO25,        setFilterO25]        = useState(false);
   const [searchQuery,      setSearchQuery]      = useState("");
   const [sortBy,           setSortBy]           = useState("date");
   const [visibleCount,     setVisibleCount]     = useState(PAGE_SIZE);
@@ -401,6 +403,8 @@ export default function Predictions() {
     const nowMs = Date.now();
     let rows = allMatches.filter(m => new Date(m.utcDate).getTime() > nowMs);
     if (minConf > 0)            rows = rows.filter(m => m.conf >= minConf);
+    if (filterBtts)             rows = rows.filter(m => (m.btts  || 0) >= 60);
+    if (filterO25)              rows = rows.filter(m => (m.over25 || 0) >= 60);
     if (activeLeague !== ALL)   rows = rows.filter(m => m.comp === activeLeague);
     if (activeTier   !== "ALL") rows = rows.filter(m => m.tier === activeTier);
     if (activeDateFilter !== "ALL") {
@@ -419,7 +423,7 @@ export default function Predictions() {
     return [...rows].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
   }, [allMatches, activeLeague, activeTier, activeDateFilter, searchQuery, sortBy]);
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeLeague, activeTier, activeDateFilter, minConf, searchQuery, sortBy]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeLeague, activeTier, activeDateFilter, minConf, filterBtts, filterO25, searchQuery, sortBy]);
 
   const topPicks = useMemo(() => {
     const nowMs = Date.now();
@@ -481,6 +485,7 @@ export default function Predictions() {
             { val: 65, label: "65%+"  },
             { val: 70, label: "70%+"  },
             { val: 75, label: "75%+"  },
+            { val: 85, label: "85%+"  },
           ].map(({ val, label }) => (
             <button key={val} onClick={() => setMinConf(val)}
               className={cn(
@@ -549,6 +554,28 @@ export default function Predictions() {
               {label}
             </button>
           ))}
+          <div className="w-px bg-white/10 self-stretch flex-shrink-0 mx-1" />
+          {/* Market filters */}
+          <button onClick={() => setFilterBtts(v => !v)}
+            className={cn(
+              "px-3 py-1.5 md:px-4 rounded-lg font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest transition-all flex-shrink-0 flex items-center gap-1",
+              filterBtts
+                ? "bg-primary-container text-on-primary neon-glow"
+                : "border border-white/10 text-on-surface-variant hover:border-primary-container/40"
+            )}>
+            {filterBtts && <span className="material-symbols-outlined text-[11px]">check</span>}
+            BTTS
+          </button>
+          <button onClick={() => setFilterO25(v => !v)}
+            className={cn(
+              "px-3 py-1.5 md:px-4 rounded-lg font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest transition-all flex-shrink-0 flex items-center gap-1",
+              filterO25
+                ? "bg-primary-container text-on-primary neon-glow"
+                : "border border-white/10 text-on-surface-variant hover:border-primary-container/40"
+            )}>
+            {filterO25 && <span className="material-symbols-outlined text-[11px]">check</span>}
+            O2.5
+          </button>
           <div className="w-px bg-white/10 self-stretch flex-shrink-0 mx-1" />
           {SORT_OPTIONS.map(({ key, label }) => (
             <button key={key} onClick={() => setSortBy(key)}

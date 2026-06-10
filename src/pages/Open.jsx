@@ -204,8 +204,8 @@ function PredCard({ match, index, revealed }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1.5">
-          <span className={cn("inline-block px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider w-fit border", tier.bg, tier.text, tier.border)}>
-            {tier.label}
+          <span className={cn("inline-block px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider w-fit border", glow.badge)}>
+            {glow.label}
           </span>
           <span className={cn("px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-tighter w-fit", sig.bg, sig.text)}>
             {match.signal}
