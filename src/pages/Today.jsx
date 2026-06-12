@@ -409,9 +409,9 @@ export default function Today() {
 
   const { data: matches, loading, error, lastFetch } = useTodayPredictions();
 
-  // Sort → filter to 75%+ strong signals only
+  // Sort → filter to 80%+ strong signals only
   const sorted    = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
-  const displayed = useMemo(() => sorted.filter(m => m.signal !== "No strong signal" && m.conf >= 60), [sorted]);
+  const displayed = useMemo(() => sorted.filter(m => m.signal !== "No strong signal" && m.conf >= 80), [sorted]);
 
   // Stats computed from displayed (75%+ picks only)
   const signalCounts = useMemo(() => {
