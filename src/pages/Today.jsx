@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TeamAvatar from "@/components/TeamAvatar";
 import { useAuth } from "@/context/AuthContext";
@@ -23,6 +23,29 @@ import { cn } from "@/lib/utils";
 // ── Loading skeleton ──────────────────────────────────────────────────────
 function Skeleton({ className }) {
   return <div className={cn("animate-pulse bg-surface-container rounded-lg", className)} />;
+}
+
+// ── Scrollable row with arrow buttons ────────────────────────────────────────
+function ScrollRow({ children }) {
+  const ref = useRef(null);
+  const scroll = (dir) => ref.current?.scrollBy({ left: dir * 220, behavior: "smooth" });
+  return (
+    <div className="relative flex items-center gap-1">
+      <button onClick={() => scroll(-1)}
+        className="flex-shrink-0 w-7 h-7 rounded-lg border border-white/10 bg-surface-container/60 text-on-surface-variant hover:text-on-surface hover:border-primary-container/40 transition-all flex items-center justify-center"
+        aria-label="Scroll left">
+        <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+      </button>
+      <div ref={ref} className="flex gap-2 overflow-x-auto scrollbar-hide flex-1 pb-1">
+        {children}
+      </div>
+      <button onClick={() => scroll(1)}
+        className="flex-shrink-0 w-7 h-7 rounded-lg border border-white/10 bg-surface-container/60 text-on-surface-variant hover:text-on-surface hover:border-primary-container/40 transition-all flex items-center justify-center"
+        aria-label="Scroll right">
+        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+      </button>
+    </div>
+  );
 }
 
 function CardSkeleton() {
@@ -409,9 +432,21 @@ export default function Today() {
 
   const { data: matches, loading, error, lastFetch } = useTodayPredictions();
 
+  const [activeLeague, setActiveLeague] = useState("ALL");
+
   // Sort → filter to 80%+ strong signals only
   const sorted    = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
   const displayed = useMemo(() => sorted.filter(m => m.signal !== "No strong signal" && m.conf >= 80), [sorted]);
+
+  // League tabs derived from displayed
+  const leagues = useMemo(() => {
+    const set = new Set(displayed.map(m => m.comp || m.league || ""));
+    return ["ALL", ...[...set].filter(Boolean).sort()];
+  }, [displayed]);
+
+  const visibleCards = useMemo(() =>
+    activeLeague === "ALL" ? displayed : displayed.filter(m => (m.comp || m.league) === activeLeague),
+  [displayed, activeLeague]);
 
   // Stats computed from displayed (75%+ picks only)
   const signalCounts = useMemo(() => {
@@ -479,7 +514,7 @@ export default function Today() {
 
       {/* Match cards / Pack gate */}
       <section>
-        <div className="flex items-center justify-between mb-5 md:mb-6">
+        <div className="flex items-center justify-between mb-4 md:mb-5">
           <h2 className="text-base md:text-headline-md font-semibold text-on-surface uppercase tracking-wider flex items-center gap-2 md:gap-3">
             <span className="w-1.5 h-5 md:h-6 bg-primary-container rounded-full inline-block" />
             Today's Match Cards
@@ -490,6 +525,25 @@ export default function Today() {
             <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
           </Link>
         </div>
+
+        {/* League filter with arrow scroll */}
+        {leagues.length > 2 && (
+          <div className="mb-5">
+            <ScrollRow>
+              {leagues.map(l => (
+                <button key={l} onClick={() => setActiveLeague(l)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap transition-all flex-shrink-0 border",
+                    activeLeague === l
+                      ? "bg-primary-container text-on-primary border-primary-container neon-glow"
+                      : "border-white/10 text-on-surface-variant hover:border-primary-container/50 hover:text-on-surface"
+                  )}>
+                  {l === "ALL" ? "All Leagues" : l}
+                </button>
+              ))}
+            </ScrollRow>
+          </div>
+        )}
 
         {/* ── Not logged in: sign-in + store gate ── */}
         {!user && !loading && matches.length > 0 ? (
@@ -599,21 +653,33 @@ export default function Today() {
             {[...Array(3)].map((_, i) => <CardSkeleton key={i} />)}
           </div>
 
-        ) : displayed.length === 0 ? (
+        ) : visibleCards.length === 0 ? (
           <div className="text-center py-14 md:py-20 glass-card rounded-xl border border-outline-variant/30">
             <span className="material-symbols-outlined text-[48px] text-on-surface-variant mb-4 block">sports_soccer</span>
-            <div className="text-on-surface font-bold text-lg mb-2">No picks for today</div>
-            <div className="text-on-surface-variant text-sm mb-6 px-4">The AI engine found no strong signals for today's matches.</div>
-            <Link to="/predictions"
-              className="inline-flex items-center gap-2 bg-primary-container text-on-primary px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-tight neon-glow">
-              Browse All Predictions
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </Link>
+            <div className="text-on-surface font-bold text-lg mb-2">
+              {displayed.length === 0 ? "No picks for today" : `No picks for ${activeLeague}`}
+            </div>
+            <div className="text-on-surface-variant text-sm mb-6 px-4">
+              {displayed.length === 0
+                ? "The AI engine found no strong signals for today's matches."
+                : "Try selecting a different league."}
+            </div>
+            {displayed.length > 0
+              ? <button onClick={() => setActiveLeague("ALL")}
+                  className="inline-flex items-center gap-2 bg-primary-container text-on-primary px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-tight neon-glow">
+                  Show all leagues
+                </button>
+              : <Link to="/predictions"
+                  className="inline-flex items-center gap-2 bg-primary-container text-on-primary px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-tight neon-glow">
+                  Browse All Predictions
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </Link>
+            }
           </div>
 
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-            {displayed.map((m, i) => (
+            {visibleCards.map((m, i) => (
               <AnimatedCard key={m.id} match={m} delay={i * 500} instant={packOpened} />
             ))}
           </div>

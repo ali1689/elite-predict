@@ -28,7 +28,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             {NAV_LINKS.map(({ label, to, live }) => (
               <NavLink key={label} to={to}
                 className={({ isActive }) =>

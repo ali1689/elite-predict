@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/App";
 import TeamAvatar from "@/components/TeamAvatar";
@@ -55,6 +55,33 @@ function LiveDot() {
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function Skeleton({ className }) {
   return <div className={cn("animate-pulse bg-white/5 rounded-xl", className)} />;
+}
+
+// ── Scrollable row with arrow buttons ────────────────────────────────────────
+function ScrollRow({ children }) {
+  const ref = useRef(null);
+  const scroll = (dir) => ref.current?.scrollBy({ left: dir * 220, behavior: "smooth" });
+  return (
+    <div className="relative flex items-center gap-1">
+      <button
+        onClick={() => scroll(-1)}
+        className="flex-shrink-0 w-7 h-7 rounded-lg border border-white/10 bg-surface-container/60 text-on-surface-variant hover:text-on-surface hover:border-primary-container/40 transition-all flex items-center justify-center"
+        aria-label="Scroll left"
+      >
+        <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+      </button>
+      <div ref={ref} className="flex gap-2 overflow-x-auto scrollbar-hide flex-1 pb-1">
+        {children}
+      </div>
+      <button
+        onClick={() => scroll(1)}
+        className="flex-shrink-0 w-7 h-7 rounded-lg border border-white/10 bg-surface-container/60 text-on-surface-variant hover:text-on-surface hover:border-primary-container/40 transition-all flex items-center justify-center"
+        aria-label="Scroll right"
+      >
+        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+      </button>
+    </div>
+  );
 }
 
 // ── Probability bar ───────────────────────────────────────────────────────────
@@ -398,7 +425,7 @@ export default function Live() {
 
         {/* Competition tabs */}
         {competitions.length > 2 && (
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+          <ScrollRow>
             {competitions.map(c => (
               <button key={c} onClick={() => setActiveComp(c)}
                 className={cn(
@@ -410,7 +437,7 @@ export default function Live() {
                 {c === ALL ? "All Competitions" : c}
               </button>
             ))}
-          </div>
+          </ScrollRow>
         )}
       </section>
 
