@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import Navbar from "./components/Navbar";
@@ -10,7 +10,8 @@ import Today from "./pages/Today";
 import Login from "./pages/Login";
 import Players from "./pages/Players";
 import Open from "./pages/Open";
-import { AuthProvider } from "./context/AuthContext";
+import Live from "./pages/Live";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // ── Theme context ──────────────────────────────────────────────────────────
 export const ThemeContext = createContext({ theme: "light", toggle: () => {} });
@@ -40,6 +41,13 @@ function ThemeProvider({ children }) {
   );
 }
 
+// ── Protected route — redirects to /login if not authenticated ────────────
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null; // wait for session check before deciding
+  return user ? children : <Navigate to="/login" replace />;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -53,6 +61,7 @@ export default function App() {
               <Route path="/predictions" element={<Predictions />} />
               <Route path="/players"     element={<Players />} />
               <Route path="/open"        element={<Open />} />
+              <Route path="/live"        element={<ProtectedRoute><Live /></ProtectedRoute>} />
               <Route path="/login"       element={<Login />} />
             </Routes>
           </main>

@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/App";
 
 const NAV_LINKS = [
+  { label: "Live",                 to: "/live",        icon: "sensors",       live: true },
   { label: "Today's Predictions",  to: "/today",       icon: "today"          },
   { label: "Open Pack",            to: "/open",        icon: "style"          },
   { label: "Upcoming Predictions", to: "/predictions", icon: "calendar_month" },
@@ -28,16 +29,22 @@ export default function Navbar() {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map(({ label, to }) => (
+            {NAV_LINKS.map(({ label, to, live }) => (
               <NavLink key={label} to={to}
                 className={({ isActive }) =>
                   [
-                    "font-['Lexend'] uppercase tracking-widest font-semibold text-[11px] transition-colors",
+                    "relative font-['Lexend'] uppercase tracking-widest font-semibold text-[11px] transition-colors flex items-center gap-1.5",
                     isActive
                       ? "text-primary-container border-b-2 border-primary-container pb-0.5"
                       : "text-zinc-400 hover:text-zinc-100",
                   ].join(" ")
                 }>
+                {live && (
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+                  </span>
+                )}
                 {label}
               </NavLink>
             ))}
@@ -117,7 +124,7 @@ export default function Navbar() {
             className="absolute top-16 left-0 right-0 border-b shadow-2xl navbar-adaptive"
             onClick={e => e.stopPropagation()}>
             <div className="px-4 py-4 space-y-1">
-              {NAV_LINKS.map(({ label, to, icon }) => (
+              {NAV_LINKS.map(({ label, to, icon, live }) => (
                 <NavLink key={label} to={to}
                   onClick={() => setMenuOpen(false)}
                   className={({ isActive }) =>
@@ -130,6 +137,12 @@ export default function Navbar() {
                   }>
                   <span className="material-symbols-outlined text-[18px]">{icon}</span>
                   {label}
+                  {live && (
+                    <span className="relative flex h-1.5 w-1.5 ml-auto">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>
