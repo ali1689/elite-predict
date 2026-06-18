@@ -19,6 +19,9 @@ export function isPackOpenedToday(userId) {
 }
 import { sigStyle, tierStyle, fmtTime, abbr, SIGNAL_DONUT_COLORS } from "@/data/matches";
 import { cn } from "@/lib/utils";
+import InfoTip from "@/components/InfoTip";
+import { useCountUp } from "@/lib/useCountUp";
+import HowToRead from "@/components/HowToRead";
 
 // ── Loading skeleton ──────────────────────────────────────────────────────
 function Skeleton({ className }) {
@@ -70,18 +73,42 @@ function CardSkeleton() {
 }
 
 // ── Stat card ─────────────────────────────────────────────────────────────
-function StatCard({ icon, label, value, sub, loading }) {
+// `countTo` (+ optional suffix/decimals) animates the number on load.
+// `tip` shows an InfoTip explaining the metric.
+function StatCard({ icon, label, value, sub, loading, countTo, suffix = "", decimals = 0, tip }) {
+  const animated = useCountUp(countTo ?? 0, { decimals });
+  const display = countTo != null ? `${animated}${suffix}` : value;
   return (
     <div className="glass-card rounded-xl p-5 flex flex-col gap-1">
       <div className="flex items-center gap-2 mb-1">
         <span className="material-symbols-outlined text-primary-container text-[20px]">{icon}</span>
         <span className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant">{label}</span>
+        {tip && <InfoTip title={tip.title} text={tip.text} />}
       </div>
       {loading
         ? <Skeleton className="h-7 w-16 mt-1" />
-        : <div className="font-black text-2xl text-on-surface leading-none">{value}</div>
+        : <div className="font-black text-2xl text-on-surface leading-none tabular-nums">{display}</div>
       }
       {sub && <div className="font-['Lexend'] text-[10px] text-on-surface-variant">{sub}</div>}
+    </div>
+  );
+}
+
+// ── Signal Donut — legend row (count-up + hover sync) ──────────────────────
+function DonutLegendRow({ s, i, hover, setHover }) {
+  const cnt = useCountUp(s.cnt);
+  const pct = useCountUp(Math.round(s.pct * 100));
+  return (
+    <div
+      onMouseEnter={() => setHover(i)}
+      onMouseLeave={() => setHover(null)}
+      className={cn("flex items-center gap-2 rounded-md px-1.5 -mx-1.5 py-0.5 cursor-pointer", hover === i && "bg-white/5")}
+      style={{ opacity: hover === null || hover === i ? 1 : 0.4, transition: "opacity 0.2s ease, background-color 0.2s ease" }}
+    >
+      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+      <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-wider flex-1 truncate">{s.sig}</span>
+      <span className="font-['Lexend'] text-[11px] font-bold text-on-surface tabular-nums">{cnt}</span>
+      <span className="font-['Lexend'] text-[9px] text-on-surface-variant w-7 text-right tabular-nums">{pct}%</span>
     </div>
   );
 }
@@ -90,6 +117,15 @@ function StatCard({ icon, label, value, sub, loading }) {
 function SignalDonut({ counts, total }) {
   const R = 54, CX = 70, CY = 70, STROKE = 14;
   const circ = 2 * Math.PI * R;
+  const [hover, setHover]     = useState(null);
+  const [mounted, setMounted] = useState(false);
+  const totalUp = useCountUp(total);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   let offset = 0;
   const slices = Object.entries(counts)
     .filter(([, c]) => c > 0)
@@ -112,33 +148,62 @@ function SignalDonut({ counts, total }) {
           {slices.length === 0 && (
             <circle cx={CX} cy={CY} r={R} fill="none" stroke="#27272a" strokeWidth={STROKE} />
           )}
-          {slices.map(s => (
+          {slices.map((s, i) => (
             <circle key={s.sig}
               cx={CX} cy={CY} r={R} fill="none"
-              stroke={s.color} strokeWidth={STROKE}
-              strokeDasharray={`${s.dash} ${circ - s.dash}`}
+              stroke={s.color}
+              strokeWidth={hover === i ? STROKE + 3 : STROKE}
+              strokeDasharray={mounted ? `${s.dash} ${circ - s.dash}` : `0 ${circ}`}
               strokeDashoffset={-s.offset}
               strokeLinecap="round"
-              style={{ transform: "rotate(-90deg)", transformOrigin: "70px 70px" }}
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+              style={{
+                transform: "rotate(-90deg)", transformOrigin: "70px 70px", cursor: "pointer",
+                opacity: hover === null || hover === i ? 1 : 0.3,
+                transition: "stroke-dasharray 0.9s cubic-bezier(0.22,1,0.36,1), stroke-width 0.2s ease, opacity 0.2s ease",
+              }}
             />
           ))}
-          <text x={CX} y={CY - 6} textAnchor="middle" fill="#E8EAED" fontSize="22" fontWeight="900">{total}</text>
-          <text x={CX} y={CY + 14} textAnchor="middle" fill="#9AA0A6" fontSize="9" fontWeight="600" letterSpacing="1">PICKS</text>
+          <text x={CX} y={CY - 6} textAnchor="middle" fill="#E8EAED" fontSize="22" fontWeight="900">
+            {hover !== null && slices[hover] ? slices[hover].cnt : totalUp}
+          </text>
+          <text x={CX} y={CY + 14} textAnchor="middle" fill="#9AA0A6" fontSize="9" fontWeight="600" letterSpacing="1">
+            {hover !== null && slices[hover] ? `${Math.round(slices[hover].pct * 100)}%` : "PICKS"}
+          </text>
         </svg>
         <div className="flex flex-col gap-2 flex-1 min-w-0">
-          {slices.map(s => (
-            <div key={s.sig} className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-wider flex-1 truncate">{s.sig}</span>
-              <span className="font-['Lexend'] text-[11px] font-bold text-on-surface">{s.cnt}</span>
-              <span className="font-['Lexend'] text-[9px] text-on-surface-variant w-7 text-right">{Math.round(s.pct * 100)}%</span>
-            </div>
+          {slices.map((s, i) => (
+            <DonutLegendRow key={s.sig} s={s} i={i} hover={hover} setHover={setHover} />
           ))}
           {slices.length === 0 && (
             <span className="font-['Lexend'] text-[10px] text-on-surface-variant">No picks today</span>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Confidence distribution — single bar (count-up + grow-in + hover) ──────
+function ConfBar({ b, max, mounted, hover, setHover, i }) {
+  const count = useCountUp(b.count);
+  const w = max > 0 ? (b.count / max) * 100 : 0;
+  return (
+    <div
+      onMouseEnter={() => setHover(i)}
+      onMouseLeave={() => setHover(null)}
+      className="flex items-center gap-3 cursor-default"
+      style={{ opacity: hover === null || hover === i ? 1 : 0.45, transition: "opacity 0.2s ease" }}
+    >
+      <span className="font-['Lexend'] text-[10px] text-on-surface-variant w-14 flex-shrink-0">{b.label}</span>
+      <div className="flex-1 h-5 bg-surface-container rounded-full overflow-hidden">
+        <div
+          className={cn("h-full rounded-full bg-gradient-to-r from-blue-500/80 to-primary-container/80", hover === i && "brightness-110")}
+          style={{ width: mounted ? `${w}%` : "0%", transition: "width 0.9s cubic-bezier(0.22,1,0.36,1), filter 0.2s ease" }}
+        />
+      </div>
+      <span className="font-['Lexend'] text-[11px] font-bold text-on-surface w-5 text-right tabular-nums">{count}</span>
     </div>
   );
 }
@@ -158,6 +223,13 @@ function ConfChart({ matches }) {
   }));
   const max = Math.max(...counts.map(c => c.count), 1);
 
+  const [hover, setHover]     = useState(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
     <div className="glass-card rounded-xl p-5">
       <div className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant mb-4 flex items-center gap-2">
@@ -165,17 +237,8 @@ function ConfChart({ matches }) {
         Confidence Distribution
       </div>
       <div className="space-y-3">
-        {counts.map(b => (
-          <div key={b.label} className="flex items-center gap-3">
-            <span className="font-['Lexend'] text-[10px] text-on-surface-variant w-14 flex-shrink-0">{b.label}</span>
-            <div className="flex-1 h-5 bg-surface-container rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-blue-500/80 to-primary-container/80 transition-all"
-                style={{ width: `${(b.count / max) * 100}%` }}
-              />
-            </div>
-            <span className="font-['Lexend'] text-[11px] font-bold text-on-surface w-5 text-right">{b.count}</span>
-          </div>
+        {counts.map((b, i) => (
+          <ConfBar key={b.label} b={b} i={i} max={max} mounted={mounted} hover={hover} setHover={setHover} />
         ))}
       </div>
     </div>
@@ -202,10 +265,14 @@ function ProbBar({ label, value, color = "bg-primary-container" }) {
 }
 
 // ── Stat chip ─────────────────────────────────────────────────────────────
-function StatChip({ label, value, accent }) {
+// Pass `tip` (a glossary key, e.g. "BTTS") to show an explanation tooltip.
+function StatChip({ label, value, accent, tip }) {
   return (
     <div className="bg-surface-container-low rounded-lg p-2 text-center border border-outline-variant/30">
-      <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-0.5">{label}</div>
+      <div className="flex items-center justify-center gap-0.5 mb-0.5">
+        <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest">{label}</span>
+        {tip && <InfoTip termKey={tip} />}
+      </div>
       <div className={cn("font-['Lexend'] text-sm font-bold tabular-nums", accent ? "text-primary-container" : "text-on-surface")}>
         {value}
       </div>
@@ -384,11 +451,11 @@ function MatchCard({ match }) {
 
       {/* Stats grid */}
       <div className="grid grid-cols-5 gap-1.5">
-        <StatChip label="BTTS"  value={`${match.btts}%`} />
-        <StatChip label="O1.5"  value={`${match.over15}%`} accent />
-        <StatChip label="O2.5"  value={`${match.over25}%`} accent />
-        <StatChip label="U2.5"  value={`${match.under25}%`} />
-        <StatChip label="xG"    value={xg} />
+        <StatChip label="BTTS"  value={`${match.btts}%`}    tip="BTTS" />
+        <StatChip label="O1.5"  value={`${match.over15}%`}  accent tip="O1.5" />
+        <StatChip label="O2.5"  value={`${match.over25}%`}  accent tip="O2.5" />
+        <StatChip label="U2.5"  value={`${match.under25}%`} tip="U2.5" />
+        <StatChip label="xG"    value={xg} tip="xG" />
       </div>
 
       {/* Double Chance */}
@@ -493,12 +560,32 @@ export default function Today() {
         )}
       </section>
 
+      {/* How to read this page */}
+      <div className="mb-8 md:mb-10">
+        <HowToRead
+          storageKey="howto_today"
+          title="How to read these picks"
+          intro="Each card below is one upcoming match with our AI's best bet for it."
+          steps={[
+            "Signal — our single top recommended pick for that match.",
+            "Conf (confidence) — how strongly the model backs it. Higher = stronger. We only show picks at 75%+.",
+            "The Home / Draw / Away boxes and the % chips are each market's probability.",
+            "Tap the ⓘ next to any term (BTTS, O2.5, xG…) to see what it means.",
+            "Cards are sorted strongest-first. Want full breakdowns? Join the Telegram.",
+          ]}
+        />
+      </div>
+
       {/* Stat cards */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-12">
-        <StatCard icon="calendar_today"  label="Today's Picks"    value={displayed.length} sub="75%+ confidence"    loading={loading} />
-        <StatCard icon="grade"           label="Tier A Picks"     value={tierA}          sub="Strongest signals"   loading={loading} />
-        <StatCard icon="percent"         label="Avg Confidence"   value={`${avgConf}%`}  sub="Across all picks"   loading={loading} />
-        <StatCard icon="sports_soccer"   label="Avg xG / match"   value={avgXg}          sub="Expected goals"     loading={loading} />
+        <StatCard icon="calendar_today"  label="Today's Picks"    countTo={displayed.length} sub="75%+ confidence"    loading={loading}
+                  tip={{ title: "Today's Picks", text: "Number of qualifying picks today (75%+ confidence)." }} />
+        <StatCard icon="grade"           label="Tier A Picks"     countTo={tierA}            sub="Strongest signals"   loading={loading}
+                  tip={{ title: "Tier A Picks", text: "Picks graded A — the model's strongest tier by 30-day accuracy." }} />
+        <StatCard icon="percent"         label="Avg Confidence"   countTo={avgConf} suffix="%" sub="Across all picks"  loading={loading}
+                  tip={{ title: "Average Confidence", text: "Mean model confidence across today's qualifying picks." }} />
+        <StatCard icon="sports_soccer"   label="Avg xG / match"   countTo={Number(avgXg)} decimals={2} sub="Expected goals" loading={loading}
+                  tip={{ title: "Average xG", text: "Mean expected goals per match — higher means more open, attacking games." }} />
       </section>
 
       {/* Charts row */}

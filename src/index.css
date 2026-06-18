@@ -193,3 +193,89 @@
 .animate-fade-up {
   animation: animate-fade-up 0.5s ease-out forwards;
 }
+
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║  INTERACTIVITY LAYER — START                                              ║
+   ║  Additive hover / press / focus micro-interactions only.                  ║
+   ║  No layout, spacing, color, or static-design changes — purely how         ║
+   ║  elements respond to the cursor/keyboard. Targets existing classes only.  ║
+   ║                                                                           ║
+   ║  ROLLBACK (any one of these fully reverts it):                            ║
+   ║    1) git checkout -- src/index.css      (index.css was clean in git)     ║
+   ║    2) restore src/index.css.pre-interactivity.bak                         ║
+   ║    3) delete everything between START and END below                       ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+@media (prefers-reduced-motion: no-preference) {
+
+  /* Cards — lift + depth + faint neon ring on hover */
+  .glass-card {
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 38px -18px rgba(0, 0, 0, 0.55),
+                0 0 0 1px rgba(57, 255, 20, 0.16);
+  }
+
+  /* Active neon chips — gentle always-on "breathing" glow (visible at rest) */
+  .neon-glow { animation: ep-breathe 2.6s ease-in-out infinite; }
+  @keyframes ep-breathe {
+    0%, 100% { box-shadow: 0 0 14px rgba(57, 255, 20, 0.25); }
+    50%      { box-shadow: 0 0 26px rgba(57, 255, 20, 0.55); }
+  }
+
+  /* 1X2 / Double-Chance result boxes — subtle pop on hover */
+  .result-box {
+    transition: border-color 0.2s ease, background 0.2s ease,
+                transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.25s ease;
+  }
+  .result-box:hover      { transform: translateY(-2px); }
+  .result-box.top:hover  { box-shadow: 0 0 14px rgba(57, 255, 20, 0.28); }
+
+  /* Buttons & chips — tactile press feedback + smooth hover everywhere */
+  button {
+    transition: transform 0.14s ease, filter 0.2s ease,
+                background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  button:hover  { filter: brightness(1.06); }
+  button:active { transform: scale(0.95); }
+
+  /* Active neon chips — soft glow intensifies on hover */
+  .neon-glow { transition: box-shadow 0.3s ease; }
+  .neon-glow:hover { box-shadow: 0 0 24px rgba(57, 255, 20, 0.45); }
+
+  /* Progress / probability fills — smoother eased width + glow transition */
+  .progress-fill-glow {
+    transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+  }
+}
+
+/* Home hero — ambient motion (orbs + slow image zoom) */
+@media (prefers-reduced-motion: no-preference) {
+  .ep-orb { filter: blur(64px); opacity: 0.55; will-change: transform; }
+  .ep-orb-green { background: radial-gradient(circle, rgba(57,255,20,0.55), transparent 70%);
+                  animation: ep-float 15s ease-in-out infinite; }
+  .ep-orb-blue  { background: radial-gradient(circle, rgba(96,165,250,0.45), transparent 70%);
+                  animation: ep-float 19s ease-in-out infinite reverse; }
+  @keyframes ep-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(34px, -22px) scale(1.1); }
+  }
+  .ep-kenburns { animation: ep-kenburns 30s ease-in-out infinite alternate; transform-origin: center; }
+  @keyframes ep-kenburns {
+    from { transform: scale(1); }
+    to   { transform: scale(1.12); }
+  }
+}
+/* Static so it reads even with reduced motion */
+.ep-glow-text { text-shadow: 0 0 26px rgba(57, 255, 20, 0.45); }
+
+/* Accessibility — visible keyboard focus ring (kept even with reduced motion) */
+:where(button, a, [tabindex]):focus-visible {
+  outline: 2px solid #39ff14;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* ── INTERACTIVITY LAYER — END ── */

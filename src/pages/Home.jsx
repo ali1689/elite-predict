@@ -93,26 +93,36 @@ export default function Home() {
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center pt-16 md:pt-20">
+      <section className="relative min-h-screen flex items-center pt-16 md:pt-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src={STADIUM_IMG} alt="Football stadium at night"
-            className="w-full h-full object-cover opacity-30 grayscale" />
+            className="w-full h-full object-cover opacity-30 grayscale ep-kenburns" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
         </div>
+        {/* Ambient animated glow orbs */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          <div className="ep-orb ep-orb-green absolute -top-24 -left-24 w-[26rem] h-[26rem] md:w-[34rem] md:h-[34rem] rounded-full" />
+          <div className="ep-orb ep-orb-blue absolute top-1/3 -right-24 w-[22rem] h-[22rem] md:w-[28rem] md:h-[28rem] rounded-full" />
+        </div>
         <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-8 w-full py-12 md:py-24">
-          <div className="max-w-4xl animate-fade-up">
-            <Badge variant="neon" className="mb-4 md:mb-6">
-              AI-Engine Activated &bull; Now 100% Free
-            </Badge>
-            <h1 className="text-[2.25rem] sm:text-5xl md:text-display-xl font-black text-on-surface mb-5 md:mb-8 leading-[1.05] tracking-tight md:tracking-[-0.04em]">
+          <div className="max-w-4xl">
+            <div className="animate-fade-up" style={{ animationDelay: "0ms", animationFillMode: "both" }}>
+              <Badge variant="neon" className="mb-4 md:mb-6">
+                AI-Engine Activated &bull; Now 100% Free
+              </Badge>
+            </div>
+            <h1 className="animate-fade-up text-[2.25rem] sm:text-5xl md:text-display-xl font-black text-on-surface mb-5 md:mb-8 leading-[1.05] tracking-tight md:tracking-[-0.04em]"
+              style={{ animationDelay: "100ms", animationFillMode: "both" }}>
               MASTER THE MATCH WITH{" "}
-              <span className="text-primary-container">PRO-LEVEL</span> PRECISION
+              <span className="text-primary-container ep-glow-text">PRO-LEVEL</span> PRECISION
             </h1>
-            <p className="text-base sm:text-lg md:text-headline-md font-semibold text-on-surface-variant mb-8 md:mb-12 max-w-2xl leading-relaxed">
+            <p className="animate-fade-up text-base sm:text-lg md:text-headline-md font-semibold text-on-surface-variant mb-8 md:mb-12 max-w-2xl leading-relaxed"
+              style={{ animationDelay: "200ms", animationFillMode: "both" }}>
               Join the world's most accurate AI football prediction engine. Now free for the
               community. Real-time data, expert analytics, and 85%+ win rates.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-5">
+            <div className="animate-fade-up flex flex-col sm:flex-row gap-3 sm:gap-5"
+              style={{ animationDelay: "300ms", animationFillMode: "both" }}>
               <Button size="lg" variant="primary" className="neon-glow w-full sm:w-auto" asChild>
                 <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer">
                   Join Telegram Channel

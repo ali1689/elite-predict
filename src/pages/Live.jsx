@@ -3,8 +3,28 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/App";
 import TeamAvatar from "@/components/TeamAvatar";
 import { useInplayPredictions } from "@/lib/useInplay";
+import { sigStyle, abbr } from "@/data/matches";
+import InfoTip from "@/components/InfoTip";
+import { useCountUp } from "@/lib/useCountUp";
+import HowToRead from "@/components/HowToRead";
 
 const ALL = "ALL";
+
+// ── Live → Today label map (so picks get the same badge styling) ─────────────
+const LIVE_TO_FULL = {
+  "Over 1.5":      "Over 1.5 Goals",
+  "Over 2.5":      "Over 2.5 Goals",
+  "Under 2.5":     "Under 2.5 Goals",
+  "Home Over 0.5": "Home Over 0.5 Goals",
+  "Home Over 1.5": "Home Over 1.5 Goals",
+  "Away Over 0.5": "Away Over 0.5 Goals",
+  "Away Over 1.5": "Away Over 1.5 Goals",
+  "BTTS":          "Both Teams to Score",
+  "BTTS No":       "Under 2.5 Goals",   // defensive pick → reuse Under styling
+};
+function liveSigStyle(signal = "") {
+  return sigStyle(LIVE_TO_FULL[signal] ?? signal);
+}
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 function statusLabel(status, minute) {
@@ -22,17 +42,59 @@ function statusColor(status) {
   return "text-red-400 bg-red-400/10 border-red-400/30";
 }
 
-// ── Signal colour (matches existing sigStyle convention) ──────────────────────
-function signalColor(signal = "") {
-  const s = signal.toLowerCase();
-  if (s.includes("home win"))  return "text-primary-container";
-  if (s.includes("away win"))  return "text-sky-400";
-  if (s.includes("draw"))      return "text-yellow-400";
-  if (s.includes("over 2.5"))  return "text-emerald-400";
-  if (s.includes("over 1.5"))  return "text-teal-400";
-  if (s.includes("btts"))      return "text-violet-400";
-  if (s.includes("under"))     return "text-orange-400";
-  return "text-on-surface";
+// ── 1X2 result trio (matches Today's card) ────────────────────────────────────
+function ResultTrio({ homeWin = 0, draw = 0, awayWin = 0 }) {
+  const top = homeWin >= draw && homeWin >= awayWin ? "home"
+    : draw >= homeWin && draw >= awayWin ? "draw" : "away";
+  return (
+    <div className="result-trio">
+      <div className={cn("result-box", top === "home" && "top")}>
+        <span className="result-box-label">Home</span>
+        <span className="result-box-val">{Math.round(homeWin)}%</span>
+      </div>
+      <div className={cn("result-box", top === "draw" && "top")}>
+        <span className="result-box-label">Draw</span>
+        <span className="result-box-val">{Math.round(draw)}%</span>
+      </div>
+      <div className={cn("result-box", top === "away" && "top")}>
+        <span className="result-box-label">Away</span>
+        <span className="result-box-val">{Math.round(awayWin)}%</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Stat chip (matches Today's card) ──────────────────────────────────────────
+// Pass `tip` (a glossary key, e.g. "BTTS") to show an explanation tooltip.
+function StatChip({ label, value, accent, tip }) {
+  return (
+    <div className="bg-surface-container-low rounded-lg p-2 text-center border border-outline-variant/30">
+      <div className="flex items-center justify-center gap-0.5 mb-0.5">
+        <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest">{label}</span>
+        {tip && <InfoTip termKey={tip} />}
+      </div>
+      <div className={cn("font-['Lexend'] text-sm font-bold tabular-nums", accent ? "text-primary-container" : "text-on-surface")}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+// ── Live KPI tile (animated count-up + optional tooltip) ──────────────────────
+function LiveKpi({ icon, label, count, suffix = "", tip }) {
+  const v = useCountUp(count);
+  return (
+    <div className="glass-card rounded-xl p-4 flex items-center gap-3 border border-white/5">
+      <span className="material-symbols-outlined text-primary-container text-[22px]">{icon}</span>
+      <div>
+        <div className="text-lg font-black text-on-surface tabular-nums">{v}{suffix}</div>
+        <div className="flex items-center gap-0.5">
+          <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">{label}</span>
+          {tip && <InfoTip title={tip.title} text={tip.text} />}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── Confidence ring colour ───────────────────────────────────────────────────
@@ -84,15 +146,19 @@ function ScrollRow({ children }) {
   );
 }
 
-// ── Probability bar ───────────────────────────────────────────────────────────
+// ── Probability bar (matches Today's card) ────────────────────────────────────
 function ProbBar({ label, value, color = "bg-primary-container" }) {
   return (
     <div>
-      <div className="flex justify-between mb-0.5">
+      <div className="flex justify-between mb-1">
         <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">{label}</span>
-        <span className="font-['Lexend'] text-[9px] font-bold text-on-surface tabular-nums">{value}%</span>
+        <span className={cn("font-['Lexend'] text-[9px] font-bold tabular-nums",
+          color === "bg-primary-container" ? "text-primary-container" :
+          color === "bg-blue-400"          ? "text-blue-400"          :
+          color === "bg-violet-400"        ? "text-violet-400"        : "text-on-surface-variant"
+        )}>{value}%</span>
       </div>
-      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+      <div className="h-1 bg-surface-container rounded-full overflow-hidden">
         <div className={cn("h-full rounded-full transition-all duration-700", color)} style={{ width: `${Math.min(value, 100)}%` }} />
       </div>
     </div>
@@ -107,124 +173,108 @@ function stalenessMinutes(updatedAt) {
   } catch { return null; }
 }
 
-// ── Live match card ───────────────────────────────────────────────────────────
+// ── Live match card (Today's design language, adapted for in-play) ────────────
 function LiveCard({ match }) {
-  const homeTeam  = { abbr: match.home.slice(0, 3).toUpperCase(), name: match.home, logo: null };
-  const awayTeam  = { abbr: match.away.slice(0, 3).toUpperCase(), name: match.away, logo: null };
-  const sc        = signalColor(match.primarySignal);
+  const homeTeam  = { abbr: abbr(match.home), name: match.home, logo: null };
+  const awayTeam  = { abbr: abbr(match.away), name: match.away, logo: null };
+  const sig       = liveSigStyle(match.primarySignal);
   const stColor   = statusColor(match.status);
   const staleMin  = stalenessMinutes(match.updatedAt);
   const isStale   = staleMin !== null && staleMin >= 3;
+  const xgRem     = (match.lambdaHomeRem + match.lambdaAwayRem).toFixed(2);
 
   // Leading team determines score colour
   const homeAhead = match.homeScore > match.awayScore;
   const awayAhead = match.awayScore > match.homeScore;
+  const scoreGlow = "text-primary-container drop-shadow-[0_0_12px_rgba(57,255,20,0.6)]";
 
   return (
-    <div className="glass-card rounded-2xl p-5 flex flex-col gap-4 border border-white/5 hover:border-primary-container/25 transition-all duration-300 group">
+    <div className="glass-card p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-4 group">
 
-      {/* Header row: competition + status badge */}
-      <div className="flex items-center justify-between">
-        <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest truncate max-w-[55%]">
-          {match.competition}
-        </span>
-        <div className="flex items-center gap-1.5">
-          {isStale && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-yellow-500/40 bg-yellow-500/10 font-['Lexend'] text-[8px] font-bold uppercase tracking-widest text-yellow-400"
-              title={`Data last updated ${staleMin}m ago — pipeline may be delayed`}>
-              <span className="material-symbols-outlined text-[10px]">warning</span>
-              {staleMin}m old
-            </span>
-          )}
+      {/* Header: status + signal pick (left) · competition (right) */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col gap-1.5">
           <span className={cn(
-            "flex items-center gap-1.5 px-2 py-0.5 rounded-full border font-['Lexend'] text-[9px] font-bold uppercase tracking-widest",
+            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider w-fit border",
             stColor
           )}>
             <LiveDot />
             {statusLabel(match.status, match.minute)}
           </span>
+          <span className={cn("px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-tighter w-fit", sig.bg, sig.text)}>
+            {match.primarySignal}
+          </span>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest truncate max-w-[120px]">{match.competition}</div>
+          {isStale && (
+            <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded border border-yellow-500/40 bg-yellow-500/10 font-['Lexend'] text-[8px] font-bold uppercase tracking-widest text-yellow-400"
+              title={`Data last updated ${staleMin}m ago — pipeline may be delayed`}>
+              <span className="material-symbols-outlined text-[10px]">warning</span>
+              {staleMin}m old
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Score section */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
-          <TeamAvatar team={homeTeam} />
-          <div className="font-bold text-sm text-on-surface truncate w-full text-center">{homeTeam.abbr}</div>
-          <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest text-center truncate w-full px-1">
-            {match.home}
-          </div>
+      {/* Teams + live score */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+          <TeamAvatar team={homeTeam} size="md" />
+          <span className="font-bold text-xs text-on-surface text-center leading-tight truncate w-full px-1">{match.home}</span>
         </div>
-
-        {/* Score */}
-        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+        <div className="flex flex-col items-center px-3 flex-shrink-0">
           <div className="flex items-center gap-1.5">
-            <span className={cn(
-              "text-3xl font-black tabular-nums leading-none",
-              homeAhead ? "text-primary-container drop-shadow-[0_0_12px_rgba(57,255,20,0.6)]" : "text-on-surface"
-            )}>
-              {match.homeScore}
-            </span>
+            <span className={cn("text-3xl font-black tabular-nums leading-none", homeAhead ? scoreGlow : "text-on-surface")}>{match.homeScore}</span>
             <span className="text-xl font-black text-on-surface-variant">-</span>
-            <span className={cn(
-              "text-3xl font-black tabular-nums leading-none",
-              awayAhead ? "text-primary-container drop-shadow-[0_0_12px_rgba(57,255,20,0.6)]" : "text-on-surface"
-            )}>
-              {match.awayScore}
-            </span>
+            <span className={cn("text-3xl font-black tabular-nums leading-none", awayAhead ? scoreGlow : "text-on-surface")}>{match.awayScore}</span>
           </div>
-          <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest">
-            xG rem: {(match.lambdaHomeRem + match.lambdaAwayRem).toFixed(2)}
-          </div>
+          <span className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mt-1.5">xG rem {xgRem}</span>
         </div>
-
-        <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
-          <TeamAvatar team={awayTeam} />
-          <div className="font-bold text-sm text-on-surface truncate w-full text-center">{awayTeam.abbr}</div>
-          <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest text-center truncate w-full px-1">
-            {match.away}
-          </div>
+        <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+          <TeamAvatar team={awayTeam} size="md" />
+          <span className="font-bold text-xs text-on-surface text-center leading-tight truncate w-full px-1">{match.away}</span>
         </div>
       </div>
 
-      {/* Signal box */}
-      <div className="bg-primary-container/10 rounded-xl p-3 border border-primary-container/25 group-hover:border-primary-container transition-colors">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-1">Signal</div>
-            <div className={cn("font-black text-sm leading-tight", sc)}>
-              {match.primarySignal || "–"}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-1">Conf</div>
-            <div className={cn("font-black text-xl font-['Lexend'] tabular-nums", confColor(match.confidence))}>
-              {match.confidence}%
-            </div>
-          </div>
+      {/* Match progress bar (minute / 90) */}
+      <div className="px-0.5 -mt-1">
+        <div className="h-1 bg-surface-container rounded-full overflow-hidden">
+          <div className="h-full rounded-full bg-red-400/70 transition-all duration-700"
+            style={{ width: `${Math.min((match.minute / 90) * 100, 100)}%` }} />
         </div>
       </div>
 
-      {/* 1X2 probability bars */}
-      <div className="space-y-1.5">
-        <ProbBar label="Home Win" value={match.pHomeWin} color="bg-primary-container" />
-        <ProbBar label="Draw"     value={match.pDraw}    color="bg-yellow-400" />
-        <ProbBar label="Away Win" value={match.pAwayWin} color="bg-sky-400" />
+      {/* Signal + confidence box (pick-coloured) */}
+      <div className={cn("rounded-xl p-3 border border-outline-variant/30 flex items-center justify-between", sig.bg)}>
+        <div className="min-w-0">
+          <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-1">Live Signal</div>
+          <div className={cn("font-black text-sm leading-tight truncate", sig.text)}>{match.primarySignal || "–"}</div>
+        </div>
+        <div className="text-right flex-shrink-0 pl-3">
+          <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-1">Conf</div>
+          <div className={cn("font-black text-xl font-['Lexend'] tabular-nums", confColor(match.confidence))}>{match.confidence}%</div>
+        </div>
       </div>
 
-      {/* Market pills */}
-      <div className="grid grid-cols-4 gap-1.5">
-        {[
-          { label: "O2.5", value: match.pOver25  },
-          { label: "O1.5", value: match.pOver15  },
-          { label: "BTTS", value: match.pBtts    },
-          { label: "U2.5", value: match.pUnder25 },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-white/[0.03] rounded-lg p-2 text-center border border-white/5">
-            <div className="font-['Lexend'] text-[7px] text-on-surface-variant uppercase tracking-widest mb-0.5">{label}</div>
-            <div className="font-['Lexend'] text-xs font-semibold text-on-surface">{value}%</div>
-          </div>
-        ))}
+      {/* 1X2 result trio */}
+      <ResultTrio homeWin={match.pHomeWin} draw={match.pDraw} awayWin={match.pAwayWin} />
+
+      {/* Team-goal probability bars */}
+      <div className="space-y-2">
+        <ProbBar label="Home to score (0.5+)" value={match.pHomeOver05} color="bg-primary-container" />
+        <ProbBar label="Home 2+ goals (1.5+)" value={match.pHomeOver15} color="bg-primary-container" />
+        <ProbBar label="Away to score (0.5+)" value={match.pAwayOver05} color="bg-blue-400" />
+        <ProbBar label="Away 2+ goals (1.5+)" value={match.pAwayOver15} color="bg-blue-400" />
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-5 gap-1.5">
+        <StatChip label="BTTS" value={`${match.pBtts}%`}    tip="BTTS" />
+        <StatChip label="O1.5" value={`${match.pOver15}%`}  accent tip="O1.5" />
+        <StatChip label="O2.5" value={`${match.pOver25}%`}  accent tip="O2.5" />
+        <StatChip label="U2.5" value={`${match.pUnder25}%`} tip="U2.5" />
+        <StatChip label="xG"   value={xgRem} tip="xG rem" />
       </div>
     </div>
   );
@@ -269,6 +319,9 @@ export default function Live() {
     const tg  = m.homeScore + m.awayScore;
     const min = m.minute;
     const sig = m.primarySignal;
+
+    // No qualifying pick (below the model's confidence floor) — hide entirely
+    if (sig === "No strong signal" || !sig) return false;
 
     // Match basically over
     if (min >= 88 && (m.status === "1H" || m.status === "2H")) return false;
@@ -357,23 +410,34 @@ export default function Live() {
         )}
       </section>
 
+      {/* How to read this page */}
+      <div className="mb-8">
+        <HowToRead
+          storageKey="howto_live"
+          title="How to read in-play picks"
+          intro="These are matches happening right now — the page refreshes every 60 seconds."
+          steps={[
+            "The score and minute are live. \"xG rem\" is the goals still expected before full time.",
+            "Signal — the best in-play bet right now; Conf is how sure the model is.",
+            "The Home / Draw / Away boxes update with the live state; the bars show each team's chance to score.",
+            "Tap the ⓘ next to any term (BTTS, O2.5, xG…) to see what it means.",
+            "Only actionable bets are shown — settled or too-late markets drop off automatically.",
+          ]}
+        />
+      </div>
+
       {/* Stats bar */}
       {!loading && actionable.length > 0 && (
         <section className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Actionable Bets",  value: actionable.length,                                                    icon: "sports_soccer" },
-            { label: "Avg Confidence",   value: `${Math.round(actionable.reduce((s,m) => s + m.confidence, 0) / actionable.length)}%`, icon: "verified" },
-            { label: "High Conf (75%+)", value: actionable.filter(m => m.confidence >= 75).length,                    icon: "star" },
-            { label: "Competitions",     value: competitions.length - 1,                                               icon: "emoji_events" },
-          ].map(({ label, value, icon }) => (
-            <div key={label} className="glass-card rounded-xl p-4 flex items-center gap-3 border border-white/5">
-              <span className="material-symbols-outlined text-primary-container text-[22px]">{icon}</span>
-              <div>
-                <div className="text-lg font-black text-on-surface tabular-nums">{value}</div>
-                <div className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">{label}</div>
-              </div>
-            </div>
-          ))}
+          <LiveKpi icon="sports_soccer" label="Actionable Bets" count={actionable.length}
+                   tip={{ title: "Actionable Bets", text: "Live matches with a qualifying in-play pick right now." }} />
+          <LiveKpi icon="verified" label="Avg Confidence" suffix="%"
+                   count={Math.round(actionable.reduce((s, m) => s + m.confidence, 0) / actionable.length)}
+                   tip={{ title: "Average Confidence", text: "Mean model confidence across the actionable live bets." }} />
+          <LiveKpi icon="star" label="High Conf (75%+)" count={actionable.filter(m => m.confidence >= 75).length}
+                   tip={{ title: "High Confidence", text: "Live picks the model backs at 75%+ confidence." }} />
+          <LiveKpi icon="emoji_events" label="Competitions" count={competitions.length - 1}
+                   tip={{ title: "Competitions", text: "Distinct competitions with a live actionable bet." }} />
         </section>
       )}
 
