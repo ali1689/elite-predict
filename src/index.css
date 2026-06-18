@@ -279,3 +279,95 @@
   border-radius: 6px;
 }
 /* ── INTERACTIVITY LAYER — END ── */
+
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║  HOME REDESIGN LAYER — START                                              ║
+   ║  Scroll-reveal + feature-showcase interactions for the home page.         ║
+   ║  Purely additive; paired with src/lib/useReveal.js.                       ║
+   ║  ROLLBACK: delete everything between START and END, or restore            ║
+   ║           src/pages/Home.jsx.pre-redesign.bak.                            ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
+/* Scroll reveal — hidden until JS flips `.reveal-in` (see useReveal). */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-in { opacity: 1; transform: none; }
+/* Optional stagger — set style="--reveal-delay: 120ms" on the element */
+.reveal { transition-delay: var(--reveal-delay, 0ms); }
+
+/* Never hide content for reduced-motion or no-JS users */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* Feature-showcase tiles — surface the app's tools from the home page */
+.ep-tool-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.ep-tool-card::after {
+  /* Sweeping sheen that follows the hover */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(57, 255, 20, 0.12),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ep-tool-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(57, 255, 20, 0.30);
+    box-shadow: 0 22px 48px -22px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(57, 255, 20, 0.18);
+  }
+  .ep-tool-card:hover::after { opacity: 1; }
+  .ep-tool-card:hover .ep-tool-icon { transform: translateY(-2px) scale(1.08); }
+  .ep-tool-card:hover .ep-tool-arrow { transform: translateX(4px); opacity: 1; }
+}
+.ep-tool-icon  { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.ep-tool-arrow { transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0.5; }
+
+/* Live "LIVE" pill — pulsing red dot for the in-play tile */
+.ep-live-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 9999px;
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ep-live-dot { animation: ep-live-pulse 1.5s ease-out infinite; }
+  @keyframes ep-live-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    70%  { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  }
+}
+
+/* Horizontal prediction rail — snap + hidden scrollbar */
+.ep-rail {
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.ep-rail::-webkit-scrollbar { display: none; }
+.ep-rail > * { scroll-snap-align: start; }
+/* ── HOME REDESIGN LAYER — END ── */

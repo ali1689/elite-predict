@@ -1,12 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PredictionCard from "@/components/PredictionCard";
 import FeatureCard from "@/components/FeatureCard";
+import ToolCard from "@/components/ToolCard";
 import TestimonialCard from "@/components/TestimonialCard";
 import { testimonials, abbr, fmtTime } from "@/data/matches";
 import { useAllPredictions } from "@/lib/usePredictions";
+import { useReveal } from "@/lib/useReveal";
+import { useCountUp } from "@/lib/useCountUp";
 
 // Transform a normalized Supabase row → PredictionCard-compatible card object
 function toHeroCard(m) {
@@ -31,10 +34,45 @@ function toHeroCard(m) {
 const STADIUM_IMG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuC7mr9iVGiClXRxel-urcHQjdBa7cHDVc6BJzIwwUob8QMRyNz2r_Qn2vuwuZGuHU4eikl26YAE1PY7xLh_qtDipp7k4CXQ8t4TJp0pEwy_zt2h8c8V1masqYth_4uzMBhR2mycPN9FeRevauIhcyGdllXVHsPkvZ0MEbkE2RHhpsNRy4A-8KNqgC_Tb-9TBICJDtQgAHcEIR7Aa57kM026fDgekdshgVvWi6-JuJsurObxcUCRUl2q_CiMuRSpcIObjQQUMgha2A";
 
+// Animated counters — each item declares a numeric target + presentation.
 const STATS = [
-  { value: "5,000+", label: "Active Members"  },
-  { value: "87.4%",  label: "ROI Last Month"  },
-  { value: "FREE",   label: "Lifetime Access" },
+  { value: 5000, decimals: 0, suffix: "+", group: true, label: "Active Members"  },
+  { value: 87.4, decimals: 1, suffix: "%",               label: "ROI Last Month"  },
+  { text:  "FREE",                                        label: "Lifetime Access" },
+];
+
+// New-feature showcase — every tool the app now ships, linked from the home page.
+const TOOLS = [
+  {
+    to: "/live", icon: "sensors", live: true,
+    title: "Live In-Play",
+    description: "Follow goals, momentum and in-play signals updating in real time as matches unfold.",
+  },
+  {
+    to: "/today", icon: "today", badge: "Daily",
+    title: "Today's Predictions",
+    description: "Every high-confidence pick for today's fixtures, ranked and scored by our AI engine.",
+  },
+  {
+    to: "/open", icon: "style", badge: "New",
+    title: "Open Pack",
+    description: "Reveal a curated pack of the day's strongest value bets — one tap, instant insight.",
+  },
+  {
+    to: "/predictions", icon: "calendar_month",
+    title: "Upcoming Predictions",
+    description: "Browse the full slate of upcoming matches with probabilities across every market.",
+  },
+  {
+    to: "/players", icon: "sports_soccer", badge: "Players",
+    title: "Goalscorers",
+    description: "Anytime and first-scorer probabilities for the key players in every featured match.",
+  },
+  {
+    href: "https://t.me/SmartBet_Signals", icon: "send", badge: "Free",
+    title: "Telegram Community",
+    description: "Get instant alerts, full breakdowns and discussion with 5,000+ elite members.",
+  },
 ];
 
 const FEATURES = [
@@ -59,6 +97,54 @@ const COMMUNITY_PERKS = [
   ["Unlimited AI Predictions", "1,200+ Global Leagues", "Real-time Live Match Alerts"],
   ["Bankroll Management Advice", "Exclusive Telegram Discussion", "Live Injury & Lineup Updates"],
 ];
+
+// ── Scroll-reveal wrapper ─────────────────────────────────────────────────────
+function Reveal({ children, className = "", delay = 0, as: Tag = "div", ...rest }) {
+  const [ref, shown] = useReveal();
+  return (
+    <Tag
+      ref={ref}
+      className={`reveal ${shown ? "reveal-in" : ""} ${className}`}
+      style={{ "--reveal-delay": `${delay}ms` }}
+      {...rest}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+// ── Single animated stat — counts up once its section scrolls into view ───────
+function Stat({ stat, shown }) {
+  const animated = useCountUp(shown ? stat.value ?? 0 : 0, { decimals: stat.decimals ?? 0 });
+  let display = stat.text;
+  if (!display) {
+    const n = stat.group ? Number(animated).toLocaleString("en-US") : animated;
+    display = `${n}${stat.suffix ?? ""}`;
+  }
+  return (
+    <div>
+      <div className="font-['Lexend'] text-3xl sm:text-5xl md:text-display-xl font-extrabold text-primary-container mb-1 md:mb-2 leading-none tabular-nums">
+        {display}
+      </div>
+      <div className="font-['Lexend'] text-[9px] sm:text-[11px] md:text-[12px] text-on-surface-variant uppercase tracking-widest">
+        {stat.label}
+      </div>
+    </div>
+  );
+}
+
+function StatBar() {
+  const [ref, shown] = useReveal({ threshold: 0.4 });
+  return (
+    <section ref={ref} className="bg-surface-container-low border-y border-white/5 py-10 md:py-14">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 grid grid-cols-3 gap-4 md:gap-12 text-center">
+        {STATS.map((stat) => (
+          <Stat key={stat.label} stat={stat} shown={shown} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
 // Skeleton placeholder for a PredictionCard while loading
 function CardSkeleton() {
@@ -86,9 +172,19 @@ function CardSkeleton() {
 export default function Home() {
   const { data: allMatches, loading } = useAllPredictions();
   const heroCards = useMemo(
-    () => [...allMatches].sort((a, b) => b.conf - a.conf).slice(0, 3).map(toHeroCard),
+    () => [...allMatches].sort((a, b) => b.conf - a.conf).slice(0, 8).map(toHeroCard),
     [allMatches]
   );
+
+  // Wired carousel — chevrons scroll the rail by roughly one card width.
+  const railRef = useRef(null);
+  const scrollRail = (dir) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const card = rail.querySelector("[data-rail-card]");
+    const amount = card ? card.offsetWidth + 32 : rail.clientWidth * 0.8;
+    rail.scrollBy({ left: dir * amount, behavior: "smooth" });
+  };
 
   return (
     <>
@@ -132,61 +228,111 @@ export default function Home() {
                 <Link to="/predictions">Access Free Predictions</Link>
               </Button>
             </div>
+
+            {/* Quick-jump chips to the newest tools */}
+            <div className="animate-fade-up mt-8 md:mt-12 flex flex-wrap gap-2 md:gap-3"
+              style={{ animationDelay: "400ms", animationFillMode: "both" }}>
+              {[
+                { to: "/live", icon: "sensors", label: "Live In-Play", live: true },
+                { to: "/today", icon: "today", label: "Today" },
+                { to: "/open", icon: "style", label: "Open Pack" },
+                { to: "/players", icon: "sports_soccer", label: "Goalscorers" },
+              ].map(({ to, icon, label, live }) => (
+                <Link key={to} to={to}
+                  className="group flex items-center gap-2 pl-3 pr-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-on-surface text-xs md:text-sm font-semibold hover:border-primary-container/40 hover:bg-primary-container/10 transition-all">
+                  {live
+                    ? <span className="ep-live-dot" />
+                    : <span className="material-symbols-outlined text-primary-container text-[18px]">{icon}</span>}
+                  {label}
+                  <span className="material-symbols-outlined text-[16px] opacity-0 -ml-1 group-hover:opacity-60 group-hover:ml-0 transition-all">arrow_forward</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* SOCIAL PROOF */}
-      <section className="bg-surface-container-low border-y border-white/5 py-10 md:py-14">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 grid grid-cols-3 gap-4 md:gap-12 text-center">
-          {STATS.map(({ value, label }) => (
-            <div key={label}>
-              <div className="font-['Lexend'] text-3xl sm:text-5xl md:text-display-xl font-extrabold text-primary-container mb-1 md:mb-2 leading-none">
-                {value}
-              </div>
-              <div className="font-['Lexend'] text-[9px] sm:text-[11px] md:text-[12px] text-on-surface-variant uppercase tracking-widest">
-                {label}
-              </div>
-            </div>
+      {/* SOCIAL PROOF — animated counters */}
+      <StatBar />
+
+      {/* FEATURE SHOWCASE — surface every tool the app now ships */}
+      <section className="py-16 md:py-28 max-w-[1280px] mx-auto px-4 sm:px-8">
+        <Reveal className="text-center mb-10 md:mb-16 max-w-2xl mx-auto">
+          <Badge variant="neon" className="mb-4">Everything in one place</Badge>
+          <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-3 md:mb-4">
+            One engine, every angle of the match
+          </h2>
+          <p className="text-on-surface-variant text-sm md:text-base">
+            Elite Predict has grown into a full toolkit. Jump straight into live action,
+            today's slate, surprise packs, goalscorer markets and more.
+          </p>
+        </Reveal>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+          {TOOLS.map((tool, i) => (
+            <Reveal key={tool.title} delay={(i % 3) * 90}>
+              <ToolCard {...tool} />
+            </Reveal>
           ))}
         </div>
       </section>
 
-      {/* PREDICTION FEED */}
-      <section className="py-16 md:py-32 max-w-[1280px] mx-auto px-4 sm:px-8">
-        <div className="flex justify-between items-start md:items-end mb-8 md:mb-16 gap-4">
-          <div>
-            <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-3 md:mb-4">
-              Upcoming High-Confidence Predictions
-            </h2>
-            <p className="text-on-surface-variant max-w-xl text-sm md:text-base">
-              Our neural networks have flagged these matches with extreme probability scoring.
-              Join our Telegram for full breakdowns.
-            </p>
-          </div>
-          <div className="hidden md:flex gap-3 flex-shrink-0">
-            {["chevron_left", "chevron_right"].map((icon) => (
-              <button key={icon} aria-label={icon}
-                className="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-colors">
-                <span className="material-symbols-outlined text-on-surface">{icon}</span>
+      {/* PREDICTION FEED — wired swipe rail */}
+      <section className="py-16 md:py-28 bg-surface-container">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
+          <Reveal className="flex justify-between items-start md:items-end mb-8 md:mb-14 gap-4">
+            <div>
+              <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-3 md:mb-4">
+                Upcoming High-Confidence Predictions
+              </h2>
+              <p className="text-on-surface-variant max-w-xl text-sm md:text-base">
+                Our neural networks have flagged these matches with extreme probability scoring.
+                Swipe through the top picks or open the full slate.
+              </p>
+            </div>
+            <div className="hidden md:flex gap-3 flex-shrink-0">
+              <button onClick={() => scrollRail(-1)} aria-label="Scroll left"
+                className="p-3 rounded-full border border-white/10 hover:bg-white/5 hover:border-primary-container/30 transition-colors">
+                <span className="material-symbols-outlined text-on-surface">chevron_left</span>
               </button>
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8">
-          {loading
-            ? [...Array(3)].map((_, i) => <CardSkeleton key={i} />)
-            : heroCards.length > 0
-              ? heroCards.map((card) => <PredictionCard key={card.id} card={card} />)
-              : <p className="col-span-3 text-on-surface-variant font-['Lexend'] text-sm">No predictions available right now — check back soon.</p>
-          }
+              <button onClick={() => scrollRail(1)} aria-label="Scroll right"
+                className="p-3 rounded-full border border-white/10 hover:bg-white/5 hover:border-primary-container/30 transition-colors">
+                <span className="material-symbols-outlined text-on-surface">chevron_right</span>
+              </button>
+            </div>
+          </Reveal>
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8">
+              {[...Array(3)].map((_, i) => <CardSkeleton key={i} />)}
+            </div>
+          ) : heroCards.length > 0 ? (
+            <div ref={railRef}
+              className="ep-rail flex gap-5 md:gap-8 overflow-x-auto pb-4 -mx-4 px-4 sm:-mx-8 sm:px-8">
+              {heroCards.map((card) => (
+                <div key={card.id} data-rail-card
+                  className="flex-shrink-0 w-[85vw] sm:w-[360px] md:w-[calc((100%-4rem)/3)]">
+                  <PredictionCard card={card} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-on-surface-variant font-['Lexend'] text-sm">
+              No predictions available right now — check back soon.
+            </p>
+          )}
+
+          <Reveal className="mt-8 md:mt-10 flex justify-center" delay={100}>
+            <Button size="lg" variant="ghost" asChild>
+              <Link to="/predictions">View all predictions</Link>
+            </Button>
+          </Reveal>
         </div>
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="bg-surface-container py-16 md:py-32">
+      <section id="features" className="bg-background py-16 md:py-32">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
-          <div className="text-center mb-10 md:mb-20 max-w-2xl mx-auto">
+          <Reveal className="text-center mb-10 md:mb-20 max-w-2xl mx-auto">
             <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-4 md:mb-6">
               Unrivaled AI Precision, Free Forever
             </h2>
@@ -194,10 +340,12 @@ export default function Home() {
               We've opened our vault. Our proprietary algorithms process historical trends and
               real-time news to deliver surgical precision directly to your phone.
             </p>
-          </div>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
-            {FEATURES.map(({ icon, title, description }) => (
-              <FeatureCard key={icon} icon={icon} title={title} description={description} />
+            {FEATURES.map(({ icon, title, description }, i) => (
+              <Reveal key={icon} delay={i * 110}>
+                <FeatureCard icon={icon} title={title} description={description} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -205,12 +353,14 @@ export default function Home() {
 
       {/* TESTIMONIALS */}
       <section className="py-16 md:py-32 max-w-[1280px] mx-auto px-4 sm:px-8">
-        <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-8 md:mb-16 text-center">
+        <Reveal as="h2" className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-8 md:mb-16 text-center">
           Success Stories from Our Channel
-        </h2>
+        </Reveal>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
-          {testimonials.map((t) => (
-            <TestimonialCard key={t.id} testimonial={t} />
+          {testimonials.map((t, i) => (
+            <Reveal key={t.id} delay={(i % 2) * 110}>
+              <TestimonialCard testimonial={t} />
+            </Reveal>
           ))}
         </div>
       </section>
@@ -218,7 +368,7 @@ export default function Home() {
       {/* COMMUNITY CTA */}
       <section className="py-16 md:py-32 bg-zinc-950">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8 text-center">
-          <div className="max-w-4xl mx-auto p-6 sm:p-8 md:p-12 rounded-2xl md:rounded-3xl bg-primary-container text-on-primary shadow-2xl shadow-primary-container/20">
+          <Reveal className="max-w-4xl mx-auto p-6 sm:p-8 md:p-12 rounded-2xl md:rounded-3xl bg-primary-container text-on-primary shadow-2xl shadow-primary-container/20">
             <span className="inline-block bg-on-primary text-primary-container text-[10px] font-bold uppercase tracking-[0.15em] py-1 px-4 rounded-full mb-4 md:mb-6">
               100% Free Lifetime Access
             </span>
@@ -251,7 +401,7 @@ export default function Home() {
             <p className="mt-4 md:mt-6 text-sm opacity-70">
               Join 5,000+ members already winning with Elite Predict
             </p>
-          </div>
+          </Reveal>
         </div>
       </section>
     </>
