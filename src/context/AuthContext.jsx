@@ -26,17 +26,22 @@ export function AuthProvider({ children }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // 🔐 LOGIN
+  // 🔐 LOGIN (with retry for Supabase cold-start)
   async function login(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw new Error(error.message);
-
-    setUser(data.user);
-    return data.user;
+    const DELAYS = [2000, 4000, 7000];
+    let lastError;
+    for (let i = 0; i <= DELAYS.length; i++) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error) { setUser(data.user); return data.user; }
+      lastError = error;
+      const isNetwork = error.message?.toLowerCase().includes("fetch") || error.status === 0;
+      if (!isNetwork || i === DELAYS.length) break;
+      await new Promise(r => setTimeout(r, DELAYS[i]));
+    }
+    const msg = lastError?.message?.toLowerCase().includes("fetch")
+      ? "Database is waking up — please try again in a few seconds."
+      : lastError.message;
+    throw new Error(msg);
   }
 
   // 🧾 REGISTER

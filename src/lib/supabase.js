@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
+// Route all Supabase requests through our own domain (/sb proxy).
+// This avoids .co TLD DNS issues some ISPs have with supabase.co.
+// In dev: Vite proxies /sb → supabase. In prod: Vercel rewrites do the same.
 const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL ||
-  "https://pekulnmfxyxqyusnhhfn.supabase.co";
+  `${window.location.origin}/sb`;
 
 const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||

@@ -474,7 +474,8 @@ export default function Predictions() {
         </p>
         {error && (
           <div className="mt-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-['Lexend']">
-            Could not load predictions — check Supabase connection.
+            Could not load predictions — the database may be waking up. Try refreshing in a moment.
+            {error?.message && <span className="block mt-1 text-xs opacity-60">{error.message}</span>}
           </div>
         )}
       </section>

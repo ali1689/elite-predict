@@ -89,6 +89,9 @@ function normalize(row) {
   };
 }
 
+// Retry helper — waits `ms` ms then resolves
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 // Generic hook
 export function usePredictions({ dateFilter = null, limit = 300, futureOnly = false } = {}) {
   const [data,    setData]    = useState([]);
@@ -101,31 +104,46 @@ export function usePredictions({ dateFilter = null, limit = 300, futureOnly = fa
     async function load() {
       setLoading(true);
       setError(null);
-      try {
-        let query = supabase
-          .from("predictions")
-          .select("*")
-          .order("utc_date", { ascending: true })
-          .limit(limit);
 
-        if (dateFilter) {
-          query = query.eq("match_date", dateFilter);
-        }
+      const MAX_RETRIES = 4;
+      const DELAYS = [1500, 3000, 6000, 10000]; // ms between attempts
 
-        if (futureOnly) {
-          const todayUTC = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" });
-          query = query.gte("match_date", todayUTC);
-        }
-
-        const { data: rows, error: err } = await query;
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         if (cancelled) return;
-        if (err) throw err;
-        setData((rows || []).map(normalize));
-        setLastFetch(new Date());
-      } catch (e) {
-        if (!cancelled) setError(e);
-      } finally {
-        if (!cancelled) setLoading(false);
+        try {
+          let query = supabase
+            .from("predictions")
+            .select("*")
+            .order("utc_date", { ascending: true })
+            .limit(limit);
+
+          if (dateFilter) {
+            query = query.eq("match_date", dateFilter);
+          }
+
+          if (futureOnly) {
+            const todayUTC = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" });
+            query = query.gte("match_date", todayUTC);
+          }
+
+          const { data: rows, error: err } = await query;
+          if (cancelled) return;
+          if (err) throw err;
+          setData((rows || []).map(normalize));
+          setLastFetch(new Date());
+          setError(null);
+          setLoading(false);
+          return; // success
+        } catch (e) {
+          if (cancelled) return;
+          if (attempt < MAX_RETRIES) {
+            // Database is waking up (Supabase free tier) — retry after delay
+            await sleep(DELAYS[attempt]);
+          } else {
+            setError(e);
+            setLoading(false);
+          }
+        }
       }
     }
     load();
