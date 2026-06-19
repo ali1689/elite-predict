@@ -104,7 +104,7 @@ export const testimonials = [
     name:  "Marcus Thorne",
     role:  "Pro Community Member",
     avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAIBylE-leFWRll7x5V17x-lN031HNALVCpi-JXQXOyi1rz5emZjbMl1KGkMuxnR0jT0lFZ3MRU63HSWBY6nysfB6bj9FWxMPB8gmxS5aHAhLxriaZpvxlxdYl0bIZn9f2jAtMkOrzaJX2qlFZA62CsJN_HPjURjtSj_e4LGCNV2rrOMw6SNkXAboXHcUl4rW0ytJ2KqvBnv3I2NKSRT-zrmBbATh31N8z1YAz4ZSxRWB9c_TNvM3ILoNPFMiuPhcuWB5JGTOZLRw",
-    quote: "I can't believe this level of data is free now. The Telegram alerts are literally worth thousands. My accuracy has peaked since joining.",
+    quote: "I used to juggle five different stats sites before every matchday. Now it's all in one place — the confidence scores and live in-play view completely changed how I pick my bets.",
     stars: 5,
   },
   {
@@ -112,7 +112,7 @@ export const testimonials = [
     name:  "Elena Rodriguez",
     role:  "Data Scientist",
     avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB2A_nyu2mTZXOtXMtfRf_4VXnQlkIDVZdcvlwvODK25xIUJv1LbmNvvdGa0eUFJJ54Ha0vMGWFfJ04kMayUEgY3WGjszCGqrfKl0iAKSAvXUPYJIMw255dbXBiXH51ZXxoWlqd2qmeO-OCJKMOhtRjmH1bj0f2WCY5-_5ZOyoqmWrer58hHS_hElIqR3a8n6TNpUn3tPzihd70x9bTKnsJNC9FyM-fqyTPeGKwACn1NY7s2e2YrQlDWnZkMYyI6HK6VnlORaCK4Q",
-    quote: "The consistency of the AI model is world-class. Transitioning to a free model is a game changer for the betting community. Join the Telegram now.",
+    quote: "As someone who builds models for a living, the calibration genuinely impressed me. The probabilities hold up over a full season, and the site makes the data effortless to read and act on.",
     stars: 5,
   },
 ];

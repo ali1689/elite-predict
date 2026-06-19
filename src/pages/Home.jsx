@@ -202,8 +202,8 @@ export default function Home() {
         </div>
         <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-8 w-full py-12 md:py-24">
           <div className="max-w-4xl">
-            <div className="animate-fade-up" style={{ animationDelay: "0ms", animationFillMode: "both" }}>
-              <Badge variant="neon" className="mb-4 md:mb-6">
+            <div className="animate-fade-up inline-block" style={{ animationDelay: "0ms", animationFillMode: "both" }}>
+              <Badge variant="neon" className="mb-4 md:mb-6 ep-float-badge">
                 AI-Engine Activated &bull; Now 100% Free
               </Badge>
             </div>
@@ -353,10 +353,17 @@ export default function Home() {
 
       {/* TESTIMONIALS */}
       <section className="py-16 md:py-32 max-w-[1280px] mx-auto px-4 sm:px-8">
-        <Reveal as="h2" className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-8 md:mb-16 text-center">
-          Success Stories from Our Channel
+        <Reveal className="text-center mb-10 md:mb-16 max-w-2xl mx-auto">
+          <Badge variant="neon" className="mb-4">Loved by the community</Badge>
+          <h2 className="text-2xl sm:text-3xl md:text-headline-lg font-bold text-on-surface mb-3 md:mb-4">
+            Success Stories from Our Channel
+          </h2>
+          <p className="text-on-surface-variant text-sm md:text-base">
+            Real members, real results. Here's what the Elite Predict community has to say
+            since the AI engine went free.
+          </p>
         </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 items-stretch">
           {testimonials.map((t, i) => (
             <Reveal key={t.id} delay={(i % 2) * 110}>
               <TestimonialCard testimonial={t} />

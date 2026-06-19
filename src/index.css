@@ -370,4 +370,14 @@
 }
 .ep-rail::-webkit-scrollbar { display: none; }
 .ep-rail > * { scroll-snap-align: start; }
+
+/* Hero badge — gentle "floating in low gravity" drift (always on by request) */
+@keyframes ep-badge-float {
+  0%, 100% { transform: translateY(0)     rotate(-0.6deg); }
+  50%      { transform: translateY(-10px) rotate(0.6deg); }
+}
+.ep-float-badge {
+  animation: ep-badge-float 3.2s ease-in-out infinite !important;
+  will-change: transform;
+}
 /* ── HOME REDESIGN LAYER — END ── */
