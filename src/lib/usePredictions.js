@@ -29,8 +29,10 @@ function computeDisplaySignal(row) {
     { label: "Over 2.5 Goals",      prob: o25,  thr: 58, w: 0.70 },
   ];
 
-  // Priority override: Over 1.5 ≥ 80% + strong scoring support → better value than Over 0.5
-  if (o15 >= 80 && (h05 >= 75 || a05 >= 75)) {
+  // The temporary frontend "Over 1.5 ≥ 80%" override has been removed.
+  // The model now owns this decision: 05_predict.py promotes "Over 1.5 Goals"
+  // to the primary signal when blended P(Over 1.5) ≥ 85%. Honour that directly.
+  if (row.primary_signal === "Over 1.5 Goals") {
     return "Over 1.5 Goals";
   }
 
@@ -270,12 +272,4 @@ export function usePlayerPredictions({ matchId = null, limit = 500 } = {}) {
       } catch (e) {
         if (!cancelled) setError(e);
       } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [matchId, limit]);
-
-  return { data, loading, error };
-}
+        if (!cancelled) setLoa
