@@ -43,6 +43,48 @@ function computeDisplaySignal(row) {
   return best?.label ?? (row.primary_signal ?? "No strong signal");
 }
 
+// ── Tier derivation ───────────────────────────────────────────────────────────
+// Mirrors backend MODE 2 (bootstrap) logic in 05_predict.py get_signal_tier().
+// Uses normalised margin-above-threshold so each market is judged on its own
+// scale — BTTS at 65% gets the same tier as Over 1.5 at 85% (both are equally
+// convincing relative to their market norms).
+//
+// Thresholds match DEFAULT_THRESHOLDS in _config.py:
+const SIGNAL_THRESHOLDS = {
+  "Home Over 0.5 Goals":  0.70,
+  "Away Over 0.5 Goals":  0.68,
+  "Over 1.5 Goals":       0.63,
+  "Home Over 1.5 Goals":  0.57,
+  "Away Over 1.5 Goals":  0.52,
+  "Both Teams to Score":  0.60,
+  "Under 2.5 Goals":      0.57,
+  "Over 2.5 Goals":       0.58,
+  "Under 1.5 Goals":      0.55,
+  "Home Clean Sheet":     0.52,
+  "Away Clean Sheet":     0.50,
+  "Home Win (1)":         0.58,
+  "Away Win (2)":         0.55,
+  "Draw (X)":             0.55,
+  "Double Chance 1X":     0.74,
+  "Double Chance X2":     0.74,
+  "Double Chance 12":     0.76,
+};
+
+function deriveTier(row) {
+  // Trust backend tier if it's already differentiated (signal_quality active)
+  if (row.primary_tier && row.primary_tier !== "B") return row.primary_tier;
+
+  const signal = row.primary_signal ?? "";
+  const conf   = (row.conf ?? 0) / 100;   // stored as 0–100 in Supabase
+  const thr    = SIGNAL_THRESHOLDS[signal] ?? 0.60;
+  const denom  = Math.max(1 - thr, 0.01);
+  const margin = (conf - thr) / denom;
+
+  if (margin >= 0.35) return "A";
+  if (margin >= 0.12) return "B";
+  return "C";
+}
+
 // Normalise Supabase snake_case to camelCase
 function normalize(row) {
   let allSignals = [];
@@ -63,7 +105,7 @@ function normalize(row) {
     awayElo:     row.away_elo  ?? 1500,
     eloDiff:     (row.home_elo ?? 1500) - (row.away_elo ?? 1500),
     signal:      computeDisplaySignal(row),
-    tier:        row.primary_tier   ?? "B",
+    tier:        deriveTier(row),
     conf:        row.conf           ?? 0,
     homeOver05:  row.home_over05    ?? 0,
     homeOver15:  row.home_over15    ?? 0,
@@ -85,8 +127,8 @@ function normalize(row) {
     dcX2:        row.dc_x2          ?? row.p_x2       ?? 0,
     dc12:        row.dc_12          ?? row.p_12       ?? 0,
     allSignals,
-    homeScore:   row.home_over05    ?? 0,
-    awayScore:   row.away_over05    ?? 0,
+    homeScore:   row.home_score      ?? null,
+    awayScore:   row.away_score      ?? null,
     league:      row.comp,
   };
 }
@@ -155,25 +197,33 @@ export function usePredictions({ dateFilter = null, limit = 300, futureOnly = fa
   return { data, loading, error, lastFetch };
 }
 
-// Today hook — shows the closest upcoming day's predictions in Warsaw time.
-// The pipeline runs at 06:00 Warsaw and may generate for today OR tomorrow.
-// Strategy: try today's match_date first; if empty, fall back to tomorrow.
+// How often to automatically re-fetch today's predictions (ms).
+// Set to 5 minutes — short enough to catch the pipeline finishing, long enough
+// not to hammer Supabase. During the known pipeline window (12:00–13:00 Warsaw)
+// users get fresh data within 5 min of the pipeline completing without needing
+// to hard-refresh.
+const TODAY_POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+// Today hook — shows today's predictions in Warsaw time.
+// Auto-refreshes every 5 minutes so users see updated picks after the pipeline
+// finishes without needing a manual page reload.
 export function useTodayPredictions() {
   const [data,      setData]      = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
   const [lastFetch, setLastFetch] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Expose a manual refresh trigger for the UI
+  const refresh = () => setRefreshKey(k => k + 1);
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      setLoading(true);
+    async function load(isBackground = false) {
+      // Background polls don't show the loading spinner — avoids flicker
+      if (!isBackground) setLoading(true);
       setError(null);
       try {
-        // Fetch today's matches in Warsaw time only.
-        // We do NOT fall through to tomorrow — the pipeline stores the whole
-        // week so falling through would silently show future-day picks.
-        // If today has no data, the page shows "No picks today".
         const todayWarsaw = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
 
         const { data: fetched, error: err } = await supabase
@@ -184,22 +234,31 @@ export function useTodayPredictions() {
           .limit(200);
 
         if (err) throw err;
-        const rows = (fetched && fetched.length > 0) ? fetched : null;
-
         if (cancelled) return;
-        setData((rows || []).map(normalize));
+
+        const rows = (fetched && fetched.length > 0) ? fetched : [];
+        setData(rows.map(normalize));
         setLastFetch(new Date());
       } catch (e) {
         if (!cancelled) setError(e);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && !isBackground) setLoading(false);
       }
     }
-    load();
-    return () => { cancelled = true; };
-  }, []);
 
-  return { data, loading, error, lastFetch };
+    // Initial load (shows spinner)
+    load(false);
+
+    // Auto-refresh every 5 minutes (background, no spinner)
+    const interval = setInterval(() => load(true), TODAY_POLL_INTERVAL);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [refreshKey]); // refreshKey bump triggers a manual full reload
+
+  return { data, loading, error, lastFetch, refresh };
 }
 
 // All upcoming hook - only future matches, ordered by date ascending
@@ -272,4 +331,12 @@ export function usePlayerPredictions({ matchId = null, limit = 500 } = {}) {
       } catch (e) {
         if (!cancelled) setError(e);
       } finally {
-        if (!cancelled) setLoa
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [matchId, limit]);
+
+  return { data, loading, error };
+}

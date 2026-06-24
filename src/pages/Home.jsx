@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,32 @@ import { testimonials, abbr, fmtTime } from "@/data/matches";
 import { useAllPredictions } from "@/lib/usePredictions";
 import { useReveal } from "@/lib/useReveal";
 import { useCountUp } from "@/lib/useCountUp";
+import { supabase } from "@/lib/supabase";
+
+// ── Live stats hook — pulls real numbers from Supabase settled predictions ────
+function useLiveStats() {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { data, error } = await supabase
+          .from("predictions")
+          .select("result_correct, conf")
+          .eq("result_settled", true)
+          .gte("conf", 80);
+        if (error || !data?.length) return;
+        const hits  = data.filter(r => r.result_correct === true).length;
+        const total = data.filter(r => r.result_correct !== null).length;
+        setStats({
+          hitRate: total > 0 ? parseFloat(((hits / total) * 100).toFixed(1)) : null,
+          total,
+        });
+      } catch (_) {}
+    }
+    load();
+  }, []);
+  return stats;
+}
 
 // Transform a normalized Supabase row → PredictionCard-compatible card object
 function toHeroCard(m) {
@@ -34,11 +60,10 @@ function toHeroCard(m) {
 const STADIUM_IMG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuC7mr9iVGiClXRxel-urcHQjdBa7cHDVc6BJzIwwUob8QMRyNz2r_Qn2vuwuZGuHU4eikl26YAE1PY7xLh_qtDipp7k4CXQ8t4TJp0pEwy_zt2h8c8V1masqYth_4uzMBhR2mycPN9FeRevauIhcyGdllXVHsPkvZ0MEbkE2RHhpsNRy4A-8KNqgC_Tb-9TBICJDtQgAHcEIR7Aa57kM026fDgekdshgVvWi6-JuJsurObxcUCRUl2q_CiMuRSpcIObjQQUMgha2A";
 
-// Animated counters — each item declares a numeric target + presentation.
-const STATS = [
-  { value: 5000, decimals: 0, suffix: "+", group: true, label: "Active Members"  },
-  { value: 87.4, decimals: 1, suffix: "%",               label: "ROI Last Month"  },
-  { text:  "FREE",                                        label: "Lifetime Access" },
+// Static stats (live hit rate is injected dynamically in StatBar)
+const STATS_STATIC = [
+  { value: 5000, decimals: 0, suffix: "+", group: true, label: "Telegram Members" },
+  { text:  "FREE",                                        label: "Lifetime Access"  },
 ];
 
 // New-feature showcase — every tool the app now ships, linked from the home page.
@@ -69,9 +94,14 @@ const TOOLS = [
     description: "Anytime and first-scorer probabilities for the key players in every featured match.",
   },
   {
+    to: "/track-record", icon: "verified", badge: "Live",
+    title: "Track Record",
+    description: "Every settled prediction scored against the real result. No cherry-picking — full transparency.",
+  },
+  {
     href: "https://t.me/SmartBet_Signals", icon: "send", badge: "Free",
     title: "Telegram Community",
-    description: "Get instant alerts, full breakdowns and discussion with 5,000+ elite members.",
+    description: "Get instant alerts, full breakdowns and discussion with our elite members.",
   },
 ];
 
@@ -135,10 +165,24 @@ function Stat({ stat, shown }) {
 
 function StatBar() {
   const [ref, shown] = useReveal({ threshold: 0.4 });
+  const liveStats    = useLiveStats();
+
+  const stats = [
+    STATS_STATIC[0],
+    {
+      value:    liveStats?.hitRate ?? null,
+      text:     liveStats === null ? null : liveStats?.hitRate == null ? "—" : undefined,
+      decimals: 1,
+      suffix:   "%",
+      label:    "Verified Hit Rate",
+    },
+    STATS_STATIC[1],
+  ];
+
   return (
     <section ref={ref} className="bg-surface-container-low border-y border-white/5 py-10 md:py-14">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 grid grid-cols-3 gap-4 md:gap-12 text-center">
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <Stat key={stat.label} stat={stat} shown={shown} />
         ))}
       </div>
@@ -215,7 +259,7 @@ export default function Home() {
             <p className="animate-fade-up text-base sm:text-lg md:text-headline-md font-semibold text-on-surface-variant mb-8 md:mb-12 max-w-2xl leading-relaxed"
               style={{ animationDelay: "200ms", animationFillMode: "both" }}>
               Join the world's most accurate AI football prediction engine. Now free for the
-              community. Real-time data, expert analytics, and 85%+ win rates.
+              community. Real-time data, expert analytics, and a verified track record.
             </p>
             <div className="animate-fade-up flex flex-col sm:flex-row gap-3 sm:gap-5"
               style={{ animationDelay: "300ms", animationFillMode: "both" }}>
@@ -237,6 +281,7 @@ export default function Home() {
                 { to: "/today", icon: "today", label: "Today" },
                 { to: "/open", icon: "style", label: "Open Pack" },
                 { to: "/players", icon: "sports_soccer", label: "Goalscorers" },
+                { to: "/track-record", icon: "verified", label: "Track Record" },
               ].map(({ to, icon, label, live }) => (
                 <Link key={to} to={to}
                   className="group flex items-center gap-2 pl-3 pr-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-on-surface text-xs md:text-sm font-semibold hover:border-primary-container/40 hover:bg-primary-container/10 transition-all">

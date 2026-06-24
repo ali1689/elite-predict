@@ -5,11 +5,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/App";
 
 const NAV_LINKS = [
-  { label: "Live",                 to: "/live",        icon: "sensors",       live: true },
-  { label: "Today's Predictions",  to: "/today",       icon: "today"          },
-  { label: "Open Pack",            to: "/open",        icon: "style"          },
-  { label: "Upcoming Predictions", to: "/predictions", icon: "calendar_month" },
-  { label: "Goalscorers",          to: "/players",     icon: "sports_soccer"  },
+  { label: "Live",                 to: "/live",         icon: "sensors",       live: true },
+  { label: "Today's Predictions",  to: "/today",        icon: "today"          },
+  { label: "Open Pack",            to: "/open",         icon: "style"          },
+  { label: "Upcoming Predictions", to: "/predictions",  icon: "calendar_month" },
+  { label: "Goalscorers",          to: "/players",      icon: "sports_soccer"  },
+  { label: "Track Record",         to: "/track-record", icon: "verified"       },
 ];
 
 export default function Navbar() {

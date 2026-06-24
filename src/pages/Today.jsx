@@ -497,13 +497,13 @@ export default function Today() {
     return () => window.removeEventListener("focus", onFocus);
   }, [authLoading, user?.id]);
 
-  const { data: matches, loading, error, lastFetch } = useTodayPredictions();
+  const { data: matches, loading, error, lastFetch, refresh } = useTodayPredictions();
 
   const [activeLeague, setActiveLeague] = useState("ALL");
 
-  // Sort → filter to 80%+ strong signals only
+  // Sort by confidence — show Tier A and B only (Tier C / Speculative hidden on Today)
   const sorted    = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
-  const displayed = useMemo(() => sorted.filter(m => m.signal !== "No strong signal" && m.conf >= 80), [sorted]);
+  const displayed = useMemo(() => sorted.filter(m => m.signal !== "No strong signal" && m.tier !== "C"), [sorted]);
 
   // League tabs derived from displayed
   const leagues = useMemo(() => {
@@ -548,10 +548,21 @@ export default function Today() {
               ? `${displayed.length} pick${displayed.length !== 1 ? "s" : ""} today — sorted by confidence.`
               : "No predictions scheduled for today. Check back later or browse the full schedule."}
         </p>
-        {lastFetch && !loading && (
-          <p className="font-['Lexend'] text-[10px] text-on-surface-variant mt-2 uppercase tracking-widest">
-            Updated {lastFetch.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-          </p>
+        {lastFetch && (
+          <div className="flex items-center gap-3 mt-2">
+            <p className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest">
+              Updated {lastFetch.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+            </p>
+            <button
+              onClick={refresh}
+              disabled={loading}
+              className="flex items-center gap-1 font-['Lexend'] text-[10px] uppercase tracking-widest text-on-surface-variant hover:text-primary-container transition-colors disabled:opacity-40"
+              aria-label="Refresh predictions"
+            >
+              <span className={cn("material-symbols-outlined text-[13px]", loading && "animate-spin")}>refresh</span>
+              {loading ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
         )}
         {error && (
           <div className="mt-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-['Lexend']">
@@ -568,7 +579,7 @@ export default function Today() {
           intro="Each card below is one upcoming match with our AI's best bet for it."
           steps={[
             "Signal — our single top recommended pick for that match.",
-            "Conf (confidence) — how strongly the model backs it. Higher = stronger. We only show picks at 75%+.",
+            "Conf (confidence) — how strongly the model backs it. Higher = stronger.",
             "The Home / Draw / Away boxes and the % chips are each market's probability.",
             "Tap the ⓘ next to any term (BTTS, O2.5, xG…) to see what it means.",
             "Cards are sorted strongest-first. Want full breakdowns? Join the Telegram.",
@@ -578,8 +589,8 @@ export default function Today() {
 
       {/* Stat cards */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-12">
-        <StatCard icon="calendar_today"  label="Today's Picks"    countTo={displayed.length} sub="75%+ confidence"    loading={loading}
-                  tip={{ title: "Today's Picks", text: "Number of qualifying picks today (75%+ confidence)." }} />
+        <StatCard icon="calendar_today"  label="Today's Picks"    countTo={displayed.length} sub="All signals"        loading={loading}
+                  tip={{ title: "Today's Picks", text: "Number of picks today with a valid signal." }} />
         <StatCard icon="grade"           label="Tier A Picks"     countTo={tierA}            sub="Strongest signals"   loading={loading}
                   tip={{ title: "Tier A Picks", text: "Picks graded A — the model's strongest tier by 30-day accuracy." }} />
         <StatCard icon="percent"         label="Avg Confidence"   countTo={avgConf} suffix="%" sub="Across all picks"  loading={loading}
