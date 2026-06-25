@@ -37,7 +37,7 @@ export default function Navbar() {
                     "relative font-['Lexend'] uppercase tracking-widest font-semibold text-[11px] transition-colors flex items-center gap-1.5",
                     isActive
                       ? "text-primary-container border-b-2 border-primary-container pb-0.5"
-                      : "text-zinc-400 hover:text-zinc-100",
+                      : "text-on-surface-variant hover:text-primary-container",
                   ].join(" ")
                 }>
                 {live && (
@@ -133,7 +133,7 @@ export default function Navbar() {
                       "flex items-center gap-3 px-4 py-3.5 rounded-xl font-['Lexend'] uppercase tracking-widest font-semibold text-[12px] transition-all",
                       isActive
                         ? "text-primary-container bg-primary-container/10 border border-primary-container/20"
-                        : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5",
+                        : "text-on-surface-variant hover:text-primary-container hover:bg-primary-container/5",
                     ].join(" ")
                   }>
                   <span className="material-symbols-outlined text-[18px]">{icon}</span>
@@ -164,7 +164,7 @@ export default function Navbar() {
                 </div>
               ) : (
                 <Link to="/login" onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-['Lexend'] uppercase tracking-widest font-semibold text-[12px] text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all">
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-['Lexend'] uppercase tracking-widest font-semibold text-[12px] text-on-surface-variant hover:text-primary-container hover:bg-primary-container/5 transition-all">
                   <span className="material-symbols-outlined text-[18px]">login</span>
                   Sign In
                 </Link>

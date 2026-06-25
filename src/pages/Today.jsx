@@ -103,7 +103,7 @@ function DonutLegendRow({ s, i, hover, setHover }) {
       onMouseEnter={() => setHover(i)}
       onMouseLeave={() => setHover(null)}
       className={cn("flex items-center gap-2 rounded-md px-1.5 -mx-1.5 py-0.5 cursor-pointer", hover === i && "bg-white/5")}
-      style={{ opacity: hover === null || hover === i ? 1 : 0.4, transition: "opacity 0.2s ease, background-color 0.2s ease" }}
+      style={{ opacity: hover === null || hover === i ? 1 : 0.4, transition: "opacity 0.4s ease, background-color 0.4s ease" }}
     >
       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
       <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-wider flex-1 truncate">{s.sig}</span>
@@ -161,7 +161,7 @@ function SignalDonut({ counts, total }) {
               style={{
                 transform: "rotate(-90deg)", transformOrigin: "70px 70px", cursor: "pointer",
                 opacity: hover === null || hover === i ? 1 : 0.3,
-                transition: "stroke-dasharray 0.9s cubic-bezier(0.22,1,0.36,1), stroke-width 0.2s ease, opacity 0.2s ease",
+                transition: "stroke-dasharray 0.9s cubic-bezier(0.22,1,0.36,1), stroke-width 0.45s ease, opacity 0.45s ease",
               }}
             />
           ))}
@@ -194,13 +194,13 @@ function ConfBar({ b, max, mounted, hover, setHover, i }) {
       onMouseEnter={() => setHover(i)}
       onMouseLeave={() => setHover(null)}
       className="flex items-center gap-3 cursor-default"
-      style={{ opacity: hover === null || hover === i ? 1 : 0.45, transition: "opacity 0.2s ease" }}
+      style={{ opacity: hover === null || hover === i ? 1 : 0.45, transition: "opacity 0.4s ease" }}
     >
       <span className="font-['Lexend'] text-[10px] text-on-surface-variant w-14 flex-shrink-0">{b.label}</span>
       <div className="flex-1 h-5 bg-surface-container rounded-full overflow-hidden">
         <div
           className={cn("h-full rounded-full bg-gradient-to-r from-blue-500/80 to-primary-container/80", hover === i && "brightness-110")}
-          style={{ width: mounted ? `${w}%` : "0%", transition: "width 0.9s cubic-bezier(0.22,1,0.36,1), filter 0.2s ease" }}
+          style={{ width: mounted ? `${w}%` : "0%", transition: "width 0.9s cubic-bezier(0.22,1,0.36,1), filter 0.4s ease" }}
         />
       </div>
       <span className="font-['Lexend'] text-[11px] font-bold text-on-surface w-5 text-right tabular-nums">{count}</span>

@@ -236,12 +236,11 @@ export default function Home() {
       <section className="relative min-h-screen flex items-center pt-16 md:pt-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src={STADIUM_IMG} alt="Football stadium at night"
-            className="w-full h-full object-cover opacity-30 grayscale ep-kenburns" />
+            className="w-full h-full object-cover opacity-30 grayscale" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
         </div>
-        {/* Ambient animated glow orbs */}
+        {/* Ambient glow orbs */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-          <div className="ep-orb ep-orb-green absolute -top-24 -left-24 w-[26rem] h-[26rem] md:w-[34rem] md:h-[34rem] rounded-full" />
           <div className="ep-orb ep-orb-blue absolute top-1/3 -right-24 w-[22rem] h-[22rem] md:w-[28rem] md:h-[28rem] rounded-full" />
         </div>
         <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-8 w-full py-12 md:py-24">
@@ -268,7 +267,7 @@ export default function Home() {
                   Join Telegram Channel
                 </a>
               </Button>
-              <Button size="lg" variant="ghost" className="w-full sm:w-auto" asChild>
+              <Button size="lg" variant="ghost" className="w-full sm:w-auto hover:scale-[1.03] active:scale-[0.97]" asChild>
                 <Link to="/predictions">Access Free Predictions</Link>
               </Button>
             </div>

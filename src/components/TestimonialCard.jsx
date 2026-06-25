@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useTilt } from "@/lib/useTilt";
 
 function Stars({ count = 5 }) {
   return (
@@ -13,10 +14,14 @@ function Stars({ count = 5 }) {
 }
 
 export default function TestimonialCard({ testimonial, className }) {
+  const tilt = useTilt({ max: 4, scale: 1.01 });
   return (
     <div
+      {...tilt}
       className={cn(
         "ep-testimonial group relative glass-card p-6 md:p-10 rounded-2xl md:rounded-3xl overflow-hidden h-full",
+        "transition-shadow duration-300 hover:!border-primary-container/60",
+        "hover:shadow-[0_0_34px_-8px_rgba(57,255,20,0.55)]",
         className
       )}
     >

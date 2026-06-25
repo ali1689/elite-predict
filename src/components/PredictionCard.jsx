@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import TeamAvatar from "@/components/TeamAvatar";
+import { useTilt } from "@/lib/useTilt";
 
 const STATUS_CONFIG = {
   live:       { dot: "bg-red-500",           label: "Live Analysis", labelClass: "text-red-500",           pulse: true  },
@@ -31,9 +32,13 @@ const SIGNAL_COLOR = {
 export default function PredictionCard({ card, className }) {
   const status   = STATUS_CONFIG[card.status] ?? STATUS_CONFIG.finalizing;
   const sigColor = SIGNAL_COLOR[card.prediction] ?? "text-primary-container";
+  const tilt     = useTilt();
 
   return (
-    <div className={cn("glass-card p-5 md:p-8 rounded-2xl relative overflow-hidden group hover:border-primary-container/30 transition-all duration-300", className)}>
+    <div
+      {...tilt}
+      className={cn("glass-card p-5 md:p-8 rounded-2xl relative overflow-hidden group hover:border-primary-container/40 hover:shadow-[0_0_30px_-8px_rgba(57,255,20,0.45)] transition-[box-shadow,border-color] duration-300", className)}
+    >
       <div className="absolute top-0 right-0 p-4">
         <span className={cn("flex items-center gap-2 font-bold text-xs uppercase", status.labelClass)}>
           <span className={cn("w-2 h-2 rounded-full", status.dot, status.pulse && "animate-pulse-dot")} />

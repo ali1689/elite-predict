@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import { useTilt } from "@/lib/useTilt";
 
 // ── ToolCard ──────────────────────────────────────────────────────────────────
 // Interactive showcase tile used on the home page to surface each tool/page.
-// Tracks the cursor to drive a neon sheen (see .ep-tool-card in index.css) and
-// animates its icon + arrow on hover. Renders as a router <Link> (internal) or a
-// plain <a> when `href` is provided (e.g. Telegram).
+// Uses the shared useTilt hook for a subtle 3D tilt + cursor-driven neon sheen
+// (see .ep-tool-card in index.css) and animates its icon + arrow on hover.
+// Renders as a router <Link> (internal) or a plain <a> when `href` is provided.
 export default function ToolCard({
   to,
   href,
@@ -14,11 +15,7 @@ export default function ToolCard({
   badge,
   live = false,
 }) {
-  const onMove = (e) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
-  };
+  const tilt = useTilt({ max: 4, scale: 1.02 });
 
   const inner = (
     <>
@@ -60,24 +57,20 @@ export default function ToolCard({
   );
 
   const cls =
-    "ep-tool-card group block p-6 md:p-7 rounded-2xl h-full focus:outline-none";
+    "ep-tool-card group block p-6 md:p-7 rounded-2xl h-full focus:outline-none " +
+    "transition-shadow duration-300 hover:shadow-[0_0_28px_-6px_rgba(57,255,20,0.5)] " +
+    "hover:!border-primary-container/50";
 
   if (href) {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={cls}
-        onMouseMove={onMove}
-      >
+      <a href={href} target="_blank" rel="noopener noreferrer" className={cls} {...tilt}>
         {inner}
       </a>
     );
   }
 
   return (
-    <Link to={to} className={cls} onMouseMove={onMove}>
+    <Link to={to} className={cls} {...tilt}>
       {inner}
     </Link>
   );

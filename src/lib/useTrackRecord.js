@@ -64,10 +64,10 @@ export function useTrackRecord({ limit = 500 } = {}) {
       try {
         const { data: rows, error: err } = await supabase
           .from("predictions")
-          .select("id,match_id,match_date,comp,home,away,primary_signal,primary_tier,conf,home_score,away_score,result_correct,result_settled")
+          .select("id,match_id,match_date,utc_date,comp,home,away,primary_signal,primary_tier,conf,home_score,away_score,result_correct,result_settled")
           .eq("result_settled", true)
           .gte("conf", 80)
-          .order("match_date", { ascending: false })
+          .order("utc_date", { ascending: false, nullsFirst: false })
           .limit(limit);
 
         if (cancelled) return;
@@ -113,10 +113,10 @@ export function usePastResults({ limit = 500 } = {}) {
 
         const { data: rows, error: err } = await supabase
           .from("predictions")
-          .select("id,match_id,match_date,comp,home,away,primary_signal,primary_tier,conf,home_score,away_score,result_correct,result_settled")
+          .select("id,match_id,match_date,utc_date,comp,home,away,primary_signal,primary_tier,conf,home_score,away_score,result_correct,result_settled")
           .lt("match_date", todayWarsaw)
           .gte("conf", 80)
-          .order("match_date", { ascending: false })
+          .order("utc_date", { ascending: false, nullsFirst: false })
           .limit(limit);
 
         if (cancelled) return;
