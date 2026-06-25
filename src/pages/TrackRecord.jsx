@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useTrackRecord, computeStats } from "@/lib/useTrackRecord";
+import { useTrackRecord, usePastResults, computeStats } from "@/lib/useTrackRecord";
+import { useTodayPredictions } from "@/lib/usePredictions";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 15;
@@ -219,8 +220,8 @@ function ResultRow({ result, index }) {
         </div>
       </div>
 
-      {/* Score pill */}
-      {homeScore !== null && awayScore !== null && (
+      {/* Score pill — or "Pending" chip while the match is ungraded */}
+      {homeScore !== null && awayScore !== null ? (
         <div className={cn(
           "font-black text-[13px] shrink-0 tabular-nums px-2.5 py-0.5 rounded-lg transition-all duration-100",
           correct === true  ? "bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500/20" :
@@ -229,7 +230,11 @@ function ResultRow({ result, index }) {
         )}>
           {homeScore}–{awayScore}
         </div>
-      )}
+      ) : correct === null ? (
+        <div className="font-['Lexend'] text-[10px] font-bold shrink-0 px-2 py-0.5 rounded-lg bg-amber-400/10 text-amber-400/90 border border-amber-400/20 uppercase tracking-wider">
+          Pending
+        </div>
+      ) : null}
 
       {/* Tier badge */}
       <span className={cn(
@@ -242,6 +247,68 @@ function ResultRow({ result, index }) {
       {/* Date */}
       <div className="font-['Lexend'] text-[10px] text-on-surface-variant/50 shrink-0 hidden sm:block w-20 text-right transition-colors group-hover:text-on-surface-variant/80">
         {fmtDate(matchDate)}
+      </div>
+    </div>
+  );
+}
+
+// ── Pending row (today's picks — not yet settled) ─────────────────────────────
+function PendingRow({ result, index }) {
+  const { home, away, signal, conf, tier, homeScore, awayScore } = result;
+  const hasScore = homeScore !== null && awayScore !== null;
+
+  const tierColor = {
+    A: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    B: "text-blue-400  bg-blue-400/10  border-blue-400/20",
+    C: "text-zinc-400  bg-zinc-400/10  border-zinc-400/20",
+  }[tier] ?? "text-zinc-400 bg-zinc-400/10 border-zinc-400/20";
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 py-3 border-b border-outline-variant/20 last:border-0",
+        "transition-all duration-100 rounded-lg px-2 -mx-2 cursor-default group",
+        "hover:bg-amber-400/5 hover:border-l-2 hover:border-amber-400/40",
+      )}
+      style={{ animationDelay: `${index * 30}ms` }}
+    >
+      {/* Pending indicator — pulsing amber dot */}
+      <div className="w-2 h-2 rounded-full shrink-0 bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+
+      {/* Match info */}
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-semibold text-on-surface truncate">
+          <span className="group-hover:text-primary-container transition-colors">{home}</span>
+          <span className="text-on-surface-variant font-normal mx-1">vs</span>
+          {away}
+        </div>
+        <div className="font-['Lexend'] text-[10px] text-on-surface-variant/60 uppercase tracking-wider truncate mt-0.5">
+          {signal}
+        </div>
+      </div>
+
+      {/* Live score (if match already in play) or confidence */}
+      {hasScore ? (
+        <div className="font-black text-[13px] shrink-0 tabular-nums px-2.5 py-0.5 rounded-lg bg-surface-container text-on-surface">
+          {homeScore}–{awayScore}
+        </div>
+      ) : conf > 0 ? (
+        <div className="font-black text-[13px] shrink-0 tabular-nums px-2.5 py-0.5 rounded-lg bg-surface-container text-on-surface-variant">
+          {conf}%
+        </div>
+      ) : null}
+
+      {/* Tier badge */}
+      <span className={cn(
+        "font-['Lexend'] text-[10px] font-bold px-2 py-0.5 rounded-lg border shrink-0 transition-transform duration-200 group-hover:scale-105",
+        tierColor,
+      )}>
+        {tier}
+      </span>
+
+      {/* Awaiting label */}
+      <div className="font-['Lexend'] text-[10px] text-amber-400/80 shrink-0 hidden sm:block w-20 text-right uppercase tracking-wider">
+        Awaiting
       </div>
     </div>
   );
@@ -437,16 +504,31 @@ export default function TrackRecord() {
   const { data: results, loading, error } = useTrackRecord({ limit: 500 });
   const stats = useMemo(() => computeStats(results), [results]);
 
+  // Today's picks — same filtered list shown on Today's Predictions, rendered
+  // here as "awaiting result" until the pipeline settles & scores them.
+  const { data: todayRaw } = useTodayPredictions();
+  const todayPicks = useMemo(
+    () => [...todayRaw]
+      .filter(m => m.signal !== "No strong signal" && m.tier !== "C")
+      .sort((a, b) => b.conf - a.conf),
+    [todayRaw],
+  );
+
+  // Past picks for the Results list — includes graded (win/loss) AND not-yet-
+  // graded ("pending") days, so old today's-predictions always stay visible.
+  const { data: pastResults } = usePastResults({ limit: 500 });
+
   const [expandedSignal, setExpandedSignal] = useState(null);
   const [resultFilter,   setResultFilter]   = useState("all");
   const [page,           setPage]           = useState(1);
 
   const filteredResults = useMemo(() => {
-    let r = results;
-    if (resultFilter === "win")  r = r.filter(x => x.correct === true);
-    if (resultFilter === "loss") r = r.filter(x => x.correct === false);
+    let r = pastResults;
+    if (resultFilter === "win")     r = r.filter(x => x.correct === true);
+    if (resultFilter === "loss")    r = r.filter(x => x.correct === false);
+    if (resultFilter === "pending") r = r.filter(x => x.correct === null);
     return r;
-  }, [results, resultFilter]);
+  }, [pastResults, resultFilter]);
 
   const totalPages   = Math.max(1, Math.ceil(filteredResults.length / PAGE_SIZE));
   const visibleResults = filteredResults.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -505,6 +587,28 @@ export default function TrackRecord() {
           Every settled prediction, scored against the actual result. No cherry-picking.
         </p>
       </div>
+
+      {/* Today's picks — awaiting result */}
+      {todayPicks.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div>
+              <h2 className="font-['Lexend'] text-[11px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                Today's Picks — Awaiting Result
+              </h2>
+              <p className="text-[11px] text-on-surface-variant/50 mt-0.5">
+                {todayPicks.length} pick{todayPicks.length !== 1 ? "s" : ""} live today · scored here once matches finish
+              </p>
+            </div>
+          </div>
+          <div className="glass-card rounded-2xl px-5 py-2">
+            {todayPicks.map((m, i) => (
+              <PendingRow key={m.id ?? `${m.home}-${m.away}`} result={m} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* KPI row */}
       {stats ? (
@@ -616,37 +720,41 @@ export default function TrackRecord() {
             </div>
           </section>
 
-          {/* Recent results with filters + pagination */}
-          <section id="results-section">
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <div>
-                <h2 className="font-['Lexend'] text-[11px] uppercase tracking-widest text-on-surface-variant">
-                  Results
-                </h2>
-                <p className="text-[11px] text-on-surface-variant/50 mt-0.5">
-                  {filteredResults.length} total · page {page} of {totalPages}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <FilterPill label="All"      active={resultFilter === "all"}  onClick={() => handleFilter("all")}  />
-                <FilterPill label="✓ Wins"   active={resultFilter === "win"}  onClick={() => handleFilter("win")}  />
-                <FilterPill label="✗ Losses" active={resultFilter === "loss"} onClick={() => handleFilter("loss")} />
-              </div>
-            </div>
-
-            <div className="glass-card rounded-2xl px-5 py-2">
-              {filteredResults.length === 0 ? (
-                <div className="py-8 text-center text-sm text-on-surface-variant">No results match this filter</div>
-              ) : (
-                visibleResults.map((r, i) => (
-                  <ResultRow key={r.id ?? r.matchId} result={r} index={i} />
-                ))
-              )}
-            </div>
-
-            <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
-          </section>
         </>
+      )}
+
+      {/* Results — every past pick (graded + pending), so old today's-predictions always stay visible */}
+      {pastResults.length > 0 && (
+        <section id="results-section">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div>
+              <h2 className="font-['Lexend'] text-[11px] uppercase tracking-widest text-on-surface-variant">
+                Results
+              </h2>
+              <p className="text-[11px] text-on-surface-variant/50 mt-0.5">
+                {filteredResults.length} total · page {page} of {totalPages}
+              </p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <FilterPill label="All"       active={resultFilter === "all"}     onClick={() => handleFilter("all")}     />
+              <FilterPill label="✓ Wins"    active={resultFilter === "win"}     onClick={() => handleFilter("win")}     />
+              <FilterPill label="✗ Losses"  active={resultFilter === "loss"}    onClick={() => handleFilter("loss")}    />
+              <FilterPill label="◷ Pending" active={resultFilter === "pending"} onClick={() => handleFilter("pending")} />
+            </div>
+          </div>
+
+          <div className="glass-card rounded-2xl px-5 py-2">
+            {filteredResults.length === 0 ? (
+              <div className="py-8 text-center text-sm text-on-surface-variant">No results match this filter</div>
+            ) : (
+              visibleResults.map((r, i) => (
+                <ResultRow key={r.id ?? r.matchId} result={r} index={i} />
+              ))
+            )}
+          </div>
+
+          <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
+        </section>
       )}
 
       <ScrollToTop />

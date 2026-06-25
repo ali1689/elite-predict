@@ -91,6 +91,56 @@ export function useTrackRecord({ limit = 500 } = {}) {
   return { data, loading, error };
 }
 
+// ── Past predictions for the Results list ─────────────────────────────────────
+// Unlike useTrackRecord (settled-only, used for stats), this returns EVERY past
+// pick — both graded (win/loss + score) and not-yet-graded ("pending"). This is
+// so old "Today's Predictions" always stay visible in the Track Record's Results
+// list, even on days the pipeline hasn't settled yet. Pending rows flip to a
+// win/loss automatically once scores are exported.
+export function usePastResults({ limit = 500 } = {}) {
+  const [data,    setData]    = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Strictly before today (today's picks live in the "Today's Picks" block).
+        const todayWarsaw = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
+
+        const { data: rows, error: err } = await supabase
+          .from("predictions")
+          .select("id,match_id,match_date,comp,home,away,primary_signal,primary_tier,conf,home_score,away_score,result_correct,result_settled")
+          .lt("match_date", todayWarsaw)
+          .gte("conf", 80)
+          .order("match_date", { ascending: false })
+          .limit(limit);
+
+        if (cancelled) return;
+        if (err) throw err;
+
+        const normalized = (rows || [])
+          .map(normalizeResult)
+          // keep real picks only (drop "No strong signal" / empty rows)
+          .filter(r => r.signal && r.signal !== "—" && r.signal !== "No strong signal");
+
+        setData(normalized);
+      } catch (e) {
+        if (!cancelled) setError(e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [limit]);
+
+  return { data, loading, error };
+}
+
 // Derive stats from settled results
 export function computeStats(results) {
   const total = results.length;
