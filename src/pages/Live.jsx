@@ -114,6 +114,55 @@ function LiveDot() {
   );
 }
 
+// ── Live coverage window banner ───────────────────────────────────────────────
+// The in-play engine (09_live_inplay.py) only runs during football hours:
+// UTC hour 12–23, i.e. 12:00–00:00 UTC. We surface that here, converted to each
+// visitor's local time, so users know exactly when live picks are available.
+function CoverageBanner() {
+  const COVERAGE_START_UTC_H = 12; // engine active from 12:00 UTC …
+  const COVERAGE_END_UTC_H   = 24; // … through 00:00 UTC (hour 23 inclusive)
+
+  const h      = new Date().getUTCHours();
+  const isLive = h >= COVERAGE_START_UTC_H && h < COVERAGE_END_UTC_H;
+
+  const start = new Date(); start.setUTCHours(COVERAGE_START_UTC_H, 0, 0, 0);
+  const end   = new Date(); end.setUTCHours(COVERAGE_END_UTC_H, 0, 0, 0); // rolls to next-day 00:00
+  const fmt   = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div
+      className={cn(
+        "mt-4 inline-flex flex-wrap items-center gap-x-2.5 gap-y-1 px-3.5 py-2 rounded-xl border",
+        "font-['Lexend'] text-[12px]",
+        isLive
+          ? "border-primary-container/40 bg-primary-container/10 text-on-surface"
+          : "border-outline-variant/50 bg-surface-container/40 text-on-surface-variant"
+      )}
+    >
+      <span
+        className={cn(
+          "w-1.5 h-1.5 rounded-full flex-shrink-0",
+          isLive ? "bg-primary-container animate-pulse" : "bg-on-surface-variant/40"
+        )}
+      />
+      <span className="font-bold uppercase tracking-wider">
+        {isLive ? "Live coverage is on now" : "Live coverage is off right now"}
+      </span>
+      <span className="text-on-surface-variant/50">·</span>
+      <span>
+        Daily <span className="font-semibold text-on-surface">12:00–00:00 UTC</span>
+        <span className="text-on-surface-variant/70"> ({fmt(start)}–{fmt(end)} your time)</span>
+      </span>
+      {!isLive && (
+        <>
+          <span className="text-on-surface-variant/50">·</span>
+          <span>opens {fmt(start)}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function Skeleton({ className }) {
   return <div className={cn("animate-pulse bg-white/5 rounded-xl", className)} />;
@@ -378,6 +427,7 @@ export default function Live() {
                   ? "No actionable live bets right now — check back soon."
                   : `${actionable.length} actionable bet${actionable.length !== 1 ? "s" : ""} across ${data.length} live match${data.length !== 1 ? "es" : ""} · updated in real-time`}
             </p>
+            <CoverageBanner />
           </div>
 
           {/* Refresh control */}
