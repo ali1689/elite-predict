@@ -817,4 +817,30 @@ export default function Today() {
           </div>
 
         ) : (
-      
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
+            {visibleCards.map((m, i) => (
+              <AnimatedCard key={m.id} match={m} odds={oddsById[m.matchId]} delay={i * 500} instant={packOpened} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Telegram CTA */}
+      <section className="mt-10 md:mt-16">
+        <div className="relative rounded-2xl overflow-hidden p-5 sm:p-8 bg-primary-container/10 dark:bg-zinc-950 border border-primary-container/30 flex flex-col gap-5 md:flex-row md:items-center md:gap-6">
+          <div className="flex-1">
+            <div className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-primary-container mb-2">Live Alerts</div>
+            <h3 className="text-lg md:text-headline-md font-black text-on-surface mb-1 md:mb-2">Get Instant Signal Alerts on Telegram</h3>
+            <p className="text-on-surface-variant text-sm">Lineup news, late-value drops, and picks — directly on your phone.</p>
+          </div>
+          <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 bg-primary-container text-on-primary px-6 py-3.5 rounded-xl font-black text-sm uppercase tracking-tight neon-glow hover:scale-105 active:scale-95 transition-all w-full md:w-auto flex-shrink-0">
+            <span className="material-symbols-outlined text-[18px]">send</span>
+            Join Telegram
+          </a>
+        </div>
+      </section>
+
+    </main>
+  );
+}
