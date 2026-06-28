@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { label: "Today's Predictions",  to: "/today",        icon: "today"          },
   { label: "Open Pack",            to: "/open",         icon: "style"          },
   { label: "Upcoming Predictions", to: "/predictions",  icon: "calendar_month" },
+  { label: "Risky Picks",          to: "/risky",        icon: "local_fire_department" },
   { label: "Goalscorers",          to: "/players",      icon: "sports_soccer"  },
   { label: "Track Record",         to: "/track-record", icon: "verified"       },
 ];

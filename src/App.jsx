@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Players from "./pages/Players";
 import Open from "./pages/Open";
 import Live from "./pages/Live";
+import RiskyPicks from "./pages/RiskyPicks";
 import TrackRecord from "./pages/TrackRecord";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/players"     element={<Players />} />
               <Route path="/open"        element={<Open />} />
               <Route path="/live"        element={<ProtectedRoute><Live /></ProtectedRoute>} />
+              <Route path="/risky"       element={<ProtectedRoute><RiskyPicks /></ProtectedRoute>} />
               <Route path="/track-record" element={<TrackRecord />} />
               <Route path="*" element={<NotFound />} />
               <Route path="/login"       element={<Login />} />
@@ -73,7 +75,4 @@ export default function App() {
           <Analytics />
           <SpeedInsights />
         </div>
-      </AuthProvider>
-    </ThemeProvider>
-  );
-}
+      </AuthProvi
