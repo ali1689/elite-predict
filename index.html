@@ -59,11 +59,35 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lexend:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <!-- Material Symbols -->
+    <!-- Material Symbols (display=block: glyph stays blank during load, never shows the raw ligature word) -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
       rel="stylesheet"
     />
+
+    <!-- Prevent the flash of raw icon names (e.g. "dark_mode", "logout") on first
+         load: hide icon spans until the Material Symbols font is ready, reserving
+         ~1em so there's no layout jump. Safety timeout guarantees they reveal. -->
+    <style>
+      html:not(.ms-ready) .material-symbols-outlined {
+        visibility: hidden;
+        display: inline-block;
+        width: 1em;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+    </style>
+    <script>
+      (function () {
+        function reveal() { document.documentElement.classList.add("ms-ready"); }
+        if (document.fonts && document.fonts.ready) {
+          try { document.fonts.load('24px "Material Symbols Outlined"'); } catch (e) {}
+          document.fonts.ready.then(reveal).catch(reveal);
+        }
+        // Safety: never keep icons hidden if the font is slow or blocked.
+        setTimeout(reveal, 2500);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
