@@ -54,10 +54,14 @@ export function useRiskyPicks() {
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         if (cancelled) return;
         try {
+          // Today (Warsaw) — only show today's picks, never yesterday's leftovers
+          // that haven't been settled/cleaned yet.
+          const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
           const { data: rows, error: err } = await supabase
             .from("risky_picks")
             .select("*")
-            .eq("result_settled", false)   // only the current (ungraded) day's picks
+            .eq("result_settled", false)
+            .gte("match_date", today)
             .order("rank", { ascending: true })
             .limit(20);
 

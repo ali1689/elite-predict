@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import TeamAvatar from "@/components/TeamAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { useTodayPredictions } from "@/lib/usePredictions";
+import { useMatchOdds } from "@/lib/useMatchOdds";
 
 // ── Daily pack helpers ────────────────────────────────────────────────────
 function packKey(userId) {
@@ -266,7 +267,7 @@ function ProbBar({ label, value, color = "bg-primary-container" }) {
 
 // ── Stat chip ─────────────────────────────────────────────────────────────
 // Pass `tip` (a glossary key, e.g. "BTTS") to show an explanation tooltip.
-function StatChip({ label, value, accent, tip }) {
+function StatChip({ label, value, accent, tip, odds }) {
   return (
     <div className="bg-surface-container-low rounded-lg p-2 text-center border border-outline-variant/30">
       <div className="flex items-center justify-center gap-0.5 mb-0.5">
@@ -276,6 +277,9 @@ function StatChip({ label, value, accent, tip }) {
       <div className={cn("font-['Lexend'] text-sm font-bold tabular-nums", accent ? "text-primary-container" : "text-on-surface")}>
         {value}
       </div>
+      {odds != null && (
+        <div className="font-['Lexend'] text-[8px] font-semibold text-blue-400 tabular-nums mt-0.5">@{odds.toFixed(2)}</div>
+      )}
     </div>
   );
 }
@@ -331,7 +335,7 @@ function DCTrio({ dc1X = 0, dcX2 = 0, dc12 = 0 }) {
 }
 
 // ── Animated card wrapper — flips from face-down to face-up ──────────────
-function AnimatedCard({ match, delay, instant = false }) {
+function AnimatedCard({ match, odds, delay, instant = false }) {
   const [phase, setPhase] = useState(instant ? "front" : "back"); // back | front
 
   useEffect(() => {
@@ -368,14 +372,14 @@ function AnimatedCard({ match, delay, instant = false }) {
   }
 
   return (
-    <div className={cn("border-2 rounded-xl animate-[scale-in_0.35s_ease-out]", glowClass)}>
-      <MatchCard match={match} />
+    <div className={cn("border-2 rounded-xl animate-[scale-in_0.35s_ease-out] h-full", glowClass)}>
+      <MatchCard match={match} odds={odds} />
     </div>
   );
 }
 
 // ── Match card ────────────────────────────────────────────────────────────
-function MatchCard({ match }) {
+function MatchCard({ match, odds }) {
   const sig  = sigStyle(match.signal);
   const tier = tierStyle(match.tier);
   const homeTeam = { abbr: abbr(match.home), name: match.home, logo: null };
@@ -396,7 +400,7 @@ function MatchCard({ match }) {
   };
 
   return (
-    <div className="glass-card p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-4">
+    <div className="glass-card p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-4 h-full">
 
       {/* Header: tier badge + signal + time */}
       <div className="flex items-start justify-between gap-2">
@@ -407,7 +411,11 @@ function MatchCard({ match }) {
           )}>
             {tier.label}
           </span>
-          <span className={cn("px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-tighter w-fit", sig.bg, sig.text)}>
+          <div className="flex items-center gap-1">
+            <span className="font-['Lexend'] text-[7px] font-semibold uppercase tracking-[0.15em] text-on-surface-variant">Our AI Pick</span>
+            <InfoTip title="Our AI Pick" text="The model's single best prediction for this match — its highest-confidence outcome. This is our recommendation. It's separate from the blue 'Best available bet' below, which is the most worthwhile market you can actually place at a fair price." />
+          </div>
+          <span className={cn("px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-tighter w-fit border border-primary-container/30", sig.bg, sig.text)}>
             {match.signal}
           </span>
         </div>
@@ -449,14 +457,46 @@ function MatchCard({ match }) {
         <ProbBar label="Away to score (0.5+)"  value={match.awayOver05} color="bg-blue-400" />
       </div>
 
-      {/* Stats grid */}
+      {/* Stats grid — with bookmaker odds under each market when available */}
       <div className="grid grid-cols-5 gap-1.5">
-        <StatChip label="BTTS"  value={`${match.btts}%`}    tip="BTTS" />
-        <StatChip label="O1.5"  value={`${match.over15}%`}  accent tip="O1.5" />
-        <StatChip label="O2.5"  value={`${match.over25}%`}  accent tip="O2.5" />
-        <StatChip label="U2.5"  value={`${match.under25}%`} tip="U2.5" />
+        <StatChip label="BTTS"  value={`${match.btts}%`}    tip="BTTS" odds={odds?.oddsBtts} />
+        <StatChip label="O1.5"  value={`${match.over15}%`}  accent tip="O1.5" odds={odds?.oddsOver15} />
+        <StatChip label="O2.5"  value={`${match.over25}%`}  accent tip="O2.5" odds={odds?.oddsOver25} />
+        <StatChip label="U2.5"  value={`${match.under25}%`} tip="U2.5" odds={odds?.oddsUnder25} />
         <StatChip label="xG"    value={xg} tip="xG" />
       </div>
+
+      {/* Best available bet — odds-aware safe pick (from 05c_odds_enrich): the
+          safest market the model backs that's still priced worth betting. The
+          slot always renders when odds exist (with a note when nothing clears
+          the price floor) so every card keeps the same height. */}
+      {odds && (
+        odds.bestMarket ? (
+          <div className="flex items-center justify-between rounded-lg bg-blue-400/10 border border-blue-400/25 px-3 py-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="material-symbols-outlined text-blue-400 text-[16px]">payments</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1">
+                  <span className="font-['Lexend'] text-[8px] uppercase tracking-widest text-blue-400">Best available bet</span>
+                  <InfoTip title="Best available bet" text="Not our main pick — this is the most worthwhile market you can actually bet here at a fair price: model-backed and paying at least 1.40. When our top pick is priced too short to be worth a stake, this points to the better-value alternative." />
+                </div>
+                <div className="font-black text-xs text-on-surface truncate">{odds.bestMarket}</div>
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <div className="font-black text-base text-blue-400 leading-none tabular-nums">{odds.bestOdds?.toFixed(2)}</div>
+              <div className="font-['Lexend'] text-[8px] uppercase tracking-widest text-on-surface-variant">{odds.bestProb}% model</div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-lg bg-surface-container-low border border-outline-variant/30 px-3 py-2">
+            <span className="material-symbols-outlined text-on-surface-variant/60 text-[16px]">info</span>
+            <div className="font-['Lexend'] text-[10px] text-on-surface-variant leading-snug">
+              No bet over 1.40 here — the model's markets are priced too short.
+            </div>
+          </div>
+        )
+      )}
 
       {/* Double Chance */}
       <DCTrio dc1X={match.dc1X} dcX2={match.dcX2} dc12={match.dc12} />
@@ -498,6 +538,7 @@ export default function Today() {
   }, [authLoading, user?.id]);
 
   const { data: matches, loading, error, lastFetch, refresh } = useTodayPredictions();
+  const oddsById = useMatchOdds();
 
   const [activeLeague, setActiveLeague] = useState("ALL");
 
@@ -776,30 +817,4 @@ export default function Today() {
           </div>
 
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-            {visibleCards.map((m, i) => (
-              <AnimatedCard key={m.id} match={m} delay={i * 500} instant={packOpened} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Telegram CTA */}
-      <section className="mt-10 md:mt-16">
-        <div className="relative rounded-2xl overflow-hidden p-5 sm:p-8 bg-primary-container/10 dark:bg-zinc-950 border border-primary-container/30 flex flex-col gap-5 md:flex-row md:items-center md:gap-6">
-          <div className="flex-1">
-            <div className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-primary-container mb-2">Live Alerts</div>
-            <h3 className="text-lg md:text-headline-md font-black text-on-surface mb-1 md:mb-2">Get Instant Signal Alerts on Telegram</h3>
-            <p className="text-on-surface-variant text-sm">Lineup news, late-value drops, and picks — directly on your phone.</p>
-          </div>
-          <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 bg-primary-container text-on-primary px-6 py-3.5 rounded-xl font-black text-sm uppercase tracking-tight neon-glow hover:scale-105 active:scale-95 transition-all w-full md:w-auto flex-shrink-0">
-            <span className="material-symbols-outlined text-[18px]">send</span>
-            Join Telegram
-          </a>
-        </div>
-      </section>
-
-    </main>
-  );
-}
+      

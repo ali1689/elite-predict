@@ -96,6 +96,7 @@ function normalize(row) {
 
   return {
     id:          row.id,
+    matchId:     row.match_id ?? null,
     utcDate:     row.utc_date,
     matchDate:   row.match_date,
     comp:        row.comp,
