@@ -5,6 +5,8 @@ import { fmtTime, abbr } from "@/data/matches";
 import { cn } from "@/lib/utils";
 import { useCountUp } from "@/lib/useCountUp";
 import { useRiskyPicks } from "@/lib/useRiskyPicks";
+import { useAuth } from "@/context/AuthContext";
+import SignInGate from "@/components/SignInGate";
 
 // ── Market → display label + icon ──────────────────────────────────────────
 const MARKET_META = {
@@ -151,6 +153,7 @@ function RiskyCard({ pick }) {
 
 // ── Page ───────────────────────────────────────────────────────────────────
 export default function RiskyPicks() {
+  const { user, loading: authLoading } = useAuth();
   const { data: picks, loading, error, lastFetch } = useRiskyPicks();
 
   const sorted = useMemo(() => [...picks].sort((a, b) => a.rank - b.rank), [picks]);
@@ -158,6 +161,20 @@ export default function RiskyPicks() {
   const avgEdge = sorted.length ? Math.round(sorted.reduce((s, p) => s + p.edge, 0) / sorted.length) : 0;
   const avgOdds = sorted.length ? sorted.reduce((s, p) => s + p.odds, 0) / sorted.length : 0;
   const topEdge = sorted.length ? Math.max(...sorted.map(p => p.edge)) : 0;
+
+  // Members-only gate (shows the page shell + sign-in card, like Today/Upcoming)
+  if (authLoading) return null;
+  if (!user) return (
+    <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
+      <SignInGate
+        accent="amber"
+        eyebrow="Value Engine · Higher Reward"
+        title={<>Risky <span className="text-amber-400">Picks</span> of the Day</>}
+        lockedLabel="Today's value picks"
+        description="Sign in to see the day's best value bets — markets where our model's probability beats the bookmaker's price."
+      />
+    </main>
+  );
 
   return (
     <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">

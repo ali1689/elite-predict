@@ -64,8 +64,8 @@ export default function App() {
               <Route path="/predictions" element={<Predictions />} />
               <Route path="/players"     element={<Players />} />
               <Route path="/open"        element={<Open />} />
-              <Route path="/live"        element={<ProtectedRoute><Live /></ProtectedRoute>} />
-              <Route path="/risky"       element={<ProtectedRoute><RiskyPicks /></ProtectedRoute>} />
+              <Route path="/live"        element={<Live />} />
+              <Route path="/risky"       element={<RiskyPicks />} />
               <Route path="/track-record" element={<TrackRecord />} />
               <Route path="*" element={<NotFound />} />
               <Route path="/login"       element={<Login />} />
@@ -75,4 +75,7 @@ export default function App() {
           <Analytics />
           <SpeedInsights />
         </div>
-      </AuthProvi
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}

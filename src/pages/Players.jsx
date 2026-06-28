@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { usePlayerPredictions } from "@/lib/usePredictions";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import SignInGate from "@/components/SignInGate";
 
 // ── Position config ────────────────────────────────────────────────────────
 const POS_STYLE = {
@@ -110,6 +112,7 @@ const ALL = "ALL";
 const POS_OPTIONS = ["ALL", "Attacker", "Midfielder", "Defender"];
 
 export default function Players() {
+  const { user, loading: authLoading } = useAuth();
   const { data, loading, error } = usePlayerPredictions({ limit: 600 });
 
   const [search,      setSearch]      = useState("");
@@ -157,6 +160,20 @@ export default function Players() {
   const topScorers = useMemo(() =>
     [...dedupedData].sort((a, b) => b.pAnytime - a.pAnytime).slice(0, 5),
     [dedupedData]
+  );
+
+  // Members-only gate (shows the page shell + sign-in card, like Today/Upcoming)
+  if (authLoading) return null;
+  if (!user) return (
+    <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
+      <SignInGate
+        accent="green"
+        eyebrow="AI Engine · Goalscorers"
+        title={<>Goalscorer <span className="text-primary-container">Picks</span></>}
+        lockedLabel="Anytime goalscorer picks"
+        description="Sign in to see anytime-goalscorer probabilities, season form, and our top picks for every upcoming match."
+      />
+    </main>
   );
 
   return (

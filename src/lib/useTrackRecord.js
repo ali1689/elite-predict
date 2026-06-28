@@ -111,6 +111,16 @@ export function usePastResults({ limit = 500 } = {}) {
         // Strictly before today (today's picks live in the "Today's Picks" block).
         const todayWarsaw = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
 
+        // Stale-pending cutoff: a pending pick normally flips to win/loss within
+        // ~24h (the next nightly settle run). Anything still pending after 2 days
+        // is stuck on a results coverage gap (e.g. a friendly/tournament whose
+        // league isn't refreshed) and will never settle — so we hide it from the
+        // Results list rather than showing a permanent "PENDING" row.
+        const STALE_PENDING_DAYS = 2;
+        const _stale = new Date();
+        _stale.setDate(_stale.getDate() - STALE_PENDING_DAYS);
+        const stalePendingCutoff = _stale.toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
+
         const { data: rows, error: err } = await supabase
           .from("predictions")
           .select("id,match_id,match_date,utc_date,comp,home,away,primary_signal,primary_tier,conf,home_score,away_score,result_correct,result_settled")
@@ -125,7 +135,10 @@ export function usePastResults({ limit = 500 } = {}) {
         const normalized = (rows || [])
           .map(normalizeResult)
           // keep real picks only (drop "No strong signal" / empty rows)
-          .filter(r => r.signal && r.signal !== "—" && r.signal !== "No strong signal");
+          .filter(r => r.signal && r.signal !== "—" && r.signal !== "No strong signal")
+          // hide stale pending rows that will never settle (coverage gap);
+          // settled rows always stay, recent pending stays (still settleable)
+          .filter(r => r.settled || r.matchDate >= stalePendingCutoff);
 
         setData(normalized);
       } catch (e) {

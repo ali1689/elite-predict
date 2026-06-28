@@ -7,6 +7,8 @@ import { sigStyle, abbr } from "@/data/matches";
 import InfoTip from "@/components/InfoTip";
 import { useCountUp } from "@/lib/useCountUp";
 import HowToRead from "@/components/HowToRead";
+import { useAuth } from "@/context/AuthContext";
+import SignInGate from "@/components/SignInGate";
 
 const ALL = "ALL";
 
@@ -331,6 +333,7 @@ function LiveCard({ match }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Live() {
+  const { user, loading: authLoading } = useAuth();
   const { data, loading, error, lastFetch, refresh } = useInplayPredictions();
   const [activeComp,   setActiveComp]   = useState(ALL);
   const [minConf,      setMinConf]      = useState(0);
@@ -403,6 +406,20 @@ export default function Live() {
       });
     } catch { return ""; }
   };
+
+  // Members-only gate (shows the page shell + sign-in card, like Today/Upcoming)
+  if (authLoading) return null;
+  if (!user) return (
+    <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
+      <SignInGate
+        accent="green"
+        eyebrow="AI Engine · In-Play"
+        title={<>Live <span className="text-primary-container">In-Play</span></>}
+        lockedLabel="Live in-play picks"
+        description="Sign in to follow live matches with minute-by-minute model probabilities and in-play value signals."
+      />
+    </main>
+  );
 
   return (
     <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">

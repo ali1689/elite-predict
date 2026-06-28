@@ -1,6 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useTrackRecord, usePastResults, computeStats } from "@/lib/useTrackRecord";
 import { useTodayPredictions } from "@/lib/usePredictions";
+import { useAuth } from "@/context/AuthContext";
+import SignInGate from "@/components/SignInGate";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 15;
@@ -501,6 +503,7 @@ function Pagination({ page, totalPages, onChange }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function TrackRecord() {
+  const { user } = useAuth();
   const { data: results, loading, error } = useTrackRecord({ limit: 500 });
   const stats = useMemo(() => computeStats(results), [results]);
 
@@ -588,8 +591,18 @@ export default function TrackRecord() {
         </p>
       </div>
 
-      {/* Today's picks — awaiting result */}
-      {todayPicks.length > 0 && (
+      {/* Today's picks — gated: members see today's live picks; visitors see a
+          teaser. The historical record below stays open to everyone. */}
+      {!user ? (
+        <section>
+          <SignInGate
+            accent="green"
+            compact
+            lockedLabel="Today's picks"
+            description="Sign in to see today's live picks as they're tracked here. The full historical record below stays open to everyone."
+          />
+        </section>
+      ) : todayPicks.length > 0 ? (
         <section>
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div>
@@ -608,7 +621,7 @@ export default function TrackRecord() {
             ))}
           </div>
         </section>
-      )}
+      ) : null}
 
       {/* KPI row */}
       {stats ? (

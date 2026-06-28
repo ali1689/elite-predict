@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import SignInGate from "@/components/SignInGate";
 import { markPackOpened, isPackOpenedToday } from "@/pages/Today";
 import { useTodayPredictions } from "@/lib/usePredictions";
 import { sigStyle, tierStyle, fmtTime, abbr } from "@/data/matches";
@@ -394,26 +395,17 @@ export default function Open() {
   // ── Not logged in ────────────────────────────────────────────────────
   if (!authLoading && !user) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center px-4 pb-16 pt-24">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-2xl bg-primary-container/10 border border-primary-container/30 flex items-center justify-center mx-auto mb-6">
-            <span className="material-symbols-outlined text-primary-container text-4xl">lock</span>
-          </div>
-          <h1 className="text-3xl font-black text-on-surface mb-3">Members Only</h1>
-          <p className="text-on-surface-variant mb-8 font-['Lexend'] text-sm leading-relaxed">
-            Sign in to unlock the daily pack opening experience and reveal today's AI predictions one by one.
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Link to="/login"
-              className="px-6 py-3 rounded-xl bg-primary-container text-on-primary font-black text-sm uppercase tracking-widest shadow-[0_0_20px_rgba(57,255,20,0.4)] hover:shadow-[0_0_30px_rgba(57,255,20,0.6)] transition-all">
-              Sign In
-            </Link>
-            <Link to="/today"
-              className="px-6 py-3 rounded-xl border border-white/10 text-on-surface-variant hover:text-on-surface font-['Lexend'] text-sm uppercase tracking-widest transition-all">
-              View Today
-            </Link>
-          </div>
-        </div>
+      <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
+        <SignInGate
+          accent="green"
+          eyebrow="Daily Free Pack"
+          title={<>Open Today's <span className="text-primary-container">Pack</span></>}
+          lockedLabel="Today's pack"
+          description="Sign in to open your free daily pack and reveal today's AI predictions one card at a time."
+          secondaryTo="/today"
+          secondaryLabel="View Today"
+          secondaryIcon="calendar_today"
+        />
       </main>
     );
   }
