@@ -11,7 +11,6 @@ import Login from "./pages/Login";
 import Players from "./pages/Players";
 import Open from "./pages/Open";
 import Live from "./pages/Live";
-import RiskyPicks from "./pages/RiskyPicks";
 import TrackRecord from "./pages/TrackRecord";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -65,7 +64,8 @@ export default function App() {
               <Route path="/players"     element={<Players />} />
               <Route path="/open"        element={<Open />} />
               <Route path="/live"        element={<Live />} />
-              <Route path="/risky"       element={<RiskyPicks />} />
+              {/* Risky picks folded into Today — keep old links working */}
+              <Route path="/risky"       element={<Navigate to="/today" replace />} />
               <Route path="/track-record" element={<TrackRecord />} />
               <Route path="*" element={<NotFound />} />
               <Route path="/login"       element={<Login />} />

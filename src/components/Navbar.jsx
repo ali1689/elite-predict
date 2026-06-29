@@ -9,7 +9,6 @@ const NAV_LINKS = [
   { label: "Today's Predictions",  to: "/today",        icon: "today"          },
   { label: "Open Pack",            to: "/open",         icon: "style"          },
   { label: "Upcoming Predictions", to: "/predictions",  icon: "calendar_month" },
-  { label: "Risky Picks",          to: "/risky",        icon: "local_fire_department" },
   { label: "Goalscorers",          to: "/players",      icon: "sports_soccer"  },
   { label: "Track Record",         to: "/track-record", icon: "verified"       },
 ];
@@ -30,7 +29,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex flex-1 items-center justify-center gap-5 lg:gap-7 px-4">
             {NAV_LINKS.map(({ label, to, live }) => (
               <NavLink key={label} to={to}
                 className={({ isActive }) =>

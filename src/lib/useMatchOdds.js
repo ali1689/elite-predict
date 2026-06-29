@@ -21,6 +21,8 @@ function normalize(row) {
     bestMarket:  row.best_market ?? null,
     bestOdds:    num(row.best_odds),
     bestProb:    row.best_prob ?? null,
+    bestEdge:    row.best_edge ?? null,
+    bestImplied: row.best_implied ?? null,
   };
 }
 

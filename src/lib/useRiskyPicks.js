@@ -92,3 +92,68 @@ export function useRiskyPicks() {
 
   return { data, loading, error, lastFetch };
 }
+
+// ── Settled risky picks (graded) for the Track Record's separate risky record ──
+function normalizeSettled(row) {
+  return {
+    id:          `${row.match_id}__${row.market}`,
+    home:        row.home_team   ?? "",
+    away:        row.away_team   ?? "",
+    competition: row.competition ?? "",
+    market:      row.market      ?? "",
+    odds:        Number(row.decimal_odds ?? 0),
+    edge:        row.edge        ?? 0,
+    modelProb:   row.model_prob  ?? 0,
+    impliedProb: row.implied_prob ?? 0,
+    correct:     row.result_correct,
+    homeScore:   row.home_score  ?? null,
+    awayScore:   row.away_score  ?? null,
+    matchDate:   row.match_date,
+    utcDate:     row.utc_date,
+  };
+}
+
+export function useRiskyRecord({ limit = 500 } = {}) {
+  const [data, setData]       = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const { data: rows, error } = await supabase
+          .from("risky_picks")
+          .select("*")
+          .eq("result_settled", true)
+          .not("result_correct", "is", null)   // graded only
+          .order("utc_date", { ascending: false })
+          .limit(limit);
+        if (cancelled) return;
+        if (!error) setData((rows || []).map(normalizeSettled));
+      } catch (_) { /* best-effort */ }
+      finally { if (!cancelled) setLoading(false); }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [limit]);
+
+  return { data, loading };
+}
+
+// ROI-first stats for the risky record. Value bets are judged by profit, not
+// hit rate: each win returns (odds − 1) units, each loss −1 unit.
+export function computeRiskyStats(rows) {
+  const total = rows.length;
+  if (!total) return null;
+  const hits   = rows.filter(r => r.correct === true).length;
+  const profit = rows.reduce((s, r) => s + (r.correct ? (Number(r.odds) - 1) : -1), 0);
+  return {
+    total,
+    hits,
+    misses:  total - hits,
+    hitRate: (hits / total) * 100,
+    profit,                            // units staked flat
+    roi:     (profit / total) * 100,   // yield %
+    avgOdds: rows.reduce((s, r) => s + Number(r.odds), 0) / total,
+  };
+}

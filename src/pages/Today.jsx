@@ -4,6 +4,9 @@ import TeamAvatar from "@/components/TeamAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { useTodayPredictions } from "@/lib/usePredictions";
 import { useMatchOdds } from "@/lib/useMatchOdds";
+import { useRiskyPicks } from "@/lib/useRiskyPicks";
+import RiskyPickCard from "@/components/RiskyPickCard";
+import ScrollToTop from "@/components/ScrollToTop";
 
 // ── Daily pack helpers ────────────────────────────────────────────────────
 function packKey(userId) {
@@ -413,7 +416,7 @@ function MatchCard({ match, odds }) {
           </span>
           <div className="flex items-center gap-1">
             <span className="font-['Lexend'] text-[7px] font-semibold uppercase tracking-[0.15em] text-on-surface-variant">Our AI Pick</span>
-            <InfoTip title="Our AI Pick" text="The model's single best prediction for this match — its highest-confidence outcome. This is our recommendation. It's separate from the blue 'Best available bet' below, which is the most worthwhile market you can actually place at a fair price." />
+            <InfoTip title="Our AI Pick" text="The model's single best prediction for this match — its highest-confidence outcome. This is our recommendation, and what our track record is based on. It's separate from the amber 'Value bet' below, which is a higher-risk market that beats the bookmaker's price." />
           </div>
           <span className={cn("px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-tighter w-fit border border-primary-container/30", sig.bg, sig.text)}>
             {match.signal}
@@ -466,38 +469,6 @@ function MatchCard({ match, odds }) {
         <StatChip label="xG"    value={xg} tip="xG" />
       </div>
 
-      {/* Best available bet — odds-aware safe pick (from 05c_odds_enrich): the
-          safest market the model backs that's still priced worth betting. The
-          slot always renders when odds exist (with a note when nothing clears
-          the price floor) so every card keeps the same height. */}
-      {odds && (
-        odds.bestMarket ? (
-          <div className="flex items-center justify-between rounded-lg bg-blue-400/10 border border-blue-400/25 px-3 py-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="material-symbols-outlined text-blue-400 text-[16px]">payments</span>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="font-['Lexend'] text-[8px] uppercase tracking-widest text-blue-400">Best available bet</span>
-                  <InfoTip title="Best available bet" text="Not our main pick — this is the most worthwhile market you can actually bet here at a fair price: model-backed and paying at least 1.40. When our top pick is priced too short to be worth a stake, this points to the better-value alternative." />
-                </div>
-                <div className="font-black text-xs text-on-surface truncate">{odds.bestMarket}</div>
-              </div>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div className="font-black text-base text-blue-400 leading-none tabular-nums">{odds.bestOdds?.toFixed(2)}</div>
-              <div className="font-['Lexend'] text-[8px] uppercase tracking-widest text-on-surface-variant">{odds.bestProb}% model</div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 rounded-lg bg-surface-container-low border border-outline-variant/30 px-3 py-2">
-            <span className="material-symbols-outlined text-on-surface-variant/60 text-[16px]">info</span>
-            <div className="font-['Lexend'] text-[10px] text-on-surface-variant leading-snug">
-              No bet over 1.40 here — the model's markets are priced too short.
-            </div>
-          </div>
-        )
-      )}
-
       {/* Double Chance */}
       <DCTrio dc1X={match.dc1X} dcX2={match.dcX2} dc12={match.dc12} />
 
@@ -539,6 +510,7 @@ export default function Today() {
 
   const { data: matches, loading, error, lastFetch, refresh } = useTodayPredictions();
   const oddsById = useMatchOdds();
+  const { data: riskyPicks } = useRiskyPicks();
 
   const [activeLeague, setActiveLeague] = useState("ALL");
 
@@ -612,18 +584,42 @@ export default function Today() {
         )}
       </section>
 
+      {/* Jump to Risky Picks — keeps the value section discoverable from the top */}
+      {user && riskyPicks.length > 0 && (
+        <button
+          onClick={() => document.getElementById("risky-picks")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="w-full mb-6 md:mb-8 flex items-center justify-between gap-3 rounded-xl px-4 py-3
+                     bg-amber-400/10 border border-amber-400/30 hover:border-amber-400/60 hover:bg-amber-400/15
+                     transition-all group">
+          <span className="flex items-center gap-2.5 min-w-0">
+            <span className="material-symbols-outlined text-amber-400 text-[20px]">local_fire_department</span>
+            <span className="font-['Lexend'] text-[11px] sm:text-xs font-black uppercase tracking-widest text-amber-400 whitespace-nowrap">
+              {riskyPicks.length} Risky {riskyPicks.length === 1 ? "Pick" : "Picks"} today
+            </span>
+            <span className="font-['Lexend'] text-[10px] text-on-surface-variant hidden md:inline truncate">
+              — value bets that beat the bookmaker's price
+            </span>
+          </span>
+          <span className="flex items-center gap-1 flex-shrink-0 font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-amber-400">
+            View
+            <span className="material-symbols-outlined text-[16px] group-hover:translate-y-0.5 transition-transform">arrow_downward</span>
+          </span>
+        </button>
+      )}
+
       {/* How to read this page */}
       <div className="mb-8 md:mb-10">
         <HowToRead
           storageKey="howto_today"
           title="How to read these picks"
-          intro="Each card below is one upcoming match with our AI's best bet for it."
+          intro="This page has two kinds of picks: Safe Picks up top, and Today's Risky Picks further down."
           steps={[
-            "Signal — our single top recommended pick for that match.",
-            "Conf (confidence) — how strongly the model backs it. Higher = stronger.",
-            "The Home / Draw / Away boxes and the % chips are each market's probability.",
+            "Safe Pick — our single top recommendation per match (highest confidence). Our track record is built on these.",
+            "Conf (confidence) — how strongly the model backs the safe pick. Higher = stronger.",
+            "The Home / Draw / Away boxes, the % chips, and the @odds under them are each market's probability and price.",
             "Tap the ⓘ next to any term (BTTS, O2.5, xG…) to see what it means.",
-            "Cards are sorted strongest-first. Want full breakdowns? Join the Telegram.",
+            "Scroll down to Today's Risky Picks (amber) — value bets where our model's probability beats the bookmaker's fair price.",
+            "Risky picks win less often than the safe picks but pay higher odds. Each shows model % vs bookmaker % and the edge between them — higher risk, so stake small.",
           ]}
         />
       </div>
@@ -656,7 +652,7 @@ export default function Today() {
         <div className="flex items-center justify-between mb-4 md:mb-5">
           <h2 className="text-base md:text-headline-md font-semibold text-on-surface uppercase tracking-wider flex items-center gap-2 md:gap-3">
             <span className="w-1.5 h-5 md:h-6 bg-primary-container rounded-full inline-block" />
-            Today's Match Cards
+            Today's <span className="text-primary-container ml-1.5">Safe Picks</span>
           </h2>
           <Link to="/predictions"
             className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary-container transition-colors flex items-center gap-1.5">
@@ -825,6 +821,40 @@ export default function Today() {
         )}
       </section>
 
+      {/* ── Today's Risky Picks (value bets) — same page as the safe picks ── */}
+      {user && (
+        <section id="risky-picks" className="mt-12 md:mt-16 scroll-mt-24">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="w-1.5 h-6 bg-amber-400 rounded-full inline-block" />
+            <span className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-amber-400">
+              Higher Reward · Value Engine
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-on-surface mb-2 leading-tight">
+            Today's <span className="text-amber-400">Risky Picks</span>
+          </h2>
+          <p className="text-on-surface-variant text-sm sm:text-base mb-5 max-w-2xl">
+            Markets where our model beats the bookmaker's price — higher odds, lower hit rate.
+            Separate from the safe picks above and graded in their own bucket. Stake small.
+          </p>
+
+          {riskyPicks.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
+              {riskyPicks.map(p => <RiskyPickCard key={p.id} pick={p} />)}
+            </div>
+          ) : (
+            <div className="text-center py-12 glass-card rounded-xl border border-amber-400/20">
+              <span className="material-symbols-outlined text-[40px] text-amber-400/70 mb-3 block">savings</span>
+              <div className="text-on-surface font-bold mb-1">No value bets today</div>
+              <div className="text-on-surface-variant text-sm max-w-md mx-auto px-4">
+                The model didn't find any market priced softly enough to beat the book.
+                Quality over quantity — check back after the next run.
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Telegram CTA */}
       <section className="mt-10 md:mt-16">
         <div className="relative rounded-2xl overflow-hidden p-5 sm:p-8 bg-primary-container/10 dark:bg-zinc-950 border border-primary-container/30 flex flex-col gap-5 md:flex-row md:items-center md:gap-6">
@@ -841,6 +871,7 @@ export default function Today() {
         </div>
       </section>
 
+      <ScrollToTop />
     </main>
   );
 }
