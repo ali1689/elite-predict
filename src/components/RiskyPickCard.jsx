@@ -58,7 +58,7 @@ export default function RiskyPickCard({ pick }) {
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider
                          bg-amber-400/15 text-amber-400 border border-amber-400/30">
           <span className="material-symbols-outlined text-[12px]">local_fire_department</span>
-          #{pick.rank} Value
+          #{pick.rank} Smart
         </span>
         <div className="text-right flex-shrink-0">
           <div className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest truncate max-w-[140px]">{pick.competition}</div>

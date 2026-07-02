@@ -416,7 +416,7 @@ function MatchCard({ match, odds }) {
           </span>
           <div className="flex items-center gap-1">
             <span className="font-['Lexend'] text-[7px] font-semibold uppercase tracking-[0.15em] text-on-surface-variant">Our AI Pick</span>
-            <InfoTip title="Our AI Pick" text="The model's single best prediction for this match — its highest-confidence outcome. This is our recommendation, and what our track record is based on. It's separate from the amber 'Value bet' below, which is a higher-risk market that beats the bookmaker's price." />
+            <InfoTip title="Our AI Pick" text="The model's single best prediction for this match — its highest-confidence outcome. This is our recommendation, and what our track record is based on. It's separate from the amber Smart Picks section below — confident markets the bookmaker underprices." />
           </div>
           <span className={cn("px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-tighter w-fit border border-primary-container/30", sig.bg, sig.text)}>
             {match.signal}
@@ -594,10 +594,10 @@ export default function Today() {
           <span className="flex items-center gap-2.5 min-w-0">
             <span className="material-symbols-outlined text-amber-400 text-[20px]">local_fire_department</span>
             <span className="font-['Lexend'] text-[11px] sm:text-xs font-black uppercase tracking-widest text-amber-400 whitespace-nowrap">
-              {riskyPicks.length} Risky {riskyPicks.length === 1 ? "Pick" : "Picks"} today
+              {riskyPicks.length} Smart {riskyPicks.length === 1 ? "Pick" : "Picks"} today
             </span>
             <span className="font-['Lexend'] text-[10px] text-on-surface-variant hidden md:inline truncate">
-              — value bets that beat the bookmaker's price
+              — confident picks the bookmaker underprices
             </span>
           </span>
           <span className="flex items-center gap-1 flex-shrink-0 font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-amber-400">
@@ -612,14 +612,14 @@ export default function Today() {
         <HowToRead
           storageKey="howto_today"
           title="How to read these picks"
-          intro="This page has two kinds of picks: Safe Picks up top, and Today's Risky Picks further down."
+          intro="This page has two kinds of picks: Safe Picks up top, and Today's Smart Picks further down."
           steps={[
             "Safe Pick — our single top recommendation per match (highest confidence). Our track record is built on these.",
             "Conf (confidence) — how strongly the model backs the safe pick. Higher = stronger.",
             "The Home / Draw / Away boxes, the % chips, and the @odds under them are each market's probability and price.",
             "Tap the ⓘ next to any term (BTTS, O2.5, xG…) to see what it means.",
-            "Scroll down to Today's Risky Picks (amber) — value bets where our model's probability beats the bookmaker's fair price.",
-            "Risky picks win less often than the safe picks but pay higher odds. Each shows model % vs bookmaker % and the edge between them — higher risk, so stake small.",
+            "Scroll down to Today's Smart Picks (amber) — confident, model-backed markets the bookmaker underprices (high probability + value).",
+            "Smart picks pay better odds than a raw favourite because the model rates them higher than the bookmaker does. Each shows model % vs bookmaker % and the edge — stake sensibly.",
           ]}
         />
       </div>
@@ -821,21 +821,21 @@ export default function Today() {
         )}
       </section>
 
-      {/* ── Today's Risky Picks (value bets) — same page as the safe picks ── */}
+      {/* ── Today's Smart Picks (model-backed value) — same page as the safe picks ── */}
       {user && (
         <section id="risky-picks" className="mt-12 md:mt-16 scroll-mt-24">
           <div className="flex items-center gap-3 mb-3">
             <span className="w-1.5 h-6 bg-amber-400 rounded-full inline-block" />
             <span className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-amber-400">
-              Higher Reward · Value Engine
+              Model-Backed Value
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-on-surface mb-2 leading-tight">
-            Today's <span className="text-amber-400">Risky Picks</span>
+            Today's <span className="text-amber-400">Smart Picks</span>
           </h2>
           <p className="text-on-surface-variant text-sm sm:text-base mb-5 max-w-2xl">
-            Markets where our model beats the bookmaker's price — higher odds, lower hit rate.
-            Separate from the safe picks above and graded in their own bucket. Stake small.
+            Confident, model-backed picks the bookmaker underprices — high probability at value odds.
+            Separate from the safe picks above and graded in their own ROI bucket. Stake sensibly.
           </p>
 
           {riskyPicks.length > 0 ? (

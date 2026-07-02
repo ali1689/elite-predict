@@ -71,3 +71,107 @@ export function useInplayPredictions() {
 
   return { data, loading, error, lastFetch, refresh: load };
 }
+
+// ── Live VALUE bets (in-play risky tier) ──────────────────────────────────────
+function normalizeLiveValue(row) {
+  return {
+    id:          `${row.match_id}__${row.market}`,
+    matchId:     row.match_id,
+    competition: row.competition ?? "",
+    home:        row.home_team   ?? "",
+    away:        row.away_team   ?? "",
+    minute:      row.minute      ?? 0,
+    status:      row.status      ?? "",
+    homeScore:   row.home_score  ?? 0,
+    awayScore:   row.away_score  ?? 0,
+    market:      row.market      ?? "",
+    modelProb:   row.model_prob  ?? 0,
+    impliedProb: row.implied_prob ?? 0,
+    edge:        row.edge        ?? 0,
+    odds:        Number(row.decimal_odds ?? 0),
+  };
+}
+
+export function useLiveValue() {
+  const [data, setData] = useState([]);
+
+  const load = useCallback(async () => {
+    try {
+      // Currently-live picks: updated within the last 20 minutes. Live value is
+      // transient (it only clears the edge bar in bursts), so this keeps a
+      // recently-spotted pick on the strip a little longer.
+      const cutoff = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+      const { data: rows, error } = await supabase
+        .from("live_value")
+        .select("*")
+        .eq("result_settled", false)
+        .gte("updated_at", cutoff)
+        .order("updated_at", { ascending: false })   // freshest first
+        .limit(120);
+      if (error) return;
+      // One pick per match — keep the freshest (the current best market); older
+      // markets from earlier minutes linger in the table but shouldn't show.
+      const seen = new Set();
+      const current = [];
+      for (const r of (rows || [])) {
+        if (seen.has(r.match_id)) continue;
+        seen.add(r.match_id);
+        current.push(r);
+      }
+      current.sort((a, b) => (b.edge ?? 0) - (a.edge ?? 0));   // display by edge
+      setData(current.map(normalizeLiveValue));
+    } catch (_) { /* best-effort */ }
+  }, []);
+
+  useEffect(() => {
+    load();
+    const id = setInterval(load, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [load]);
+
+  return { data };
+}
+
+// ── Settled live value picks — for the Track Record "Live Value" ROI bucket ──
+function normalizeLiveSettled(row) {
+  return {
+    id:          `${row.match_id}__${row.market}`,
+    home:        row.home_team   ?? "",
+    away:        row.away_team   ?? "",
+    competition: row.competition ?? "",
+    market:      row.market      ?? "",
+    odds:        Number(row.decimal_odds ?? 0),
+    edge:        row.edge        ?? 0,
+    modelProb:   row.model_prob  ?? 0,
+    impliedProb: row.implied_prob ?? 0,
+    correct:     row.result_correct,
+    homeScore:   row.home_score  ?? null,
+    awayScore:   row.away_score  ?? null,
+    matchDate:   row.match_date,
+  };
+}
+
+export function useLiveValueRecord({ limit = 500 } = {}) {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const { data: rows, error } = await supabase
+          .from("live_value")
+          .select("*")
+          .eq("result_settled", true)
+          .not("result_correct", "is", null)
+          .order("updated_at", { ascending: false })
+          .limit(limit);
+        if (cancelled) return;
+        if (!error) setData((rows || []).map(normalizeLiveSettled));
+      } catch (_) { /* best-effort */ }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [limit]);
+
+  return { data };
+}

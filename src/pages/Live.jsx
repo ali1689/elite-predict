@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/App";
 import TeamAvatar from "@/components/TeamAvatar";
-import { useInplayPredictions } from "@/lib/useInplay";
+import { useInplayPredictions, useLiveValue } from "@/lib/useInplay";
 import { sigStyle, abbr } from "@/data/matches";
 import InfoTip from "@/components/InfoTip";
 import { useCountUp } from "@/lib/useCountUp";
@@ -335,6 +335,7 @@ function LiveCard({ match }) {
 export default function Live() {
   const { user, loading: authLoading } = useAuth();
   const { data, loading, error, lastFetch, refresh } = useInplayPredictions();
+  const { data: liveValue } = useLiveValue();
   const [activeComp,   setActiveComp]   = useState(ALL);
   const [minConf,      setMinConf]      = useState(0);
   const [activeStatus, setActiveStatus] = useState(ALL);
@@ -492,6 +493,48 @@ export default function Live() {
           ]}
         />
       </div>
+
+      {/* ── Live Value bets (in-play risky tier) ── */}
+      {liveValue.length > 0 && (
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-amber-400 text-[20px]">local_fire_department</span>
+            <span className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-amber-400">
+              Smart Live Picks · model beats the live price
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {liveValue.map(v => (
+              <div key={v.id} className="glass-card rounded-xl p-4 border border-amber-400/25 flex flex-col gap-2
+                                          shadow-[0_0_20px_rgba(251,191,36,0.06)]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 rounded">
+                    <span className="material-symbols-outlined text-[11px]">bolt</span> {v.minute}' Live
+                  </span>
+                  <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest truncate max-w-[120px]">{v.competition}</span>
+                </div>
+                <div className="font-bold text-sm text-on-surface truncate">
+                  {v.home} <span className="text-on-surface-variant/60 font-normal text-xs tabular-nums">{v.homeScore}-{v.awayScore}</span> {v.away}
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-amber-400/10 border border-amber-400/20 px-3 py-2">
+                  <div className="min-w-0">
+                    <div className="font-['Lexend'] text-[8px] uppercase tracking-widest text-on-surface-variant">Smart pick</div>
+                    <div className="font-black text-xs text-on-surface truncate">{v.market}</div>
+                  </div>
+                  <div className="font-black text-base text-amber-400 tabular-nums flex-shrink-0">{v.odds.toFixed(2)}</div>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-on-surface-variant tabular-nums">model {v.modelProb}% vs mkt {v.impliedProb}%</span>
+                  <span className="font-black text-amber-400 tabular-nums">+{v.edge}pp edge</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-on-surface-variant/60 mt-2 font-['Lexend']">
+            Confident picks at value odds · live prices move fast · stake small.
+          </p>
+        </section>
+      )}
 
       {/* Stats bar */}
       {!loading && actionable.length > 0 && (
