@@ -361,7 +361,7 @@ function AnimatedCard({ match, odds, delay, instant = false }) {
       <div className={cn(
         "rounded-xl border-2 border-primary-container/30 bg-zinc-950 flex flex-col items-center justify-center gap-3 overflow-hidden",
         "animate-[scale-in_0.4s_ease-out]",
-        "min-h-[420px]"
+        "min-h-[300px] md:min-h-[420px]"
       )}>
         <div className="absolute inset-0 bg-gradient-to-br from-primary-container/5 via-transparent to-blue-500/5 pointer-events-none" />
         <span className="text-4xl font-black italic text-primary-container tracking-tighter drop-shadow-[0_0_20px_rgba(57,255,20,0.8)]">EP</span>
@@ -382,7 +382,11 @@ function AnimatedCard({ match, odds, delay, instant = false }) {
 }
 
 // ── Match card ────────────────────────────────────────────────────────────
+// On mobile the deep-dive sections (prob bars, market chips, double chance,
+// extra signals) are collapsed behind an "All markets" toggle so a card fits
+// roughly one screen; on md+ everything is always visible as before.
 function MatchCard({ match, odds }) {
+  const [expanded, setExpanded] = useState(false);
   const sig  = sigStyle(match.signal);
   const tier = tierStyle(match.tier);
   const homeTeam = { abbr: abbr(match.home), name: match.home, logo: null };
@@ -403,7 +407,7 @@ function MatchCard({ match, odds }) {
   };
 
   return (
-    <div className="glass-card p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-4 h-full">
+    <div className="glass-card p-4 sm:p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-3.5 sm:gap-4 h-full">
 
       {/* Header: tier badge + signal + time */}
       <div className="flex items-start justify-between gap-2">
@@ -462,38 +466,57 @@ function MatchCard({ match, odds }) {
       {/* 1X2 result trio */}
       <ResultTrio homeWin={match.homeWin} draw={match.draw} awayWin={match.awayWin} />
 
-      {/* Goals probability bars */}
-      <div className="space-y-2">
-        <ProbBar label="Home to score (0.5+)" value={match.homeOver05} color="bg-primary-container" />
-        <ProbBar label="Away to score (0.5+)"  value={match.awayOver05} color="bg-blue-400" />
-      </div>
+      {/* ── Deep-dive markets — collapsed on mobile, always open on md+ ── */}
+      <div className={cn("flex-col gap-4", expanded ? "flex" : "hidden md:flex")}>
 
-      {/* Stats grid — with bookmaker odds under each market when available */}
-      <div className="grid grid-cols-5 gap-1.5">
-        <StatChip label="BTTS"  value={`${match.btts}%`}    tip="BTTS" odds={odds?.oddsBtts} />
-        <StatChip label="O1.5"  value={`${match.over15}%`}  accent tip="O1.5" odds={odds?.oddsOver15} />
-        <StatChip label="O2.5"  value={`${match.over25}%`}  accent tip="O2.5" odds={odds?.oddsOver25} />
-        <StatChip label="U2.5"  value={`${match.under25}%`} tip="U2.5" odds={odds?.oddsUnder25} />
-        <StatChip label="xG"    value={xg} tip="xG" />
-      </div>
-
-      {/* Double Chance */}
-      <DCTrio dc1X={match.dc1X} dcX2={match.dcX2} dc12={match.dc12} />
-
-      {/* Extra signal pills */}
-      {extraSignals.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-outline-variant/30">
-          {extraSignals.map(s => {
-            const ss = sigStyle(s.label ?? s.type);
-            return (
-              <span key={s.type}
-                className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
-                {s.label ?? s.type} · {storedProb[s.type] ?? Math.round(s.prob * 100)}%
-              </span>
-            );
-          })}
+        {/* Goals probability bars */}
+        <div className="space-y-2">
+          <ProbBar label="Home to score (0.5+)" value={match.homeOver05} color="bg-primary-container" />
+          <ProbBar label="Away to score (0.5+)"  value={match.awayOver05} color="bg-blue-400" />
         </div>
-      )}
+
+        {/* Stats grid — with bookmaker odds under each market when available */}
+        <div className="grid grid-cols-5 gap-1.5">
+          <StatChip label="BTTS"  value={`${match.btts}%`}    tip="BTTS" odds={odds?.oddsBtts} />
+          <StatChip label="O1.5"  value={`${match.over15}%`}  accent tip="O1.5" odds={odds?.oddsOver15} />
+          <StatChip label="O2.5"  value={`${match.over25}%`}  accent tip="O2.5" odds={odds?.oddsOver25} />
+          <StatChip label="U2.5"  value={`${match.under25}%`} tip="U2.5" odds={odds?.oddsUnder25} />
+          <StatChip label="xG"    value={xg} tip="xG" />
+        </div>
+
+        {/* Double Chance */}
+        <DCTrio dc1X={match.dc1X} dcX2={match.dcX2} dc12={match.dc12} />
+
+        {/* Extra signal pills */}
+        {extraSignals.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1 border-t border-outline-variant/30">
+            {extraSignals.map(s => {
+              const ss = sigStyle(s.label ?? s.type);
+              return (
+                <span key={s.type}
+                  className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
+                  {s.label ?? s.type} · {storedProb[s.type] ?? Math.round(s.prob * 100)}%
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Mobile-only expander */}
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="md:hidden flex items-center justify-center gap-1.5 -mt-1 py-2 rounded-lg
+                   border border-outline-variant/40 bg-surface-container/40
+                   font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant
+                   hover:text-on-surface active:scale-[0.98] transition-all"
+        aria-expanded={expanded}
+      >
+        {expanded ? "Less" : "All markets & odds"}
+        <span className={cn("material-symbols-outlined text-[16px] transition-transform duration-200", expanded && "rotate-180")}>
+          expand_more
+        </span>
+      </button>
     </div>
   );
 }
@@ -521,6 +544,7 @@ export default function Today() {
   const { data: riskyPicks } = useRiskyPicks();
 
   const [activeLeague, setActiveLeague] = useState("ALL");
+  const [showCharts, setShowCharts]     = useState(false); // mobile-only chart toggle
 
   // Sort by confidence — show Tier A and B only (Tier C / Speculative hidden on Today)
   const sorted    = useMemo(() => [...matches].sort((a, b) => b.conf - a.conf), [matches]);
@@ -643,15 +667,33 @@ export default function Today() {
                   tip={{ title: "Average xG", text: "Mean expected goals per match — higher means more open, attacking games." }} />
       </section>
 
-      {/* Charts row */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-12">
-        {loading
-          ? <><Skeleton className="h-48" /><Skeleton className="h-48" /></>
-          : <>
-              <SignalDonut counts={signalCounts} total={displayed.length} />
-              <ConfChart matches={displayed} />
-            </>
-        }
+      {/* Charts row — collapsed behind a toggle on mobile so picks are one
+          scroll away; always visible on md+ */}
+      <section className="mb-8 md:mb-12">
+        <button
+          onClick={() => setShowCharts(s => !s)}
+          className="md:hidden w-full flex items-center justify-between gap-2 px-4 py-3 mb-3 rounded-xl
+                     glass-card border border-outline-variant/40
+                     font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-on-surface-variant"
+          aria-expanded={showCharts}
+        >
+          <span className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary-container text-[18px]">donut_small</span>
+            Signal breakdown & confidence
+          </span>
+          <span className={cn("material-symbols-outlined text-[18px] transition-transform duration-200", showCharts && "rotate-180")}>
+            expand_more
+          </span>
+        </button>
+        <div className={cn("grid-cols-1 md:grid-cols-2 gap-4 md:gap-6", showCharts ? "grid" : "hidden md:grid")}>
+          {loading
+            ? <><Skeleton className="h-48" /><Skeleton className="h-48" /></>
+            : <>
+                <SignalDonut counts={signalCounts} total={displayed.length} />
+                <ConfChart matches={displayed} />
+              </>
+          }
+        </div>
       </section>
 
       {/* Match cards / Pack gate */}

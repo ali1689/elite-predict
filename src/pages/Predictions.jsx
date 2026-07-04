@@ -111,7 +111,10 @@ function ScrollRow({ children }) {
 }
 
 // ── Featured card ──────────────────────────────────────────────────────────
+// On mobile the market detail (goal bars, chips, extra signals) collapses
+// behind an "All markets" toggle; on md+ everything is always visible.
 function FeaturedCard({ match }) {
+  const [expanded, setExpanded] = useState(false);
   const sig      = sigStyle(match.signal);
   const tier     = tierStyle(match.tier);
   const homeTeam = { abbr: abbr(match.home), name: match.home, logo: null };
@@ -120,7 +123,7 @@ function FeaturedCard({ match }) {
   const extraSignals = (match.allSignals || []).slice(1, 3);
 
   return (
-    <div className="glass-card p-6 rounded-xl relative overflow-hidden group hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-5">
+    <div className="glass-card p-4 sm:p-6 rounded-xl relative overflow-hidden group hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-4 sm:gap-5">
       <div className="absolute top-0 right-0 p-4">
         <span className={cn("px-3 py-1 rounded text-[9px] font-black uppercase tracking-tighter border", tier.bg, tier.text, tier.border)}>
           {tier.label}
@@ -157,49 +160,67 @@ function FeaturedCard({ match }) {
           </div>
         </div>
       </div>
-      <div className="space-y-2">
-        {[
-          { label: "Home to score",  value: match.homeOver05, color: "bg-primary-container" },
-          { label: "Home 2+ goals",  value: match.homeOver15, color: "bg-emerald-400"       },
-          { label: "Away to score",  value: match.awayOver05, color: "bg-blue-400"           },
-          { label: "Away 2+ goals",  value: match.awayOver15, color: "bg-sky-400"            },
-        ].map(({ label, value, color }) => (
-          <div key={label}>
-            <div className="flex justify-between mb-0.5">
-              <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">{label}</span>
-              <span className="font-['Lexend'] text-[9px] font-bold text-on-surface tabular-nums">{value}%</span>
+      {/* ── Market detail — collapsed on mobile, always open on md+ ── */}
+      <div className={cn("flex-col gap-4 sm:gap-5", expanded ? "flex" : "hidden md:flex")}>
+        <div className="space-y-2">
+          {[
+            { label: "Home to score",  value: match.homeOver05, color: "bg-primary-container" },
+            { label: "Home 2+ goals",  value: match.homeOver15, color: "bg-emerald-400"       },
+            { label: "Away to score",  value: match.awayOver05, color: "bg-blue-400"           },
+            { label: "Away 2+ goals",  value: match.awayOver15, color: "bg-sky-400"            },
+          ].map(({ label, value, color }) => (
+            <div key={label}>
+              <div className="flex justify-between mb-0.5">
+                <span className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">{label}</span>
+                <span className="font-['Lexend'] text-[9px] font-bold text-on-surface tabular-nums">{value}%</span>
+              </div>
+              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(value, 100)}%` }} />
+              </div>
             </div>
-            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-              <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(value, 100)}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { label: "BTTS", value: `${match.btts}%`    },
-          { label: "O1.5", value: `${match.over15}%`  },
-          { label: "O2.5", value: `${match.over25}%`  },
-          { label: "U2.5", value: `${match.under25}%` },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-white/[0.03] rounded-lg p-2 text-center border border-white/5">
-            <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-0.5">{label}</div>
-            <div className="font-['Lexend'] text-sm font-semibold text-on-surface">{value}</div>
-          </div>
-        ))}
-      </div>
-      {extraSignals.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
-          {extraSignals.map(s => {
-            const ss = sigStyle(s.label ?? s.type);
-            return (
-              <span key={s.type} className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
-                {s.label ?? s.type} · {s.prob}%
-              </span>
-            );
-          })}
+          ))}
         </div>
-      )}
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { label: "BTTS", value: `${match.btts}%`    },
+            { label: "O1.5", value: `${match.over15}%`  },
+            { label: "O2.5", value: `${match.over25}%`  },
+            { label: "U2.5", value: `${match.under25}%` },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-white/[0.03] rounded-lg p-2 text-center border border-white/5">
+              <div className="font-['Lexend'] text-[8px] text-on-surface-variant uppercase tracking-widest mb-0.5">{label}</div>
+              <div className="font-['Lexend'] text-sm font-semibold text-on-surface">{value}</div>
+            </div>
+          ))}
+        </div>
+        {extraSignals.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
+            {extraSignals.map(s => {
+              const ss = sigStyle(s.label ?? s.type);
+              return (
+                <span key={s.type} className={cn("px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider", ss.bg, ss.text)}>
+                  {s.label ?? s.type} · {s.prob}%
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Mobile-only expander */}
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="md:hidden flex items-center justify-center gap-1.5 -mt-1 py-2 rounded-lg
+                   border border-outline-variant/40 bg-surface-container/40
+                   font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant
+                   hover:text-on-surface active:scale-[0.98] transition-all"
+        aria-expanded={expanded}
+      >
+        {expanded ? "Less" : "All markets"}
+        <span className={cn("material-symbols-outlined text-[16px] transition-transform duration-200", expanded && "rotate-180")}>
+          expand_more
+        </span>
+      </button>
     </div>
   );
 }

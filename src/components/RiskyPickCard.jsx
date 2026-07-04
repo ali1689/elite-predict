@@ -54,7 +54,7 @@ export default function RiskyPickCard({ pick }) {
 
   return (
     <div className={cn(
-      "relative glass-card p-5 rounded-xl flex flex-col gap-4 h-full border border-amber-400/25",
+      "relative glass-card p-4 sm:p-5 rounded-xl flex flex-col gap-3.5 sm:gap-4 h-full border border-amber-400/25",
       "hover:border-amber-400/50 transition-all duration-300",
       "shadow-[0_0_24px_rgba(251,191,36,0.06)] hover:shadow-[0_0_32px_rgba(251,191,36,0.16)]",
       started && "opacity-75 saturate-[0.85]"

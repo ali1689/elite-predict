@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import SignInGate from "@/components/SignInGate";
@@ -362,6 +362,10 @@ export default function Open() {
   const [phase,        setPhase]        = useState("locked");  // locked | already | pack | confirm | revealing | done
   const [activeReveal, setActiveReveal] = useState(-1);
   const [cards,        setCards]        = useState([]);
+  const revealTimers = useRef([]);   // pending reveal timeouts — cleared by Skip
+
+  // Clear any pending reveal timers on unmount (e.g. user navigates away)
+  useEffect(() => () => revealTimers.current.forEach(clearTimeout), []);
 
   // Once matches load, set up cards
   useEffect(() => {
@@ -383,13 +387,22 @@ export default function Open() {
 
   function openPack() {
     setPhase("revealing");
-    matches.forEach((_, i) => {
-      setTimeout(() => setActiveReveal(i), i * 600);
-    });
-    setTimeout(() => {
+    revealTimers.current = matches.map((_, i) =>
+      setTimeout(() => setActiveReveal(i), i * 600)
+    );
+    revealTimers.current.push(setTimeout(() => {
       markPackOpened(user?.id);
       setPhase("done");
-    }, matches.length * 600 + 800);
+    }, matches.length * 600 + 800));
+  }
+
+  // Skip the card-by-card reveal: cancel the queue, count the pack as opened,
+  // and jump straight to Today's Picks (which shows everything instantly).
+  function skipReveal() {
+    revealTimers.current.forEach(clearTimeout);
+    revealTimers.current = [];
+    markPackOpened(user?.id);
+    navigate("/today");
   }
 
   // ── Not logged in ────────────────────────────────────────────────────
@@ -574,7 +587,7 @@ export default function Open() {
   return (
     <main className="pt-24 pb-16 md:pt-28 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between gap-4 mb-8">
         <div>
           <div className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-primary-container mb-1">
             Today's Pack
@@ -585,7 +598,19 @@ export default function Open() {
               : "Revealing…"}
           </h1>
         </div>
-        {/* phase "done" now has its own screen — nothing here */}
+        {phase === "revealing" && (
+          <button
+            onClick={skipReveal}
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl
+                       border-2 border-primary-container/40 text-primary-container
+                       font-['Lexend'] text-[11px] sm:text-xs font-black uppercase tracking-widest
+                       hover:bg-primary-container/10 hover:border-primary-container/70
+                       active:scale-95 transition-all duration-200"
+          >
+            Skip
+            <span className="material-symbols-outlined text-[16px]">skip_next</span>
+          </button>
+        )}
       </div>
 
       {/* Cards grid */}
@@ -602,8 +627,18 @@ export default function Open() {
 
       {/* Progress — shown while revealing */}
       {phase === "revealing" && (
-        <div className="mt-8 text-center font-['Lexend'] text-[11px] text-on-surface-variant uppercase tracking-widest animate-pulse">
-          Revealing {Math.min(activeReveal + 1, matches.length)} / {matches.length}…
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <div className="text-center font-['Lexend'] text-[11px] text-on-surface-variant uppercase tracking-widest animate-pulse">
+            Revealing {Math.min(activeReveal + 1, matches.length)} / {matches.length}…
+          </div>
+          <button
+            onClick={skipReveal}
+            className="flex items-center gap-1.5 font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest
+                       text-on-surface-variant hover:text-primary-container transition-colors"
+          >
+            Skip — view Today's Picks
+            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </button>
         </div>
       )}
 

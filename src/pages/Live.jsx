@@ -237,7 +237,10 @@ function stalenessMinutes(updatedAt) {
 }
 
 // ── Live match card (Today's design language, adapted for in-play) ────────────
+// On mobile the market detail (1X2 trio, team-goal bars, chips, half markets)
+// collapses behind an "All markets" toggle; on md+ everything is always shown.
 function LiveCard({ match }) {
+  const [expanded, setExpanded] = useState(false);
   const homeTeam  = { abbr: abbr(match.home), name: match.home, logo: null };
   const awayTeam  = { abbr: abbr(match.away), name: match.away, logo: null };
   const sig       = liveSigStyle(match.primarySignal);
@@ -252,7 +255,7 @@ function LiveCard({ match }) {
   const scoreGlow = "text-primary-container drop-shadow-[0_0_12px_rgba(57,255,20,0.6)]";
 
   return (
-    <div className="glass-card p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-4 group">
+    <div className="glass-card p-4 sm:p-5 rounded-xl hover:border-primary-container/30 transition-all duration-300 flex flex-col gap-3.5 sm:gap-4 group">
 
       {/* Header: status + signal pick (left) · competition (right) */}
       <div className="flex items-start justify-between gap-2">
@@ -320,46 +323,65 @@ function LiveCard({ match }) {
         </div>
       </div>
 
-      {/* 1X2 result trio */}
-      <ResultTrio homeWin={match.pHomeWin} draw={match.pDraw} awayWin={match.pAwayWin} />
+      {/* ── Market detail — collapsed on mobile, always open on md+ ── */}
+      <div className={cn("flex-col gap-4", expanded ? "flex" : "hidden md:flex")}>
 
-      {/* Team-goal probability bars */}
-      <div className="space-y-2">
-        <ProbBar label="Home to score (0.5+)" value={match.pHomeOver05} color="bg-primary-container" />
-        <ProbBar label="Home 2+ goals (1.5+)" value={match.pHomeOver15} color="bg-primary-container" />
-        <ProbBar label="Away to score (0.5+)" value={match.pAwayOver05} color="bg-blue-400" />
-        <ProbBar label="Away 2+ goals (1.5+)" value={match.pAwayOver15} color="bg-blue-400" />
-      </div>
+        {/* 1X2 result trio */}
+        <ResultTrio homeWin={match.pHomeWin} draw={match.pDraw} awayWin={match.pAwayWin} />
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-5 gap-1.5">
-        <StatChip label="BTTS" value={`${match.pBtts}%`}    tip="BTTS" />
-        <StatChip label="O1.5" value={`${match.pOver15}%`}  accent tip="O1.5" />
-        <StatChip label="O2.5" value={`${match.pOver25}%`}  accent tip="O2.5" />
-        <StatChip label="U2.5" value={`${match.pUnder25}%`} tip="U2.5" />
-        <StatChip label="xG"   value={xgRem} tip="xG rem" />
-      </div>
-
-      {/* Current-half markets — goals + winner for THIS half only */}
-      {match.halfLabel && match.pHalfHome != null && (
-        <div className="rounded-xl p-3 border border-primary-container/25 bg-primary-container/[0.04] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-['Lexend'] text-[9px] font-bold uppercase tracking-widest text-primary-container">
-              {match.halfLabel === "1H" ? "1st Half" : "2nd Half"} · this half only
-            </span>
-            <span className="material-symbols-outlined text-primary-container text-[13px]">timer</span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            <HalfChip label="Over 0.5" value={match.pHalfOver05} />
-            <HalfChip label="Over 1.5" value={match.pHalfOver15} />
-          </div>
-          <div className="grid grid-cols-3 gap-1.5">
-            <HalfChip label="Home" value={match.pHalfHome} />
-            <HalfChip label="Draw" value={match.pHalfDraw} />
-            <HalfChip label="Away" value={match.pHalfAway} />
-          </div>
+        {/* Team-goal probability bars */}
+        <div className="space-y-2">
+          <ProbBar label="Home to score (0.5+)" value={match.pHomeOver05} color="bg-primary-container" />
+          <ProbBar label="Home 2+ goals (1.5+)" value={match.pHomeOver15} color="bg-primary-container" />
+          <ProbBar label="Away to score (0.5+)" value={match.pAwayOver05} color="bg-blue-400" />
+          <ProbBar label="Away 2+ goals (1.5+)" value={match.pAwayOver15} color="bg-blue-400" />
         </div>
-      )}
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-5 gap-1.5">
+          <StatChip label="BTTS" value={`${match.pBtts}%`}    tip="BTTS" />
+          <StatChip label="O1.5" value={`${match.pOver15}%`}  accent tip="O1.5" />
+          <StatChip label="O2.5" value={`${match.pOver25}%`}  accent tip="O2.5" />
+          <StatChip label="U2.5" value={`${match.pUnder25}%`} tip="U2.5" />
+          <StatChip label="xG"   value={xgRem} tip="xG rem" />
+        </div>
+
+        {/* Current-half markets — goals + winner for THIS half only */}
+        {match.halfLabel && match.pHalfHome != null && (
+          <div className="rounded-xl p-3 border border-primary-container/25 bg-primary-container/[0.04] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-['Lexend'] text-[9px] font-bold uppercase tracking-widest text-primary-container">
+                {match.halfLabel === "1H" ? "1st Half" : "2nd Half"} · this half only
+              </span>
+              <span className="material-symbols-outlined text-primary-container text-[13px]">timer</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <HalfChip label="Over 0.5" value={match.pHalfOver05} />
+              <HalfChip label="Over 1.5" value={match.pHalfOver15} />
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              <HalfChip label="Home" value={match.pHalfHome} />
+              <HalfChip label="Draw" value={match.pHalfDraw} />
+              <HalfChip label="Away" value={match.pHalfAway} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile-only expander */}
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="md:hidden flex items-center justify-center gap-1.5 -mt-1 py-2 rounded-lg
+                   border border-outline-variant/40 bg-surface-container/40
+                   font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant
+                   hover:text-on-surface active:scale-[0.98] transition-all"
+        aria-expanded={expanded}
+      >
+        {expanded ? "Less" : "All markets"}
+        <span className={cn("material-symbols-outlined text-[16px] transition-transform duration-200", expanded && "rotate-180")}>
+          expand_more
+        </span>
+      </button>
     </div>
   );
 }
