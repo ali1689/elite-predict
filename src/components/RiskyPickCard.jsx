@@ -48,18 +48,35 @@ export default function RiskyPickCard({ pick }) {
   const homeTeam = { abbr: abbr(pick.home), name: pick.home, logo: null };
   const awayTeam = { abbr: abbr(pick.away), name: pick.away, logo: null };
 
+  // Picks stay listed until they're settled — flag ones whose match already
+  // kicked off so nobody takes a pre-match price that no longer exists.
+  const started = pick.utcDate ? new Date(pick.utcDate).getTime() <= Date.now() : false;
+
   return (
-    <div className="relative glass-card p-5 rounded-xl flex flex-col gap-4 h-full border border-amber-400/25
-                    hover:border-amber-400/50 transition-all duration-300
-                    shadow-[0_0_24px_rgba(251,191,36,0.06)] hover:shadow-[0_0_32px_rgba(251,191,36,0.16)]">
+    <div className={cn(
+      "relative glass-card p-5 rounded-xl flex flex-col gap-4 h-full border border-amber-400/25",
+      "hover:border-amber-400/50 transition-all duration-300",
+      "shadow-[0_0_24px_rgba(251,191,36,0.06)] hover:shadow-[0_0_32px_rgba(251,191,36,0.16)]",
+      started && "opacity-75 saturate-[0.85]"
+    )}>
 
       {/* Header: rank + comp + time */}
       <div className="flex items-start justify-between gap-2">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider
-                         bg-amber-400/15 text-amber-400 border border-amber-400/30">
-          <span className="material-symbols-outlined text-[12px]">local_fire_department</span>
-          #{pick.rank} Smart
-        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider
+                           bg-amber-400/15 text-amber-400 border border-amber-400/30">
+            <span className="material-symbols-outlined text-[12px]">local_fire_department</span>
+            #{pick.rank} Smart
+          </span>
+          {started && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider
+                             bg-red-400/10 text-red-400 border border-red-400/30"
+                  title="This match has kicked off — the pre-match price is no longer available">
+              <span className="material-symbols-outlined text-[11px]">timer</span>
+              Started
+            </span>
+          )}
+        </div>
         <div className="text-right flex-shrink-0">
           <div className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest truncate max-w-[140px]">{pick.competition}</div>
           <div className="font-['Lexend'] text-[10px] font-semibold text-on-surface mt-0.5">{fmtTime(pick.utcDate)}</div>

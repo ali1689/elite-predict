@@ -31,6 +31,13 @@ function normalizeInplay(row) {
     primarySignal:   row.primary_signal   ?? "",
     confidence:      row.confidence       ?? 0,
     updatedAt:       row.updated_at       ?? "",
+    // Current-half markets (null outside a regulation half)
+    halfLabel:       row.half_label       ?? null,
+    pHalfOver05:     row.p_half_over05     ?? null,
+    pHalfOver15:     row.p_half_over15     ?? null,
+    pHalfHome:       row.p_half_home       ?? null,
+    pHalfDraw:       row.p_half_draw       ?? null,
+    pHalfAway:       row.p_half_away       ?? null,
   };
 }
 
@@ -97,10 +104,11 @@ export function useLiveValue() {
 
   const load = useCallback(async () => {
     try {
-      // Currently-live picks: updated within the last 20 minutes. Live value is
-      // transient (it only clears the edge bar in bursts), so this keeps a
-      // recently-spotted pick on the strip a little longer.
-      const cutoff = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+      // Currently-live picks only: updated within the last ~3 minutes. The live
+      // job writes every minute, so a live match is always fresh; once a match
+      // ends the writes stop and it drops off the strip within ~3 min (tolerates
+      // a couple of missed ticks without flickering).
+      const cutoff = new Date(Date.now() - 3 * 60 * 1000).toISOString();
       const { data: rows, error } = await supabase
         .from("live_value")
         .select("*")

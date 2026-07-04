@@ -150,7 +150,7 @@ function SignalDonut({ counts, total }) {
       <div className="flex items-center gap-6">
         <svg width="140" height="140" viewBox="0 0 140 140" className="flex-shrink-0">
           {slices.length === 0 && (
-            <circle cx={CX} cy={CY} r={R} fill="none" stroke="#27272a" strokeWidth={STROKE} />
+            <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--color-surface-container)" strokeWidth={STROKE} />
           )}
           {slices.map((s, i) => (
             <circle key={s.sig}
@@ -169,10 +169,10 @@ function SignalDonut({ counts, total }) {
               }}
             />
           ))}
-          <text x={CX} y={CY - 6} textAnchor="middle" fill="#E8EAED" fontSize="22" fontWeight="900">
+          <text x={CX} y={CY - 6} textAnchor="middle" fill="var(--color-on-surface)" fontSize="22" fontWeight="900">
             {hover !== null && slices[hover] ? slices[hover].cnt : totalUp}
           </text>
-          <text x={CX} y={CY + 14} textAnchor="middle" fill="#9AA0A6" fontSize="9" fontWeight="600" letterSpacing="1">
+          <text x={CX} y={CY + 14} textAnchor="middle" fill="var(--color-on-surface-variant)" fontSize="9" fontWeight="600" letterSpacing="1">
             {hover !== null && slices[hover] ? `${Math.round(slices[hover].pct * 100)}%` : "PICKS"}
           </text>
         </svg>
@@ -425,6 +425,14 @@ function MatchCard({ match, odds }) {
         <div className="text-right flex-shrink-0">
           <div className="font-['Lexend'] text-[9px] text-on-surface-variant uppercase tracking-widest">{match.comp}</div>
           <div className="font-['Lexend'] text-[10px] font-semibold text-on-surface mt-0.5">{fmtTime(match.utcDate)}</div>
+          {match.utcDate && new Date(match.utcDate).getTime() <= Date.now() && (
+            <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded border border-red-400/30 bg-red-400/10
+                             font-['Lexend'] text-[8px] font-bold uppercase tracking-widest text-red-400"
+                  title="This match has kicked off — pre-match prices are no longer available">
+              <span className="material-symbols-outlined text-[10px]">timer</span>
+              Started
+            </span>
+          )}
         </div>
       </div>
 
@@ -538,7 +546,6 @@ export default function Today() {
   const avgConf  = displayed.length ? Math.round(displayed.reduce((s, m) => s + m.conf,    0) / displayed.length) : 0;
   const avgXg    = displayed.length ? (displayed.reduce((s, m) => s + (m.xgTotal || 0),    0) / displayed.length).toFixed(2) : "0.00";
   const tierA    = displayed.filter(m => m.tier === "A").length;
-  const highConf = displayed.filter(m => m.conf >= 60).length;
 
   return (
     <main className="pt-24 pb-16 md:pt-32 md:pb-24 max-w-[1280px] mx-auto px-4 sm:px-8">

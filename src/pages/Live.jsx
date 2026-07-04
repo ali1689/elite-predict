@@ -117,19 +117,20 @@ function LiveDot() {
 }
 
 // ── Live coverage window banner ───────────────────────────────────────────────
-// The in-play engine (09_live_inplay.py) only runs during football hours:
-// UTC hour 12–23, i.e. 12:00–00:00 UTC. We surface that here, converted to each
-// visitor's local time, so users know exactly when live picks are available.
+// The in-play engine (09_live_inplay.py) runs around the clock EXCEPT the dead
+// hours 07:00–10:59 UTC — so evening European football AND late-night Americas
+// kickoffs (World Cup, Copa, Brazilian leagues) are all covered. We surface the
+// short daily pause here, converted to each visitor's local time.
 function CoverageBanner() {
-  const COVERAGE_START_UTC_H = 12; // engine active from 12:00 UTC …
-  const COVERAGE_END_UTC_H   = 24; // … through 00:00 UTC (hour 23 inclusive)
+  const PAUSE_START_UTC_H = 7;  // engine pauses 07:00 UTC …
+  const PAUSE_END_UTC_H   = 11; // … and resumes 11:00 UTC
 
   const h      = new Date().getUTCHours();
-  const isLive = h >= COVERAGE_START_UTC_H && h < COVERAGE_END_UTC_H;
+  const isLive = !(h >= PAUSE_START_UTC_H && h < PAUSE_END_UTC_H);
 
-  const start = new Date(); start.setUTCHours(COVERAGE_START_UTC_H, 0, 0, 0);
-  const end   = new Date(); end.setUTCHours(COVERAGE_END_UTC_H, 0, 0, 0); // rolls to next-day 00:00
-  const fmt   = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const pauseStart = new Date(); pauseStart.setUTCHours(PAUSE_START_UTC_H, 0, 0, 0);
+  const resume     = new Date(); resume.setUTCHours(PAUSE_END_UTC_H, 0, 0, 0);
+  const fmt        = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div
@@ -148,17 +149,19 @@ function CoverageBanner() {
         )}
       />
       <span className="font-bold uppercase tracking-wider">
-        {isLive ? "Live coverage is on now" : "Live coverage is off right now"}
+        {isLive ? "Live coverage is on now" : "Live coverage is paused right now"}
       </span>
       <span className="text-on-surface-variant/50">·</span>
       <span>
-        Daily <span className="font-semibold text-on-surface">12:00–00:00 UTC</span>
-        <span className="text-on-surface-variant/70"> ({fmt(start)}–{fmt(end)} your time)</span>
+        Covered <span className="font-semibold text-on-surface">around the clock</span>
+        <span className="text-on-surface-variant/70">
+          {" "}(short daily pause {fmt(pauseStart)}–{fmt(resume)} your time)
+        </span>
       </span>
       {!isLive && (
         <>
           <span className="text-on-surface-variant/50">·</span>
-          <span>opens {fmt(start)}</span>
+          <span>resumes {fmt(resume)}</span>
         </>
       )}
     </div>
@@ -212,6 +215,15 @@ function ProbBar({ label, value, color = "bg-primary-container" }) {
       <div className="h-1 bg-surface-container rounded-full overflow-hidden">
         <div className={cn("h-full rounded-full transition-all duration-700", color)} style={{ width: `${Math.min(value, 100)}%` }} />
       </div>
+    </div>
+  );
+}
+
+function HalfChip({ label, value }) {
+  return (
+    <div className="rounded-lg bg-surface-container/60 border border-outline-variant/20 px-2 py-1.5 text-center">
+      <div className="font-['Lexend'] text-[8px] uppercase tracking-wider text-on-surface-variant truncate">{label}</div>
+      <div className="font-black text-sm text-on-surface tabular-nums leading-tight">{value ?? 0}%</div>
     </div>
   );
 }
@@ -327,6 +339,27 @@ function LiveCard({ match }) {
         <StatChip label="U2.5" value={`${match.pUnder25}%`} tip="U2.5" />
         <StatChip label="xG"   value={xgRem} tip="xG rem" />
       </div>
+
+      {/* Current-half markets — goals + winner for THIS half only */}
+      {match.halfLabel && match.pHalfHome != null && (
+        <div className="rounded-xl p-3 border border-primary-container/25 bg-primary-container/[0.04] space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-['Lexend'] text-[9px] font-bold uppercase tracking-widest text-primary-container">
+              {match.halfLabel === "1H" ? "1st Half" : "2nd Half"} · this half only
+            </span>
+            <span className="material-symbols-outlined text-primary-container text-[13px]">timer</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            <HalfChip label="Over 0.5" value={match.pHalfOver05} />
+            <HalfChip label="Over 1.5" value={match.pHalfOver15} />
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            <HalfChip label="Home" value={match.pHalfHome} />
+            <HalfChip label="Draw" value={match.pHalfDraw} />
+            <HalfChip label="Away" value={match.pHalfAway} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -494,8 +527,8 @@ export default function Live() {
         />
       </div>
 
-      {/* ── Live Value bets (in-play risky tier) ── */}
-      {liveValue.length > 0 && (
+      {/* ── Smart Live Picks (in-play value tier) ── */}
+      {data.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-3">
             <span className="material-symbols-outlined text-amber-400 text-[20px]">local_fire_department</span>
@@ -503,6 +536,17 @@ export default function Live() {
               Smart Live Picks · model beats the live price
             </span>
           </div>
+          {liveValue.length === 0 ? (
+            <div className="glass-card rounded-xl px-4 py-5 border border-amber-400/15 flex items-center gap-3">
+              <span className="material-symbols-outlined text-amber-400/60 text-[22px]">hourglass_empty</span>
+              <div>
+                <div className="font-bold text-sm text-on-surface">No smart live picks right now</div>
+                <div className="text-[11px] text-on-surface-variant font-['Lexend'] leading-relaxed">
+                  Nothing beats the live price yet — we only surface a pick when the model has a real edge at good odds. Re-checking every 60s.
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             {liveValue.map(v => (
               <div key={v.id} className="glass-card rounded-xl p-4 border border-amber-400/25 flex flex-col gap-2
@@ -530,9 +574,12 @@ export default function Live() {
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-on-surface-variant/60 mt-2 font-['Lexend']">
-            Confident picks at value odds · live prices move fast · stake small.
-          </p>
+          )}
+          {liveValue.length > 0 && (
+            <p className="text-[10px] text-on-surface-variant/60 mt-2 font-['Lexend']">
+              Confident picks at value odds · live prices move fast · stake small.
+            </p>
+          )}
         </section>
       )}
 
