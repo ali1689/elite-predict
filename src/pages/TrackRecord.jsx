@@ -3,12 +3,10 @@ import { useTrackRecord, usePastResults, computeStats } from "@/lib/useTrackReco
 import { useTodayPredictions } from "@/lib/usePredictions";
 import { useAuth } from "@/context/AuthContext";
 import SignInGate from "@/components/SignInGate";
-import { useRiskyRecord, computeRiskyStats } from "@/lib/useRiskyPicks";
-import { useLiveValueRecord } from "@/lib/useInplay";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 15;
-const RISKY_PAGE_SIZE = 8;   // risky list is smaller — paginate sooner
+// RISKY_PAGE_SIZE removed 2026-08-24 with the value tiers.
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDate(str) {
@@ -505,32 +503,7 @@ function Pagination({ page, totalPages, onChange }) {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
-// ── Risky pick result row (graded value bet) ──────────────────────────────────
-function RiskyResultRow({ pick }) {
-  const won = pick.correct === true;
-  return (
-    <div className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0">
-      <span className={cn("w-2 h-2 rounded-full flex-shrink-0", won ? "bg-emerald-500" : "bg-red-500")} />
-      <div className="min-w-0 flex-1">
-        <div className="font-bold text-sm text-on-surface truncate">
-          {pick.home} <span className="text-on-surface-variant/60 font-normal text-xs">vs</span> {pick.away}
-        </div>
-        <div className="font-['Lexend'] text-[10px] text-amber-400 uppercase tracking-wider truncate">
-          {pick.market}{pick.edge ? ` · +${pick.edge}pp` : ""}
-        </div>
-      </div>
-      <span className={cn(
-        "font-['Lexend'] text-[11px] font-bold tabular-nums px-2 py-0.5 rounded flex-shrink-0",
-        won ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400",
-      )}>
-        {pick.homeScore}–{pick.awayScore}
-      </span>
-      <span className="font-black text-xs text-amber-400 tabular-nums w-12 text-right flex-shrink-0">
-        @{Number(pick.odds).toFixed(2)}
-      </span>
-    </div>
-  );
-}
+// RiskyResultRow removed 2026-08-24 — no graded value bets to render.
 
 export default function TrackRecord() {
   const { user } = useAuth();
@@ -551,43 +524,8 @@ export default function TrackRecord() {
   // graded ("pending") days, so old today's-predictions always stay visible.
   const { data: pastResults } = usePastResults({ limit: 500 });
 
-  // Risky/value tier — graded separately, judged by ROI not hit rate.
-  const { data: riskyRows } = useRiskyRecord();
-  const riskyStats = useMemo(() => computeRiskyStats(riskyRows), [riskyRows]);
-
-  // Risky match list — its own filter + pagination, mirroring the safe Results.
-  const [riskyPage,   setRiskyPage]   = useState(1);
-  const [riskyFilter, setRiskyFilter] = useState("all");
-  const riskyFiltered = useMemo(() => {
-    if (riskyFilter === "win")  return riskyRows.filter(r => r.correct === true);
-    if (riskyFilter === "loss") return riskyRows.filter(r => r.correct === false);
-    return riskyRows;
-  }, [riskyRows, riskyFilter]);
-  const riskyTotalPages = Math.max(1, Math.ceil(riskyFiltered.length / RISKY_PAGE_SIZE));
-  const visibleRisky    = riskyFiltered.slice((riskyPage - 1) * RISKY_PAGE_SIZE, riskyPage * RISKY_PAGE_SIZE);
-  const handleRiskyFilter = useCallback((f) => { setRiskyFilter(f); setRiskyPage(1); }, []);
-  const handleRiskyPage = useCallback((p) => {
-    setRiskyPage(p);
-    document.getElementById("risky-results-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
-  // Live value tier — graded in-play value bets (own ROI bucket).
-  const { data: liveValRows } = useLiveValueRecord();
-  const liveValStats = useMemo(() => computeRiskyStats(liveValRows), [liveValRows]);
-  const [lvPage,   setLvPage]   = useState(1);
-  const [lvFilter, setLvFilter] = useState("all");
-  const lvFiltered = useMemo(() => {
-    if (lvFilter === "win")  return liveValRows.filter(r => r.correct === true);
-    if (lvFilter === "loss") return liveValRows.filter(r => r.correct === false);
-    return liveValRows;
-  }, [liveValRows, lvFilter]);
-  const lvTotalPages = Math.max(1, Math.ceil(lvFiltered.length / RISKY_PAGE_SIZE));
-  const lvVisible    = lvFiltered.slice((lvPage - 1) * RISKY_PAGE_SIZE, lvPage * RISKY_PAGE_SIZE);
-  const handleLvFilter = useCallback((f) => { setLvFilter(f); setLvPage(1); }, []);
-  const handleLvPage = useCallback((p) => {
-    setLvPage(p);
-    document.getElementById("live-value-record")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  // Risky + Live Value tiers removed 2026-08-24 — no odds source, so
+  // neither can be graded. Track Record now covers published predictions only.
 
   const [expandedSignal, setExpandedSignal] = useState(null);
   const [resultFilter,   setResultFilter]   = useState("all");
@@ -838,138 +776,13 @@ export default function TrackRecord() {
         </section>
       )}
 
-      {/* ── Risky Picks Record — SEPARATE tier, below the safe match list ── */}
-      {riskyStats && (
-        <section className="pt-2 border-t border-amber-400/15">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="material-symbols-outlined text-amber-400 text-[20px]">local_fire_department</span>
-            <span className="font-['Lexend'] text-[11px] uppercase tracking-widest text-amber-400">Smart Value · Graded by ROI</span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-on-surface mb-1">Smart Picks Record</h2>
-          <p className="text-sm text-on-surface-variant mb-3 max-w-xl">
-            Separate from the safe record above. Model-backed value picks — confident calls the
-            bookmaker underprices — judged by ROI (profit per unit staked), not just hit rate.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <KpiCard
-              icon="trending_up"
-              label="ROI / Yield"
-              value={`${riskyStats.roi >= 0 ? "+" : ""}${riskyStats.roi.toFixed(1)}%`}
-              sub="return per unit staked"
-              accent={riskyStats.roi >= 0 ? "green" : "red"}
-            />
-            <KpiCard
-              icon="savings"
-              label="Profit (units)"
-              value={`${riskyStats.profit >= 0 ? "+" : ""}${riskyStats.profit.toFixed(2)}`}
-              sub="at 1 unit per pick"
-              accent={riskyStats.profit >= 0 ? "green" : "red"}
-            />
-            <KpiCard
-              icon="percent"
-              label="Hit Rate"
-              value={`${riskyStats.hitRate.toFixed(0)}%`}
-              sub={`${riskyStats.hits}/${riskyStats.total} · avg odds ${riskyStats.avgOdds.toFixed(2)}`}
-            />
-            <KpiCard
-              icon="format_list_numbered"
-              label="Graded Picks"
-              value={riskyStats.total}
-              sub={`${riskyStats.hits} won · ${riskyStats.misses} lost`}
-            />
-          </div>
+      {/* Risky Picks record removed 2026-08-24: no odds source, so no new
+          value bets are graded. The Track Record now reflects only the
+          published match predictions. risky_picks data is retained in
+          Supabase and this block can be restored if odds return. */}
 
-          {/* Risky picks match list — filterable + paginated like the safe Results */}
-          {riskyRows.length > 0 && (
-            <div id="risky-results-section" className="mt-4">
-              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                <p className="text-[11px] text-on-surface-variant/50">
-                  {riskyFiltered.length} graded · page {riskyPage} of {riskyTotalPages}
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  <FilterPill label="All"      active={riskyFilter === "all"}  onClick={() => handleRiskyFilter("all")}  />
-                  <FilterPill label="✓ Wins"   active={riskyFilter === "win"}  onClick={() => handleRiskyFilter("win")}  />
-                  <FilterPill label="✗ Losses" active={riskyFilter === "loss"} onClick={() => handleRiskyFilter("loss")} />
-                </div>
-              </div>
-              <div className="glass-card rounded-2xl px-5 py-2">
-                {visibleRisky.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-on-surface-variant">No picks match this filter</div>
-                ) : (
-                  visibleRisky.map(p => <RiskyResultRow key={p.id} pick={p} />)
-                )}
-              </div>
-              <Pagination page={riskyPage} totalPages={riskyTotalPages} onChange={handleRiskyPage} />
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* ── Live Value Record — in-play value tier, its own ROI bucket ── */}
-      {liveValStats && (
-        <section id="live-value-record" className="pt-2 border-t border-amber-400/15 scroll-mt-24">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="material-symbols-outlined text-amber-400 text-[20px]">bolt</span>
-            <span className="font-['Lexend'] text-[11px] uppercase tracking-widest text-amber-400">Live Value · In-Play · Graded by ROI</span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-on-surface mb-1">Live Value Record</h2>
-          <p className="text-sm text-on-surface-variant mb-3 max-w-xl">
-            In-play value bets — where the live model beat the live price. Separate from every tier
-            above and judged by ROI; the highest-variance bucket of all.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <KpiCard
-              icon="trending_up"
-              label="ROI / Yield"
-              value={`${liveValStats.roi >= 0 ? "+" : ""}${liveValStats.roi.toFixed(1)}%`}
-              sub="return per unit staked"
-              accent={liveValStats.roi >= 0 ? "green" : "red"}
-            />
-            <KpiCard
-              icon="savings"
-              label="Profit (units)"
-              value={`${liveValStats.profit >= 0 ? "+" : ""}${liveValStats.profit.toFixed(2)}`}
-              sub="at 1 unit per pick"
-              accent={liveValStats.profit >= 0 ? "green" : "red"}
-            />
-            <KpiCard
-              icon="percent"
-              label="Hit Rate"
-              value={`${liveValStats.hitRate.toFixed(0)}%`}
-              sub={`${liveValStats.hits}/${liveValStats.total} · avg odds ${liveValStats.avgOdds.toFixed(2)}`}
-            />
-            <KpiCard
-              icon="format_list_numbered"
-              label="Graded Picks"
-              value={liveValStats.total}
-              sub={`${liveValStats.hits} won · ${liveValStats.misses} lost`}
-            />
-          </div>
-
-          {liveValRows.length > 0 && (
-            <div className="mt-4">
-              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                <p className="text-[11px] text-on-surface-variant/50">
-                  {lvFiltered.length} graded · page {lvPage} of {lvTotalPages}
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  <FilterPill label="All"      active={lvFilter === "all"}  onClick={() => handleLvFilter("all")}  />
-                  <FilterPill label="✓ Wins"   active={lvFilter === "win"}  onClick={() => handleLvFilter("win")}  />
-                  <FilterPill label="✗ Losses" active={lvFilter === "loss"} onClick={() => handleLvFilter("loss")} />
-                </div>
-              </div>
-              <div className="glass-card rounded-2xl px-5 py-2">
-                {lvVisible.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-on-surface-variant">No picks match this filter</div>
-                ) : (
-                  lvVisible.map(p => <RiskyResultRow key={p.id} pick={p} />)
-                )}
-              </div>
-              <Pagination page={lvPage} totalPages={lvTotalPages} onChange={handleLvPage} />
-            </div>
-          )}
-        </section>
-      )}
+      {/* Live Value record removed 2026-08-24: 09_live_inplay is retired
+          (football-data.org free tier delays scores, so no in-play tier). */}
 
       <ScrollToTop />
     </div>

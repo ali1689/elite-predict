@@ -4,8 +4,6 @@ import TeamAvatar from "@/components/TeamAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { useTodayPredictions } from "@/lib/usePredictions";
 import { useMatchOdds } from "@/lib/useMatchOdds";
-import { useRiskyPicks } from "@/lib/useRiskyPicks";
-import RiskyPickCard from "@/components/RiskyPickCard";
 import ScrollToTop from "@/components/ScrollToTop";
 
 // ── Daily pack helpers ────────────────────────────────────────────────────
@@ -541,7 +539,6 @@ export default function Today() {
 
   const { data: matches, loading, error, lastFetch, refresh } = useTodayPredictions();
   const oddsById = useMatchOdds();
-  const { data: riskyPicks } = useRiskyPicks();
 
   const [activeLeague, setActiveLeague] = useState("ALL");
   const [showCharts, setShowCharts]     = useState(false); // mobile-only chart toggle
@@ -615,28 +612,7 @@ export default function Today() {
         )}
       </section>
 
-      {/* Jump to Risky Picks — keeps the value section discoverable from the top */}
-      {user && riskyPicks.length > 0 && (
-        <button
-          onClick={() => document.getElementById("risky-picks")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          className="w-full mb-6 md:mb-8 flex items-center justify-between gap-3 rounded-xl px-4 py-3
-                     bg-amber-400/10 border border-amber-400/30 hover:border-amber-400/60 hover:bg-amber-400/15
-                     transition-all group">
-          <span className="flex items-center gap-2.5 min-w-0">
-            <span className="material-symbols-outlined text-amber-400 text-[20px]">local_fire_department</span>
-            <span className="font-['Lexend'] text-[11px] sm:text-xs font-black uppercase tracking-widest text-amber-400 whitespace-nowrap">
-              {riskyPicks.length} Smart {riskyPicks.length === 1 ? "Pick" : "Picks"} today
-            </span>
-            <span className="font-['Lexend'] text-[10px] text-on-surface-variant hidden md:inline truncate">
-              — confident picks the bookmaker underprices
-            </span>
-          </span>
-          <span className="flex items-center gap-1 flex-shrink-0 font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-amber-400">
-            View
-            <span className="material-symbols-outlined text-[16px] group-hover:translate-y-0.5 transition-transform">arrow_downward</span>
-          </span>
-        </button>
-      )}
+      {/* Smart Picks jump-link removed 2026-08-24 — odds source retired. */}
 
       {/* How to read this page */}
       <div className="mb-8 md:mb-10">
@@ -870,39 +846,9 @@ export default function Today() {
         )}
       </section>
 
-      {/* ── Today's Smart Picks (model-backed value) — same page as the safe picks ── */}
-      {user && (
-        <section id="risky-picks" className="mt-12 md:mt-16 scroll-mt-24">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="w-1.5 h-6 bg-amber-400 rounded-full inline-block" />
-            <span className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-amber-400">
-              Model-Backed Value
-            </span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-on-surface mb-2 leading-tight">
-            Today's <span className="text-amber-400">Smart Picks</span>
-          </h2>
-          <p className="text-on-surface-variant text-sm sm:text-base mb-5 max-w-2xl">
-            Confident, model-backed picks the bookmaker underprices — high probability at value odds.
-            Separate from the safe picks above and graded in their own ROI bucket. Stake sensibly.
-          </p>
-
-          {riskyPicks.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-              {riskyPicks.map(p => <RiskyPickCard key={p.id} pick={p} />)}
-            </div>
-          ) : (
-            <div className="text-center py-12 glass-card rounded-xl border border-amber-400/20">
-              <span className="material-symbols-outlined text-[40px] text-amber-400/70 mb-3 block">savings</span>
-              <div className="text-on-surface font-bold mb-1">No value bets today</div>
-              <div className="text-on-surface-variant text-sm max-w-md mx-auto px-4">
-                The model didn't find any market priced softly enough to beat the book.
-                Quality over quantity — check back after the next run.
-              </div>
-            </div>
-          )}
-        </section>
-      )}
+      {/* Smart Picks section removed 2026-08-24: football-data.org has no
+          odds, so no value picks can be generated. The risky_picks table and
+          RiskyPickCard component are kept for a future odds source. */}
 
       {/* Telegram CTA */}
       <section className="mt-10 md:mt-16">

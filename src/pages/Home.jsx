@@ -89,11 +89,6 @@ const TOOLS = [
     description: "Browse the full slate of upcoming matches with probabilities across every market.",
   },
   {
-    to: "/players", icon: "sports_soccer", badge: "Players",
-    title: "Goalscorers",
-    description: "Anytime and first-scorer probabilities for the key players in every featured match.",
-  },
-  {
     to: "/track-record", icon: "verified", badge: "Live",
     title: "Track Record",
     description: "Every settled prediction scored against the real result. No cherry-picking — full transparency.",
@@ -279,7 +274,6 @@ export default function Home() {
                 { to: "/live", icon: "sensors", label: "Live In-Play", live: true },
                 { to: "/today", icon: "today", label: "Today" },
                 { to: "/open", icon: "style", label: "Open Pack" },
-                { to: "/players", icon: "sports_soccer", label: "Goalscorers" },
                 { to: "/track-record", icon: "verified", label: "Track Record" },
               ].map(({ to, icon, label, live }) => (
                 <Link key={to} to={to}

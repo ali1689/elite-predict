@@ -8,7 +8,9 @@ import Home from "./pages/Home";
 import Predictions from "./pages/Predictions";
 import Today from "./pages/Today";
 import Login from "./pages/Login";
-import Players from "./pages/Players";
+// Players (Goalscorers) retired 2026-08-24 — see the /players redirect below.
+// The page file is left on disk so it can be restored if a player-stats source
+// is ever reconnected.
 import Open from "./pages/Open";
 import Live from "./pages/Live";
 import TrackRecord from "./pages/TrackRecord";
@@ -61,7 +63,10 @@ export default function App() {
               <Route path="/"            element={<Home />} />
               <Route path="/today"       element={<Today />} />
               <Route path="/predictions" element={<Predictions />} />
-              <Route path="/players"     element={<Players />} />
+              {/* Goalscorers retired 2026-08-24 — no player data source on the
+                  football-data.org free tier. Redirect so old links/bookmarks
+                  land somewhere useful instead of a 404. */}
+              <Route path="/players"     element={<Navigate to="/today" replace />} />
               <Route path="/open"        element={<Open />} />
               <Route path="/live"        element={<Live />} />
               {/* Risky picks folded into Today — keep old links working */}

@@ -9,7 +9,9 @@ const NAV_LINKS = [
   { label: "Today's Predictions",  to: "/today",        icon: "today"          },
   { label: "Open Pack",            to: "/open",         icon: "style"          },
   { label: "Upcoming Predictions", to: "/predictions",  icon: "calendar_month" },
-  { label: "Goalscorers",          to: "/players",      icon: "sports_soccer"  },
+  // Goalscorers removed 2026-08-24: player stats came from API-Sports, which is
+  // no longer subscribed. football-data.org's free tier has no players endpoint,
+  // so the page could only ever show frozen rosters.
   { label: "Track Record",         to: "/track-record", icon: "verified"       },
 ];
 
