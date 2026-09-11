@@ -1,0 +1,113 @@
+{
+  "backup": "C:\\Users\\alite\\OneDrive\\Documents\\Claude\\Projects\\V5FOO\\elite-predict-backup-before-clarity-seo-20260912-012858",
+  "files": [
+    {
+      "path": "index.html",
+      "existed": true
+    },
+    {
+      "path": "public/og-image.png",
+      "existed": false
+    },
+    {
+      "path": "public/robots.txt",
+      "existed": true
+    },
+    {
+      "path": "public/sitemap.xml",
+      "existed": true
+    },
+    {
+      "path": "scripts/seo-pages.js",
+      "existed": false
+    },
+    {
+      "path": "scripts/seo.test.js",
+      "existed": false
+    },
+    {
+      "path": "src/App.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/components/FootballIdentity.jsx",
+      "existed": false
+    },
+    {
+      "path": "src/components/Footer.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/components/Navbar.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/components/Seo.jsx",
+      "existed": false
+    },
+    {
+      "path": "src/components/V2.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/index.css",
+      "existed": true
+    },
+    {
+      "path": "src/lib/seo.js",
+      "existed": false
+    },
+    {
+      "path": "src/lib/usePredictions.js",
+      "existed": true
+    },
+    {
+      "path": "src/pages/Guide.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/pages/Home.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/pages/LeaguePredictions.jsx",
+      "existed": false
+    },
+    {
+      "path": "src/pages/Login.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/pages/MatchPrediction.jsx",
+      "existed": false
+    },
+    {
+      "path": "src/pages/Open.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/pages/Predictions.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/pages/Saved.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/pages/Today.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/pages/TrackRecord.jsx",
+      "existed": true
+    },
+    {
+      "path": "vercel.json",
+      "existed": true
+    },
+    {
+      "path": "vite.config.js",
+      "existed": true
+    }
+  ]
+}

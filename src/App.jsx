@@ -23,6 +23,9 @@ import Guide from "./pages/Guide";
 import { SavedProvider } from "./context/SavedContext";
 import TrackRecord from "./pages/TrackRecord";
 import NotFound from "./pages/NotFound";
+import SeoRoutes from './components/Seo';
+import LeaguePredictions from './pages/LeaguePredictions';
+import MatchPrediction from './pages/MatchPrediction';
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // ── Theme context ──────────────────────────────────────────────────────────
@@ -72,17 +75,6 @@ function RouteEffects() {
   const { pathname } = useLocation();
   const navigationType = useNavigationType();
   useEffect(() => {
-    const titles = {
-      "/": "Football intelligence",
-      "/today": "Matchday",
-      "/predictions": "Upcoming matches",
-      "/track-record": "Track record",
-      "/open": "Daily pack",
-      "/saved": "Saved matches",
-      "/guide": "How it works",
-      "/login": "Your account",
-    };
-    document.title = `${titles[pathname] || "Page not found"} | ElitePredict`;
     if (navigationType !== "POP")
       window.scrollTo({ top: 0, behavior: "instant" });
   }, [pathname, navigationType]);
@@ -95,6 +87,7 @@ export default function App() {
       <AuthProvider>
         <SavedProvider>
           <RouteEffects />
+          <SeoRoutes />
           <div className="v2-app">
             <Navbar />
             <div id="main-content" className="v2-app-content">
@@ -102,6 +95,8 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/today" element={<Today />} />
                 <Route path="/predictions" element={<Predictions />} />
+                <Route path="/leagues/:slug" element={<LeaguePredictions />} />
+                <Route path="/matches/:id/:slug" element={<MatchPrediction />} />
                 {/* Goalscorers retired 2026-08-24 — no player data source on the
                   football-data.org free tier. Redirect so old links/bookmarks
                   land somewhere useful instead of a 404. */}

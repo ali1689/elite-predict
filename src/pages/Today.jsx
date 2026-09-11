@@ -51,8 +51,8 @@ export default function Today() {
     <main className="v2-page">
       <PageHeading
         eyebrow={`Matchday / ${dateLabel(dateKey(), false)}`}
-        title="Your matchday edge."
-        description="Today’s strongest model signals, with the full picture behind every pick."
+        title="Football predictions today"
+        description="Today’s AI picks, goal probabilities and match analysis."
       >
         <button
           className="v2-button secondary"

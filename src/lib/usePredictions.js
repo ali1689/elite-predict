@@ -86,7 +86,7 @@ function deriveTier(row) {
 }
 
 // Normalise Supabase snake_case to camelCase
-function normalize(row) {
+export function normalize(row) {
   let allSignals = [];
   try {
     allSignals = typeof row.all_signals === "string"

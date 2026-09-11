@@ -53,8 +53,8 @@ export default function TrackRecord() {
     <main className="v2-page">
       <PageHeading
         eyebrow="The evidence behind the engine"
-        title="Proof behind the predictions."
-        description="Explore settled outcomes and the records behind every number."
+        title="Football prediction results"
+        description="Correct picks, missed picks and the numbers behind them."
       />
       {settled.loading ? (
         <Loading />

@@ -1,58 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <script>try{document.documentElement.classList.toggle('dark',(localStorage.getItem('ep_theme')||'dark')==='dark')}catch{}</script>
-    <!-- Primary SEO -->
-    <title>ELITE PREDICT | AI-Powered Football Analytics</title>
-    <meta name="description" content="Explore football predictions, match probabilities, saved fixtures, and transparent historical results with ElitePredict." />
-    <meta name="keywords" content="football predictions, AI football analytics, soccer predictions, football tips, match predictions, elite predict" />
-    <meta name="author" content="Elite Predict" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://elitepredicts.com/" />
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://elitepredicts.com/" />
-    <meta property="og:site_name" content="Elite Predict" />
-    <meta property="og:title" content="ELITE PREDICT | AI-Powered Football Analytics" />
-    <meta property="og:description" content="Explore football predictions, match probabilities, saved fixtures, and transparent historical results with ElitePredict." />
-    <meta property="og:image" content="https://elitepredicts.com/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content="en_US" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://elitepredicts.com/" />
-    <meta name="twitter:title" content="ELITE PREDICT | AI-Powered Football Analytics" />
-    <meta name="twitter:description" content="Explore football predictions, match probabilities, saved fixtures, and transparent historical results with ElitePredict." />
-    <meta name="twitter:image" content="https://elitepredicts.com/og-image.png" />
-
-    <!-- Theme / PWA -->
-    <meta name="theme-color" content="#0d191e" />
-
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Elite Predict",
-      "url": "https://elitepredicts.com",
-      "description": "Explore football predictions, match probabilities, saved fixtures, and transparent historical results with ElitePredict.",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": "https://elitepredicts.com/predictions?q={search_term_string}"
-        },
-        "query-input": "required name=search_term_string"
-      }
-    }
+    <script>
+      try {
+        document.documentElement.classList.toggle(
+          "dark",
+          (localStorage.getItem("ep_theme") || "dark") === "dark",
+        );
+      } catch {}
     </script>
-
+    <!--seo:start-->
+    <title>AI Football Predictions Today | ElitePredicts</title>
+    <meta
+      name="description"
+      content="Explore AI football predictions, match probabilities and football analysis. Browse today’s fixtures, save matches and check our public prediction results."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.elitepredicts.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ElitePredicts" />
+    <meta
+      property="og:title"
+      content="AI Football Predictions Today | ElitePredicts"
+    />
+    <meta
+      property="og:description"
+      content="Explore AI football predictions, match probabilities and football analysis. Browse today’s fixtures, save matches and check our public prediction results."
+    />
+    <meta property="og:url" content="https://www.elitepredicts.com/" />
+    <meta
+      property="og:image"
+      content="https://www.elitepredicts.com/og-image.png"
+    />
+    <meta
+      property="og:image:alt"
+      content="ElitePredicts — AI football predictions and match analysis"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="AI Football Predictions Today | ElitePredicts"
+    />
+    <meta
+      name="twitter:description"
+      content="Explore AI football predictions, match probabilities and football analysis. Browse today’s fixtures, save matches and check our public prediction results."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.elitepredicts.com/og-image.png"
+    />
+    <script id="page-schema" type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ElitePredicts",
+        "alternateName": "Elite Predict",
+        "url": "https://www.elitepredicts.com/",
+        "description": "Explore AI football predictions, match probabilities and football analysis. Browse today’s fixtures, save matches and check our public prediction results."
+      }
+    </script>
+    <!--seo:end-->
+    <meta name="theme-color" content="#0d191e" />
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -80,9 +91,13 @@
     </style>
     <script>
       (function () {
-        function reveal() { document.documentElement.classList.add("ms-ready"); }
+        function reveal() {
+          document.documentElement.classList.add("ms-ready");
+        }
         if (document.fonts && document.fonts.ready) {
-          try { document.fonts.load('24px "Material Symbols Outlined"'); } catch (e) {}
+          try {
+            document.fonts.load('24px "Material Symbols Outlined"');
+          } catch (e) {}
           document.fonts.ready.then(reveal).catch(reveal);
         }
         // Safety: never keep icons hidden if the font is slow or blocked.
@@ -91,7 +106,7 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--app-shell--><!--/app-shell--></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

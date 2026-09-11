@@ -91,11 +91,7 @@ export default function Login() {
     <main className="v2-page v2-auth">
       <section className="v2-auth-story">
         <p className="v2-eyebrow">Your next match starts here</p>
-        <h1>
-          A clearer view.
-          <br />
-          <em>A personal matchday.</em>
-        </h1>
+        <h2>Football predictions.<br /><em>Your matchday.</em></h2>
         <p>
           Open your daily pack, explore the model’s predictions, and keep your
           favourite fixtures together.
@@ -127,15 +123,15 @@ export default function Login() {
       </section>
       <section className="v2-auth-form">
         <p className="v2-eyebrow">ElitePredict account</p>
-        <h2>
+        <h1>
           {mode === "register"
             ? "Create your account."
             : mode === "reset"
               ? "Reset your password."
               : mode === "update"
                 ? "Choose a new password."
-                : "Welcome back."}
-        </h2>
+                : "Sign in to ElitePredicts"}
+        </h1>
         {["login", "register"].includes(mode) && (
           <div className="v2-tabs">
             <button

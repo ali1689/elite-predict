@@ -25,8 +25,8 @@ export default function Saved() {
     <main className="v2-page">
       <PageHeading
         eyebrow="Your football, together"
-        title="Keep your eye on the match."
-        description="Your saved fixtures stay on this browser. Save or remove a match from any prediction card."
+        title="Your saved matches"
+        description="Your watchlist, saved on this browser."
       >
         <Link className="v2-button secondary" to="/predictions">
           Find matches <Icon>arrow_forward</Icon>

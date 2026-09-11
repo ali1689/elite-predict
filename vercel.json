@@ -8,8 +8,82 @@
       "destination": "https://pekulnmfxyxqyusnhhfn.supabase.co/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/today",
+      "destination": "/seo-pages/today.html"
+    },
+    {
+      "source": "/predictions",
+      "destination": "/seo-pages/predictions.html"
+    },
+    {
+      "source": "/track-record",
+      "destination": "/seo-pages/track-record.html"
+    },
+    {
+      "source": "/guide",
+      "destination": "/seo-pages/guide.html"
+    },
+    {
+      "source": "/saved",
+      "destination": "/seo-pages/saved.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/seo-pages/login.html"
+    },
+    {
+      "source": "/open",
+      "destination": "/seo-pages/open.html"
+    },
+    {
+      "source": "/leagues/premier-league",
+      "destination": "/seo-pages/leagues-premier-league.html"
+    },
+    {
+      "source": "/leagues/champions-league",
+      "destination": "/seo-pages/leagues-champions-league.html"
+    },
+    {
+      "source": "/leagues/la-liga",
+      "destination": "/seo-pages/leagues-la-liga.html"
+    },
+    {
+      "source": "/leagues/serie-a",
+      "destination": "/seo-pages/leagues-serie-a.html"
+    },
+    {
+      "source": "/leagues/bundesliga",
+      "destination": "/seo-pages/leagues-bundesliga.html"
+    },
+    {
+      "source": "/leagues/ligue-1",
+      "destination": "/seo-pages/leagues-ligue-1.html"
+    },
+    {
+      "source": "/",
       "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/spa.html"
+    }
+  ],
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/live",
+      "destination": "/today",
+      "permanent": true
+    },
+    {
+      "source": "/players",
+      "destination": "/today",
+      "permanent": true
+    },
+    {
+      "source": "/risky",
+      "destination": "/today",
+      "permanent": true
     }
   ]
 }

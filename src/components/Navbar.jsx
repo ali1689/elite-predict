@@ -6,7 +6,7 @@ import { useSaved } from "@/context/SavedContext";
 import { Icon } from "@/components/V2";
 const links = [
   ["Home", "/"],
-  ["Matchday", "/today"],
+  ["Today", "/today"],
   ["Upcoming", "/predictions"],
   ["Track record", "/track-record"],
   ["Daily pack", "/open"],
@@ -42,7 +42,7 @@ export default function Navbar() {
             <span className="v2-logomark">
               <Icon>center_focus_strong</Icon>
             </span>
-            elitepredict<span className="v2-logo-dot">.</span>
+            elitepredicts<span className="v2-logo-dot">.</span>
           </Link>
           <nav className="v2-desktop-nav" aria-label="Main navigation">
             {links.map(([label, to]) => (

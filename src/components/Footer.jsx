@@ -6,10 +6,10 @@ export default function Footer() {
       <div className="v2-footer-inner">
         <div>
           <Link to="/" className="v2-logo">
-            elitepredict.
+            elitepredicts.
           </Link>
-          <p>The beautiful game. A clearer view.</p>
-          <small>Model insights, human decisions.</small>
+          <p>AI football predictions &amp; match analysis.</p>
+          <small>Soccer predictions. Informed by data.</small>
         </div>
         <nav aria-label="Footer navigation">
           <Link to="/today">Matchday</Link>

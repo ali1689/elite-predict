@@ -40,8 +40,8 @@ export default function Open() {
     <main className="v2-page">
       <PageHeading
         eyebrow={`Daily selection / ${dateKey()}`}
-        title="A fresh perspective, every day."
-        description="Your daily prediction pack. One place to start exploring the matchday."
+        title="Your daily prediction pack"
+        description="Open today’s free collection of football predictions."
       />
       {loading || authLoading ? (
         <Loading />

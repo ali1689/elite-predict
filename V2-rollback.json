@@ -99,6 +99,58 @@
     {
       "path": "src\\lib\\calendar.test.js",
       "existed": false
+    },
+    {
+      "path": "public/og-image.png",
+      "existed": false
+    },
+    {
+      "path": "public/robots.txt",
+      "existed": true
+    },
+    {
+      "path": "public/sitemap.xml",
+      "existed": true
+    },
+    {
+      "path": "scripts/seo-pages.js",
+      "existed": false
+    },
+    {
+      "path": "scripts/seo.test.js",
+      "existed": false
+    },
+    {
+      "path": "src/components/FootballIdentity.jsx",
+      "existed": false
+    },
+    {
+      "path": "src/components/Seo.jsx",
+      "existed": false
+    },
+    {
+      "path": "src/lib/seo.js",
+      "existed": false
+    },
+    {
+      "path": "src/lib/usePredictions.js",
+      "existed": true
+    },
+    {
+      "path": "src/pages/LeaguePredictions.jsx",
+      "existed": false
+    },
+    {
+      "path": "src/pages/MatchPrediction.jsx",
+      "existed": false
+    },
+    {
+      "path": "vercel.json",
+      "existed": true
+    },
+    {
+      "path": "vite.config.js",
+      "existed": true
     }
   ],
   "backup": "C:\\Users\\alite\\OneDrive\\Documents\\Claude\\Projects\\V5FOO\\elite-predict-backup-before-v2-20260910"

@@ -1,57 +1,85 @@
 import { Link } from "react-router-dom";
 import { PageHeading, Icon } from "@/components/V2";
 export default function Guide() {
+  const cards = [
+    [
+      "psychology",
+      "The AI pick",
+      [
+        "The model’s highlighted prediction for this fixture.",
+        "Confidence scores the pick. It does not guarantee the result.",
+      ],
+    ],
+    [
+      "sports_soccer",
+      "Goals, in plain English",
+      [
+        "Team to score = at least 1 goal by that team.",
+        "2+ total goals = over 1.5 goals. 3+ = over 2.5.",
+        "Both teams to score = each team scores at least once.",
+      ],
+    ],
+    [
+      "bar_chart",
+      "Match probabilities",
+      [
+        "Home win, draw and away win estimate the match outcome.",
+        "These are different from confidence in the highlighted pick. Rounding can affect the total.",
+      ],
+    ],
+    [
+      "compare_arrows",
+      "Compare the numbers",
+      [
+        "Compare up to 3 fixtures in the full match list.",
+        "Expected goals estimate scoring; Elo measures relative team strength.",
+      ],
+    ],
+    [
+      "bookmark",
+      "Save your football",
+      [
+        "Bookmark fixtures or follow favourite teams and leagues.",
+        "Saved groups upcoming fixtures and available outcomes. Calendar export uses scheduled kickoff.",
+        "Your preferences stay on this browser.",
+      ],
+    ],
+    [
+      "fact_check",
+      "Check the evidence",
+      [
+        "Results cover up to 500 recent settled picks with confidence ≥80%.",
+        "Check sample sizes and dates. Hit rate does not measure profit.",
+      ],
+    ],
+  ];
   return (
     <main className="v2-page v2-guide">
       <PageHeading
-        eyebrow="A little context goes a long way"
-        title="Make sense of the match."
-        description="A straightforward guide to the numbers, markets, and features in ElitePredict."
+        eyebrow="A quick guide"
+        title="How to read a prediction"
+        description="The essentials: picks, probabilities and results."
       />
       <div className="v2-guide-grid">
-        {[
-          [
-            "01",
-            "Start with a model pick",
-            "The primary signal is the selection displayed by the existing prediction model. Confidence is its score; individual market probabilities may differ because they describe different estimates. A high score is not a guarantee.",
-          ],
-          [
-            "02",
-            "Read the market",
-            "Home or away to score means at least one goal by that team. Over 1.5 goals means two or more total goals. Over 2.5 means three or more. Both teams to score means each team scores at least once.",
-          ],
-          [
-            "03",
-            "Explore the full picture",
-            "Match result shows home, draw, and away probabilities. Double chance combines two possible results. Expected goals describe the model’s estimated scoring level; Elo compares team strength. Use Compare match on up to three fixtures in the full match list to compare estimates side by side.",
-          ],
-          [
-            "04",
-            "Build your watchlist",
-            "Bookmark a fixture from Home, Upcoming, Matchday, or your daily pack. The fixture is saved on this browser. The Saved page checks recent prediction history for available outcomes, without live score updates. Group saved fixtures by status, undo removals, and export upcoming kickoffs to your calendar. Follow teams or leagues under Your football, then filter to your favourites.",
-          ],
-          [
-            "05",
-            "Open your daily pack",
-            "An account is required to open your daily pack. Opening it unlocks the Matchday view on this browser for that account until midnight in Europe/Warsaw.",
-          ],
-          [
-            "06",
-            "Look at the evidence",
-            "The public record covers up to 500 recent settled predictions with confidence of at least 80%. The date range and sample sizes are displayed. Pending predictions are separate; hit rate alone does not describe profitability.",
-          ],
-        ].map(([n, title, text]) => (
-          <section className="v2-panel" key={n}>
-            <span className="v2-eyebrow">{n}</span>
+        {cards.map(([icon, title, lines]) => (
+          <section className="v2-panel" key={title}>
+            <Icon>{icon}</Icon>
             <h2>{title}</h2>
-            <p>{text}</p>
+            <ul className="v2-guide-points">
+              {lines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
           </section>
         ))}
       </div>
+      <p className="v2-fine">
+        Today’s full matchday view requires an account and an opened daily pack.
+        The pack resets at midnight, Europe/Warsaw.
+      </p>
       <Link className="v2-button" to="/today">
-        Explore matchday <Icon>arrow_forward</Icon>
+        Today’s predictions <Icon>arrow_forward</Icon>
       </Link>
     </main>
   );
 }
-

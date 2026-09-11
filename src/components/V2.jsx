@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Comparison, Kickoff } from "@/components/Discovery";
 import { useSaved } from "@/context/SavedContext";
 import { dateLabel, leagueName, percent, matchKey } from "@/lib/presentation";
+import { TeamBadge, Competition, pickLabel } from "./FootballIdentity";
+import { matchPath } from "@/lib/seo";
 export function Icon({ children, ...props }) {
   return (
     <span className="material-symbols-outlined" aria-hidden="true" {...props}>
@@ -80,9 +82,8 @@ export function Community() {
   return (
     <aside className="v2-community">
       <div>
-        <p className="v2-eyebrow">Stay in the conversation</p>
-        <h3>Your matchday, beyond the final whistle.</h3>
-        <p>Follow the ElitePredict community on Telegram.</p>
+        <p className="v2-eyebrow">ElitePredicts community</p>
+        <h3>Talk football with us.</h3>
       </div>
       <a
         className="v2-button secondary"
@@ -145,17 +146,23 @@ export function MatchDetails({ match: m, odds }) {
     <div className="v2-match-detail">
       {groups.map(([label, values]) => (
         <section key={label}>
-          <h4>{label}</h4>
+          <h3>{label}</h3>
           <div className="v2-prob-grid">
             {values.map(([name, value, price]) => (
               <div key={name}>
                 <span>{name}</span>
                 <strong>{percent(value)}</strong>
-                {value != null && value !== "" && Number.isFinite(Number(value)) && (
-                  <div className="v2-market-meter" aria-hidden="true">
-                    <i style={{ width: `${Math.max(0, Math.min(100, Number(value)))}%` }} />
-                  </div>
-                )}
+                {value != null &&
+                  value !== "" &&
+                  Number.isFinite(Number(value)) && (
+                    <div className="v2-market-meter" aria-hidden="true">
+                      <i
+                        style={{
+                          width: `${Math.max(0, Math.min(100, Number(value)))}%`,
+                        }}
+                      />
+                    </div>
+                  )}
                 {Number(price) > 1 && (
                   <small>Odds {Number(price).toFixed(2)}</small>
                 )}
@@ -186,11 +193,20 @@ export function MatchDetails({ match: m, odds }) {
         estimates and may differ. Over 1.5 means at least 2 goals; over 2.5
         means at least 3. Outcomes are uncertain.
       </p>
-      <details className="v2-explainer"><summary>What do confidence, expected goals and Elo mean?</summary><p>Confidence is the model’s score for its primary pick. Expected goals estimate the total scoring level, not the exact final score. Elo is a relative team-strength rating: a higher value indicates a stronger rating. These measures are different from the individual market probabilities above.</p></details>
+      <details className="v2-explainer">
+        <summary>What do confidence, expected goals and Elo mean?</summary>
+        <p>
+          Confidence is the model’s score for its primary pick. Expected goals
+          estimate the total scoring level, not the exact final score. Elo is a
+          relative team-strength rating: a higher value indicates a stronger
+          rating. These measures are different from the individual market
+          probabilities above.
+        </p>
+      </details>
     </div>
   );
 }
-export function MatchCard({ match, spotlight = false, odds }) {
+export function MatchCard({ match, spotlight = false, odds, showLink = true }) {
   return (
     <article className={`v2-match-card ${spotlight ? "spotlight" : ""}`}>
       <div className="v2-card-top">
@@ -200,28 +216,51 @@ export function MatchCard({ match, spotlight = false, odds }) {
         <SaveButton match={match} />
       </div>
       <p className="v2-match-time">
-        {leagueName(match.comp)} · {dateLabel(match.utcDate || match.matchDate)}{" "}
-        · Warsaw
+        <Competition code={match.comp} /> ·{" "}
+        {dateLabel(match.utcDate || match.matchDate)} · Warsaw
       </p>
       <Kickoff value={match.utcDate} />
       <div className="v2-teams">
-        <h2>{match.home}</h2>
+        <h2>
+          <TeamBadge name={match.home} />
+          {match.home}
+        </h2>
         <span>vs</span>
-        <h2>{match.away}</h2>
+        <h2>
+          <TeamBadge name={match.away} />
+          {match.away}
+        </h2>
       </div>
       <div className="v2-signal">
         <div>
-          <small>Model pick</small>
-          <strong>{match.signal}</strong>
+          <small>AI prediction</small>
+          <strong>{pickLabel(match)}</strong>
         </div>
         <div className="v2-confidence">
           <strong>{percent(match.conf)}</strong>
-          <small>Confidence</small>
+          <small>Model confidence</small>
         </div>
       </div>
+      <div className="v2-result-strip" aria-label="Match result probabilities">
+        {[
+          ["Home win", match.homeWin],
+          ["Draw", match.draw],
+          ["Away win", match.awayWin],
+        ].map(([label, value]) => (
+          <div key={label}>
+            <span>{label}</span>
+            <strong>{percent(value)}</strong>
+          </div>
+        ))}
+      </div>
+      {showLink && (
+        <Link className="v2-match-permalink" to={matchPath(match)}>
+          Match prediction <Icon>arrow_forward</Icon>
+        </Link>
+      )}
       <details>
         <summary>
-          Explore prediction <Icon>expand_more</Icon>
+          All probabilities <Icon>expand_more</Icon>
         </summary>
         <MatchDetails match={match} odds={odds} />
       </details>
@@ -230,18 +269,32 @@ export function MatchCard({ match, spotlight = false, odds }) {
 }
 export function MatchList({ matches, oddsById = {} }) {
   const [selected, setSelected] = useState([]);
-  const comparison = matches.filter(m => selected.includes(matchKey(m))).slice(0, 3);
+  const comparison = matches
+    .filter((m) => selected.includes(matchKey(m)))
+    .slice(0, 3);
   useEffect(() => {
     const available = new Set(matches.map(matchKey));
-    if (selected.some(key => !available.has(key))) setSelected(selected.filter(key => available.has(key)));
+    if (selected.some((key) => !available.has(key)))
+      setSelected(selected.filter((key) => available.has(key)));
   }, [matches, selected]);
   function toggleCompare(m) {
-    const key = matchKey(m), active = comparison.map(matchKey);
-    setSelected(active.includes(key) ? active.filter(k => k !== key) : active.length < 3 ? [...active, key] : active);
+    const key = matchKey(m),
+      active = comparison.map(matchKey);
+    setSelected(
+      active.includes(key)
+        ? active.filter((k) => k !== key)
+        : active.length < 3
+          ? [...active, key]
+          : active,
+    );
   }
   return (
     <div className="v2-match-list">
-      <Comparison matches={comparison} onRemove={key => setSelected(selected.filter(k => k !== key))} onClear={() => setSelected([])} />
+      <Comparison
+        matches={comparison}
+        onRemove={(key) => setSelected(selected.filter((k) => k !== key))}
+        onClear={() => setSelected([])}
+      />
       {matches.map((m) => (
         <article
           className="v2-match-line"
@@ -249,18 +302,24 @@ export function MatchList({ matches, oddsById = {} }) {
         >
           <div className="v2-line-overview">
             <div>
-              <strong>
-                {m.home} <span className="v2-vs">vs</span> {m.away}
-              </strong>
+              <Link className="v2-fixture-title" to={matchPath(m)}>
+                <span className="v2-mini-teams">
+                  <TeamBadge name={m.home} />
+                  <TeamBadge name={m.away} />
+                </span>
+                <strong>
+                  {m.home} <span className="v2-vs">vs</span> {m.away}
+                </strong>
+              </Link>
               <small>
-                {leagueName(m.comp)} · {dateLabel(m.utcDate || m.matchDate)} ·
-                Warsaw
+                <Competition code={m.comp} /> ·{" "}
+                {dateLabel(m.utcDate || m.matchDate)} · Warsaw
               </small>
               <Kickoff value={m.utcDate} />
             </div>
             <div className="v2-line-signal">
-              <span>{m.signal}</span>
-              <small>Model pick</small>
+              <span>{pickLabel(m)}</span>
+              <small>AI prediction</small>
             </div>
             <div className="v2-line-score">
               <strong>{percent(m.conf)}</strong>
@@ -268,8 +327,20 @@ export function MatchList({ matches, oddsById = {} }) {
             </div>
             <SaveButton match={m} />
           </div>
-          <button className="v2-compare-toggle" aria-pressed={comparison.some(x => matchKey(x) === matchKey(m))} disabled={comparison.length >= 3 && !comparison.some(x => matchKey(x) === matchKey(m))} onClick={() => toggleCompare(m)} aria-label={`Compare ${m.home} vs ${m.away}`}>
-            <Icon>compare_arrows</Icon>{comparison.some(x => matchKey(x) === matchKey(m)) ? 'Added to comparison' : 'Compare match'}
+          <button
+            className="v2-compare-toggle"
+            aria-pressed={comparison.some((x) => matchKey(x) === matchKey(m))}
+            disabled={
+              comparison.length >= 3 &&
+              !comparison.some((x) => matchKey(x) === matchKey(m))
+            }
+            onClick={() => toggleCompare(m)}
+            aria-label={`Compare ${m.home} vs ${m.away}`}
+          >
+            <Icon>compare_arrows</Icon>
+            {comparison.some((x) => matchKey(x) === matchKey(m))
+              ? "Added to comparison"
+              : "Compare match"}
           </button>
           <details>
             <summary>
