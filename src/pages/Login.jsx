@@ -1,217 +1,270 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { cn } from "@/lib/utils";
-
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-    </svg>
-  );
-}
-
-
+import { supabase } from "@/lib/supabase";
+import { Icon } from "@/components/V2";
 export default function Login() {
-  const { login, register, loginWithProvider } = useAuth();
-  const navigate = useNavigate();
-
-  const [mode, setMode]               = useState("login"); // "login" | "register"
-  const [name, setName]               = useState("");
-  const [email, setEmail]             = useState("");
-  const [password, setPassword]       = useState("");
-  const [showPwd, setShowPwd]         = useState(false);
-  const [error, setError]             = useState("");
-  const [loading, setLoading]         = useState(false);
-  const [oauthLoading, setOAuthLoading] = useState(null); // "google" | "apple" | null
-
-  async function handleOAuth(provider) {
-    setError("");
-    setOAuthLoading(provider);
-    try {
-      await loginWithProvider(provider);
-      // Supabase redirects the page — execution stops here on success
-    } catch (err) {
-      const msg = err.message?.toLowerCase() ?? "";
-      if (msg.includes("not enabled") || msg.includes("unsupported provider")) {
-        setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password for now.`);
-      } else {
-        setError(err.message);
+  const { login, register, loginWithProvider } = useAuth(),
+    navigate = useNavigate(),
+    [params] = useSearchParams();
+  const [mode, setMode] = useState(
+      params.get("mode") === "register" ? "register" : "login",
+    ),
+    [name, setName] = useState(""),
+    [email, setEmail] = useState(""),
+    [password, setPassword] = useState(""),
+    [show, setShow] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [message, setMessage] = useState("");
+  const candidate = params.get("next");
+  const next =
+    candidate && /^\/(?!\/)/.test(candidate) && !candidate.includes("\\")
+      ? candidate
+      : "/today";
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("update");
+        setMessage("Choose a new password for your account.");
       }
-      setOAuthLoading(null);
-    }
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+  function change(value) {
+    setMode(value);
+    setError("");
+    setMessage("");
+    setPassword("");
   }
-
-  async function handleSubmit(e) {
+  async function submit(e) {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setMessage("");
+    setBusy(true);
     try {
-      if (mode === "login") {
-        await login(email, password);
+      if (mode === "reset") {
+        const { error: err } = await supabase.auth.resetPasswordForEmail(
+          email,
+          { redirectTo: `${window.location.origin}/login` },
+        );
+        if (err) throw err;
+        setMessage(
+          "If an account exists for this email, a password reset link will arrive shortly.",
+        );
+      } else if (mode === "update") {
+        const { error: err } = await supabase.auth.updateUser({ password });
+        if (err) throw err;
+        setMessage("Your password has been updated.");
+        setMode("login");
+        setPassword("");
+      } else if (mode === "register") {
+        const result = await register(name, email, password);
+        if (result?.needsConfirmation) {
+          setMessage("Check your email to confirm your account, then sign in.");
+          setMode("login");
+          setPassword("");
+        } else navigate(next);
       } else {
-        await register(name, email, password);
+        await login(email, password);
+        navigate(next);
       }
-      navigate("/today");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Unable to continue. Please try again.");
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   }
-
+  async function google() {
+    setError("");
+    setBusy(true);
+    try {
+      await loginWithProvider("google", next);
+    } catch (err) {
+      setError(
+        err.message || "Google sign-in is unavailable. Please try email.",
+      );
+      setBusy(false);
+    }
+  }
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 pt-20 pb-10 relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-primary-container/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px]" />
-      </div>
-
-      <div className="relative w-full max-w-md animate-fade-up">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary-container text-4xl">bolt</span>
-            <span className="font-black text-xl text-on-surface uppercase tracking-tight">
-              Elite<span className="text-primary-container">Predict</span>
-            </span>
-          </Link>
-          <p className="text-on-surface-variant text-sm mt-3">
-            {mode === "login" ? "Sign in to access your predictions" : "Create your free account"}
-          </p>
-        </div>
-
-        {/* Glass card */}
-        <div className="glass-card rounded-2xl p-8 border border-white/10">
-          {/* Tab toggle */}
-          <div className="flex gap-1 bg-black/30 rounded-lg p-1 mb-8">
-            {["login", "register"].map(m => (
-              <button key={m} onClick={() => { setMode(m); setError(""); }}
-                className={cn(
-                  "flex-1 py-2 rounded-md font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest transition-all",
-                  mode === m ? "bg-primary-container text-on-primary" : "text-on-surface-variant hover:text-on-surface"
-                )}>
-                {m === "login" ? "Sign In" : "Register"}
-              </button>
-            ))}
+    <main className="v2-page v2-auth">
+      <section className="v2-auth-story">
+        <p className="v2-eyebrow">Your next match starts here</p>
+        <h1>
+          A clearer view.
+          <br />
+          <em>A personal matchday.</em>
+        </h1>
+        <p>
+          Open your daily pack, explore the model’s predictions, and keep your
+          favourite fixtures together.
+        </p>
+        <div className="v2-auth-benefit">
+          <Icon>style</Icon>
+          <div>
+            <strong>Your daily selection</strong>
+            <span>Fresh predictions in one place.</span>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "register" && (
-              <div>
-                <label className="block font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-on-surface-variant mb-2">
-                  Full Name
-                </label>
-                <div className="flex items-center bg-surface-container-high border border-white/5 rounded-lg px-4 py-3 gap-3 focus-within:border-primary-container/50 transition-colors">
-                  <span className="material-symbols-outlined text-on-surface-variant text-[18px]">person</span>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Your name"
-                    className="bg-transparent text-on-surface placeholder-on-surface-variant text-sm outline-none w-full"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="block font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-on-surface-variant mb-2">
-                Email Address
-              </label>
-              <div className="flex items-center bg-surface-container-high border border-white/5 rounded-lg px-4 py-3 gap-3 focus-within:border-primary-container/50 transition-colors">
-                <span className="material-symbols-outlined text-on-surface-variant text-[18px]">mail</span>
+        </div>
+        <div className="v2-auth-benefit">
+          <Icon>bookmark</Icon>
+          <div>
+            <strong>Follow what matters</strong>
+            <span>Your fixture watchlist, saved on this browser.</span>
+          </div>
+        </div>
+        <div className="v2-auth-benefit">
+          <Icon>analytics</Icon>
+          <div>
+            <strong>Numbers in perspective</strong>
+            <span>Market probabilities and historical outcomes.</span>
+          </div>
+        </div>
+        <Link className="v2-text-link" to="/guide">
+          How ElitePredict works <Icon>arrow_forward</Icon>
+        </Link>
+      </section>
+      <section className="v2-auth-form">
+        <p className="v2-eyebrow">ElitePredict account</p>
+        <h2>
+          {mode === "register"
+            ? "Create your account."
+            : mode === "reset"
+              ? "Reset your password."
+              : mode === "update"
+                ? "Choose a new password."
+                : "Welcome back."}
+        </h2>
+        {["login", "register"].includes(mode) && (
+          <div className="v2-tabs">
+            <button
+              disabled={busy}
+              onClick={() => change("login")}
+              aria-pressed={mode === "login"}
+            >
+              Sign in
+            </button>
+            <button
+              disabled={busy}
+              onClick={() => change("register")}
+              aria-pressed={mode === "register"}
+            >
+              Create account
+            </button>
+          </div>
+        )}
+        <form onSubmit={submit}>
+          {mode === "register" && (
+            <label htmlFor="account-name">
+              Name
+              <input
+                id="account-name"
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Your name"
+              />
+            </label>
+          )}
+          {mode !== "update" && (
+            <label htmlFor="account-email">
+              Email address
+              <input
+                id="account-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@example.com"
+              />
+            </label>
+          )}
+          {mode !== "reset" && (
+            <label htmlFor="account-password">
+              Password
+              <div className="v2-password">
                 <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="bg-transparent text-on-surface placeholder-on-surface-variant text-sm outline-none w-full"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-on-surface-variant mb-2">
-                Password
-              </label>
-              <div className="flex items-center bg-surface-container-high border border-white/5 rounded-lg px-4 py-3 gap-3 focus-within:border-primary-container/50 transition-colors">
-                <span className="material-symbols-outlined text-on-surface-variant text-[18px]">lock</span>
-                <input
-                  type={showPwd ? "text" : "password"}
+                  id="account-password"
+                  type={show ? "text" : "password"}
+                  autoComplete={
+                    mode === "login" ? "current-password" : "new-password"
+                  }
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Min 6 characters"
-                  className="bg-transparent text-on-surface placeholder-on-surface-variant text-sm outline-none w-full"
+                  placeholder={
+                    mode === "login" ? "Your password" : "At least 6 characters"
+                  }
                 />
-                <button type="button" onClick={() => setShowPwd(v => !v)}
-                  className="text-on-surface-variant hover:text-on-surface transition-colors">
-                  <span className="material-symbols-outlined text-[18px]">{showPwd ? "visibility_off" : "visibility"}</span>
+                <button
+                  type="button"
+                  className="v2-icon-button"
+                  aria-label={show ? "Hide password" : "Show password"}
+                  onClick={() => setShow((v) => !v)}
+                >
+                  <Icon>{show ? "visibility_off" : "visibility"}</Icon>
                 </button>
               </div>
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
-                <span className="material-symbols-outlined text-red-400 text-[16px]">error</span>
-                <span className="text-red-400 text-sm">{error}</span>
-              </div>
-            )}
-
-            <Button type="submit" variant="primary" size="lg" disabled={loading}
-              className="w-full neon-glow font-black uppercase tracking-tight mt-2">
-              {loading
-                ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" /> Processing...</span>
-                : mode === "login" ? "Sign In" : "Create Account"
-              }
-            </Button>
-          </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="font-['Lexend'] text-[10px] text-on-surface-variant uppercase tracking-widest">Or continue with</span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
-
-          {/* Social buttons */}
-          <button
-            onClick={() => handleOAuth("google")}
-            disabled={!!oauthLoading}
-            className="w-full flex items-center justify-center gap-2 bg-surface-container-high border border-white/10 hover:border-primary-container/40 rounded-lg px-4 py-3 transition-all group disabled:opacity-60 disabled:cursor-not-allowed">
-            {oauthLoading === "google"
-              ? <span className="w-4 h-4 border-2 border-on-surface-variant/30 border-t-on-surface-variant rounded-full animate-spin" />
-              : <GoogleIcon />}
-            <span className="font-['Lexend'] text-[11px] font-semibold text-on-surface-variant group-hover:text-on-surface transition-colors">
-              {oauthLoading === "google" ? "Redirecting…" : "Continue with Google"}
-            </span>
+            </label>
+          )}
+          {mode === "login" && (
+            <button
+              type="button"
+              className="v2-text-link"
+              onClick={() => change("reset")}
+            >
+              Forgot password?
+            </button>
+          )}
+          {error && (
+            <p role="alert" className="v2-form-error">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p role="status" className="v2-form-message">
+              {message}
+            </p>
+          )}
+          <button className="v2-button" type="submit" disabled={busy}>
+            {busy
+              ? "Please wait…"
+              : mode === "register"
+                ? "Create free account"
+                : mode === "reset"
+                  ? "Send reset link"
+                  : mode === "update"
+                    ? "Update password"
+                    : "Sign in"}
+            <Icon>arrow_forward</Icon>
           </button>
-
-          {/* Telegram promo */}
-          <div className="mt-6 p-4 bg-primary-container/5 border border-primary-container/20 rounded-xl flex items-center gap-3">
-            <span className="material-symbols-outlined text-primary-container text-[22px]">send</span>
-            <div>
-              <div className="font-['Lexend'] text-[10px] font-semibold uppercase tracking-widest text-primary-container mb-0.5">Free Telegram Channel</div>
-              <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer"
-                className="text-on-surface-variant text-xs hover:text-primary-container transition-colors">
-                Join 50k+ bettors → t.me/SmartBet_Signals
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-center text-on-surface-variant text-xs mt-6">
-          © 2025 ElitePredict · <Link to="/" className="hover:text-on-surface transition-colors">Home</Link>
+        </form>
+        {["login", "register"].includes(mode) ? (
+          <>
+            <div className="v2-or">or</div>
+            <button
+              className="v2-button secondary"
+              onClick={google}
+              disabled={busy}
+            >
+              Continue with Google <Icon>north_east</Icon>
+            </button>
+          </>
+        ) : (
+          <button className="v2-text-link" onClick={() => change("login")}>
+            Back to sign in
+          </button>
+        )}
+        <p className="v2-fine">
+          Your saved fixtures stay on this browser.{" "}
+          <Link to="/track-record">Explore the public track record</Link> before
+          signing in.
         </p>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

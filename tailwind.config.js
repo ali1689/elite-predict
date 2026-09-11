@@ -7,7 +7,7 @@ export default {
       colors: {
         // Primary — neon green system
         "primary":                  "#efffe3",
-        "primary-container":        "#39ff14",
+        "primary-container":        "#b9ed99",
         "on-primary":               "#053900",
         "on-primary-container":     "#107100",
         "primary-fixed":            "#79ff5b",
@@ -66,7 +66,7 @@ export default {
       },
 
       fontFamily: {
-        sans:          ["Inter", "sans-serif"],
+        sans:          ["DM Sans", "sans-serif"],
         "data-point":  ["Lexend", "sans-serif"],
         "label-caps":  ["Lexend", "sans-serif"],
       },

@@ -10,9 +10,14 @@ export function AuthProvider({ children }) {
   // 🔄 Load user session on app start
   useEffect(() => {
     const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-      setLoading(false);
+      try {
+        const { data } = await supabase.auth.getUser();
+        setUser(data.user);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getUser();
@@ -20,7 +25,7 @@ export function AuthProvider({ children }) {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user || null);
-      }
+      },
     );
 
     return () => listener.subscription.unsubscribe();
@@ -31,12 +36,19 @@ export function AuthProvider({ children }) {
     const DELAYS = [2000, 4000, 7000];
     let lastError;
     for (let i = 0; i <= DELAYS.length; i++) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (!error) { setUser(data.user); return data.user; }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (!error) {
+        setUser(data.user);
+        return data.user;
+      }
       lastError = error;
-      const isNetwork = error.message?.toLowerCase().includes("fetch") || error.status === 0;
+      const isNetwork =
+        error.message?.toLowerCase().includes("fetch") || error.status === 0;
       if (!isNetwork || i === DELAYS.length) break;
-      await new Promise(r => setTimeout(r, DELAYS[i]));
+      await new Promise((r) => setTimeout(r, DELAYS[i]));
     }
     const msg = lastError?.message?.toLowerCase().includes("fetch")
       ? "Database is waking up — please try again in a few seconds."
@@ -63,16 +75,17 @@ export function AuthProvider({ children }) {
       ]);
     }
 
-    setUser(data.user);
-    return data.user;
+    // An unconfirmed signup has a user record but no authenticated session.
+    setUser(data.session?.user ?? null);
+    return data.session ? data.user : { needsConfirmation: true };
   }
 
   // 🔑 OAUTH — Google / Apple
-  async function loginWithProvider(provider) {
+  async function loginWithProvider(provider, next = "/today") {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/today`,
+        redirectTo: `${window.location.origin}${next}`,
       },
     });
     if (error) throw new Error(error.message);
@@ -86,7 +99,9 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithProvider, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, loginWithProvider, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

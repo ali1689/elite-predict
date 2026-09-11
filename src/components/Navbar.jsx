@@ -1,180 +1,125 @@
-import { useState } from "react";
-import { NavLink, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTheme } from "@/App";
-
-const NAV_LINKS = [
-  { label: "Live",                 to: "/live",         icon: "sensors",       live: true },
-  { label: "Today's Predictions",  to: "/today",        icon: "today"          },
-  { label: "Open Pack",            to: "/open",         icon: "style"          },
-  { label: "Upcoming Predictions", to: "/predictions",  icon: "calendar_month" },
-  // Goalscorers removed 2026-08-24: player stats came from API-Sports, which is
-  // no longer subscribed. football-data.org's free tier has no players endpoint,
-  // so the page could only ever show frozen rosters.
-  { label: "Track Record",         to: "/track-record", icon: "verified"       },
+import { useAuth } from "@/context/AuthContext";
+import { useSaved } from "@/context/SavedContext";
+import { Icon } from "@/components/V2";
+const links = [
+  ["Home", "/"],
+  ["Matchday", "/today"],
+  ["Upcoming", "/predictions"],
+  ["Track record", "/track-record"],
+  ["Daily pack", "/open"],
 ];
-
 export default function Navbar() {
-  const { user, logout } = useAuth();
-  const { theme, toggle } = useTheme();
-  const [menuOpen, setMenuOpen] = useState(false);
-
+  const { theme, toggle } = useTheme(),
+    { user, logout } = useAuth(),
+    { saved } = useSaved();
+  const [open, setOpen] = useState(false),
+    menuButton = useRef(null),
+    { pathname } = useLocation();
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    const escape = (e) => {
+      if (e.key === "Escape" && open) {
+        setOpen(false);
+        menuButton.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, [open]);
   return (
     <>
-      <header className="fixed top-0 w-full z-50 navbar-adaptive">
-        <nav className="max-w-[1280px] mx-auto px-4 sm:px-8 flex justify-between items-center h-16 md:h-20">
-          {/* Logo */}
-          <Link to="/" onClick={() => setMenuOpen(false)}
-            className="text-xl md:text-2xl font-black italic text-primary-container tracking-tighter select-none">
-            ELITE PREDICT
+      <a className="v2-skip" href="#main-content">
+        Skip to content
+      </a>
+      <header className="v2-navbar">
+        <div className="v2-navbar-inner">
+          <Link to="/" className="v2-logo" aria-label="ElitePredict home">
+            <span className="v2-logomark">
+              <Icon>center_focus_strong</Icon>
+            </span>
+            elitepredict<span className="v2-logo-dot">.</span>
           </Link>
-
-          {/* Desktop nav links */}
-          <div className="hidden md:flex flex-1 items-center justify-center gap-5 lg:gap-7 px-4">
-            {NAV_LINKS.map(({ label, to, live }) => (
-              <NavLink key={label} to={to}
-                className={({ isActive }) =>
-                  [
-                    "relative font-['Lexend'] uppercase tracking-widest font-semibold text-[11px] transition-colors flex items-center gap-1.5",
-                    isActive
-                      ? "text-primary-container border-b-2 border-primary-container pb-0.5"
-                      : "text-on-surface-variant hover:text-primary-container",
-                  ].join(" ")
-                }>
-                {live && (
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
-                  </span>
-                )}
+          <nav className="v2-desktop-nav" aria-label="Main navigation">
+            {links.map(([label, to]) => (
+              <NavLink key={to} to={to} end={to === "/"}>
                 {label}
               </NavLink>
             ))}
-          </div>
-
-          {/* Desktop right actions */}
-          <div className="hidden md:flex items-center gap-3">
-            {/* Theme toggle */}
-            <button
-              onClick={toggle}
-              aria-label="Toggle theme"
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all border border-outline-variant"
-              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          </nav>
+          <div className="v2-nav-actions">
+            <Link
+              to="/saved"
+              className="v2-saved-nav"
+              aria-label={`Saved matches (${saved.length})`}
             >
-              <span className="material-symbols-outlined text-[20px]">
-                {theme === "dark" ? "light_mode" : "dark_mode"}
-              </span>
+              <Icon>bookmark</Icon>
+              <span>{saved.length}</span>
+            </Link>
+            <button
+              className="v2-icon-button"
+              onClick={toggle}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} appearance`}
+            >
+              <Icon>{theme === "dark" ? "light_mode" : "dark_mode"}</Icon>
             </button>
             {user ? (
-              <div className="flex items-center gap-3">
-                <span className="font-['Lexend'] text-[11px] text-on-surface-variant">
-                  {user.name || user.email}
-                </span>
-                <button onClick={logout} title="Sign out"
-                  className="material-symbols-outlined text-on-surface-variant hover:text-on-surface hover:bg-white/5 p-2 rounded-lg transition-all text-[22px]">
-                  logout
-                </button>
-              </div>
+              <button
+                className="v2-desktop-auth v2-button secondary"
+                onClick={logout}
+              >
+                Sign out
+              </button>
             ) : (
-              <Link to="/login"
-                className="font-['Lexend'] text-[11px] font-semibold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors px-3 py-2 rounded-lg hover:bg-white/5">
-                Sign In
+              <Link className="v2-desktop-auth v2-button" to="/login">
+                Sign in <Icon>arrow_forward</Icon>
               </Link>
             )}
-            <Button size="default" variant="primary" className="rounded-lg text-xs tracking-wide" asChild>
-              <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer">
-                Join Telegram
-              </a>
-            </Button>
-          </div>
-
-          {/* Mobile: theme toggle + Telegram pill + hamburger */}
-          <div className="flex md:hidden items-center gap-2">
             <button
-              onClick={toggle}
-              aria-label="Toggle theme"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant border border-outline-variant"
+              ref={menuButton}
+              className="v2-menu-button v2-icon-button"
+              aria-label={open ? "Close navigation" : "Open navigation"}
+              aria-expanded={open}
+              aria-controls="v2-mobile-menu"
+              onClick={() => setOpen((v) => !v)}
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {theme === "dark" ? "light_mode" : "dark_mode"}
-              </span>
-            </button>
-            <a href="https://t.me/SmartBet_Signals" target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 bg-primary-container text-on-primary px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-tight neon-glow">
-              <span className="material-symbols-outlined text-[14px]">send</span>
-              Telegram
-            </a>
-            <button
-              onClick={() => setMenuOpen(v => !v)}
-              aria-label="Toggle menu"
-              className="p-2 rounded-lg hover:bg-white/5 transition-colors">
-              <span className="material-symbols-outlined text-on-surface text-[24px]">
-                {menuOpen ? "close" : "menu"}
-              </span>
+              <Icon>{open ? "close" : "menu"}</Icon>
             </button>
           </div>
+        </div>
+        <nav
+          className="v2-mobile-nav"
+          id="v2-mobile-menu"
+          hidden={!open}
+          aria-label="Mobile navigation"
+        >
+          {links.map(([label, to]) => (
+            <NavLink key={to} to={to} end={to === "/"}>
+              {label}
+              <Icon>arrow_forward</Icon>
+            </NavLink>
+          ))}
+          <NavLink to="/saved">
+            Saved matches <span>{saved.length}</span>
+          </NavLink>
+          {user ? (
+            <button
+              onClick={() => {
+                logout();
+                setOpen(false);
+              }}
+            >
+              Sign out
+            </button>
+          ) : (
+            <Link to="/login">Sign in</Link>
+          )}
         </nav>
       </header>
-
-      {/* Mobile drawer */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMenuOpen(false)}>
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          {/* Panel */}
-          <nav
-            className="absolute top-16 left-0 right-0 border-b shadow-2xl navbar-adaptive"
-            onClick={e => e.stopPropagation()}>
-            <div className="px-4 py-4 space-y-1">
-              {NAV_LINKS.map(({ label, to, icon, live }) => (
-                <NavLink key={label} to={to}
-                  onClick={() => setMenuOpen(false)}
-                  className={({ isActive }) =>
-                    [
-                      "flex items-center gap-3 px-4 py-3.5 rounded-xl font-['Lexend'] uppercase tracking-widest font-semibold text-[12px] transition-all",
-                      isActive
-                        ? "text-primary-container bg-primary-container/10 border border-primary-container/20"
-                        : "text-on-surface-variant hover:text-primary-container hover:bg-primary-container/5",
-                    ].join(" ")
-                  }>
-                  <span className="material-symbols-outlined text-[18px]">{icon}</span>
-                  {label}
-                  {live && (
-                    <span className="relative flex h-1.5 w-1.5 ml-auto">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
-                    </span>
-                  )}
-                </NavLink>
-              ))}
-            </div>
-
-            {/* Bottom actions */}
-            <div className="px-4 py-4 border-t border-white/5 space-y-3">
-              {user ? (
-                <div className="flex items-center justify-between px-4 py-2">
-                  <span className="font-['Lexend'] text-[11px] text-on-surface-variant truncate max-w-[180px]">
-                    {user.name || user.email}
-                  </span>
-                  <button
-                    onClick={() => { logout(); setMenuOpen(false); }}
-                    className="flex items-center gap-1.5 text-on-surface-variant hover:text-on-surface text-[11px] font-['Lexend'] uppercase tracking-widest transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">logout</span>
-                    Sign Out
-                  </button>
-                </div>
-              ) : (
-                <Link to="/login" onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-['Lexend'] uppercase tracking-widest font-semibold text-[12px] text-on-surface-variant hover:text-primary-container hover:bg-primary-container/5 transition-all">
-                  <span className="material-symbols-outlined text-[18px]">login</span>
-                  Sign In
-                </Link>
-              )}
-            </div>
-          </nav>
-        </div>
-      )}
     </>
   );
 }

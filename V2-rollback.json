@@ -1,0 +1,105 @@
+{
+  "files": [
+    {
+      "path": "src\\App.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\index.css",
+      "existed": true
+    },
+    {
+      "path": "src\\components\\Footer.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\components\\MatchBrowser.jsx",
+      "existed": false
+    },
+    {
+      "path": "src\\components\\Navbar.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\components\\SignInGate.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\components\\V2.jsx",
+      "existed": false
+    },
+    {
+      "path": "src\\context\\AuthContext.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\context\\SavedContext.jsx",
+      "existed": false
+    },
+    {
+      "path": "src\\lib\\presentation.js",
+      "existed": false
+    },
+    {
+      "path": "src\\lib\\presentation.test.js",
+      "existed": false
+    },
+    {
+      "path": "src\\pages\\Guide.jsx",
+      "existed": false
+    },
+    {
+      "path": "src\\pages\\Home.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\pages\\Login.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\pages\\NotFound.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\pages\\Open.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\pages\\Predictions.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\pages\\Saved.jsx",
+      "existed": false
+    },
+    {
+      "path": "src\\pages\\Today.jsx",
+      "existed": true
+    },
+    {
+      "path": "src\\pages\\TrackRecord.jsx",
+      "existed": true
+    },
+    {
+      "path": "index.html",
+      "existed": true
+    },
+    {
+      "path": "tailwind.config.js",
+      "existed": true
+    },
+    {
+      "path": "src\\components\\Discovery.jsx",
+      "existed": false
+    },
+    {
+      "path": "src\\lib\\calendar.js",
+      "existed": false
+    },
+    {
+      "path": "src\\lib\\calendar.test.js",
+      "existed": false
+    }
+  ],
+  "backup": "C:\\Users\\alite\\OneDrive\\Documents\\Claude\\Projects\\V5FOO\\elite-predict-backup-before-v2-20260910"
+}
