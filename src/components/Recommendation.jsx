@@ -48,7 +48,6 @@ export default function Recommendation({ match }) {
           <span className="v2-recommendation-eyebrow">AI recommendation</span>
           <small>{r.available ? "Best pick" : "Model assessment"}</small>
           <strong>{pickLabel(match)}</strong>
-          {r.signal === "Over 1.5 Goals" && <small>2+ total goals</small>}
         </div>
         <div className="v2-recommendation-score">
           <strong>{r.score === null ? "—" : percent(r.score)}</strong>

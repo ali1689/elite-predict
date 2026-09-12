@@ -294,32 +294,17 @@ export function MatchList({ matches, oddsById = {} }) {
           key={m.id ?? `${m.home}-${m.away}-${m.utcDate}`}
         >
           <div className="v2-line-overview">
-            <div>
+            <div className="v2-line-match-info">
               <Link className="v2-fixture-title" to={matchPath(m)}>
-                <span className="v2-mini-teams">
-                  <TeamBadge name={m.home} />
-                  <TeamBadge name={m.away} />
-                </span>
-                <strong>
-                  {m.home} <span className="v2-vs">vs</span> {m.away}
-                </strong>
+                <span className="v2-line-team"><TeamBadge name={m.home} /><strong>{m.home}</strong></span>
+                <span className="v2-vs">vs</span>
+                <span className="v2-line-team"><TeamBadge name={m.away} /><strong>{m.away}</strong></span>
               </Link>
-              <small>
-                <Competition code={m.comp} /> ·{" "}
-                {dateLabel(m.utcDate || m.matchDate)} · Warsaw
-              </small>
+              <div className="v2-line-meta">
+                <Competition code={m.comp} /><span aria-hidden="true">•</span>
+                <span>{dateLabel(m.utcDate || m.matchDate)}</span><span aria-hidden="true">•</span><span>Warsaw</span>
+              </div>
               <Kickoff value={m.utcDate} />
-            </div>
-            <div className="v2-line-signal">
-              <span>{pickLabel(m)}</span>
-              <small>AI recommendation</small>
-            </div>
-            <div className="v2-line-score">
-              <strong>{percent(recommendation(m).score)}</strong>
-              <small>{recommendation(m).level} confidence</small>
-            </div>
-            <SaveButton match={m} />
-          </div>
           <button
             className="v2-compare-toggle"
             aria-pressed={comparison.some((x) => matchKey(x) === matchKey(m))}
@@ -335,6 +320,20 @@ export function MatchList({ matches, oddsById = {} }) {
               ? "Added to comparison"
               : "Compare match"}
           </button>
+            </div>
+            <div className="v2-line-best-pick" aria-label="AI recommendation">
+            <div className="v2-line-signal">
+              <span className="v2-best-pick-label"><Icon>auto_awesome</Icon> AI BEST PICK</span>
+              <strong>{pickLabel(m)}</strong>
+            </div>
+            <div className="v2-line-score">
+              <strong>{percent(recommendation(m).score)}</strong>
+              <small>{recommendation(m).level} confidence</small>
+            </div>
+            </div>
+            <SaveButton match={m} />
+          </div>
+
           <details className="v2-list-why"><summary>Why this pick? <Icon>expand_more</Icon></summary><RecommendationFacts match={m}/></details>
           <details>
             <summary>
