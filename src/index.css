@@ -2454,3 +2454,27 @@ details[open] > summary > .material-symbols-outlined:last-child {
   color: var(--v2-link);
   margin-bottom: 10px;
 }
+
+/* Real provider badges retain reserved dimensions and a readable fallback. */
+.v2-team-badge.has-image, .v2-league-mark.has-image { background:#fff; border-color:#dce3dd; padding:4px; opacity:1; }
+.v2-team-badge img, .v2-league-mark img { display:block; width:100%; height:100%; object-fit:contain; }
+.v2-league-mark.has-image { width:30px; min-width:30px; border-radius:7px; }
+.v2-mini-teams .v2-team-badge.has-image { padding:3px; }
+.v2-recommendation { border:1px solid var(--color-outline-variant); background:var(--v2-soft); border-radius:13px; margin:8px 0 16px; padding:14px; }
+.v2-recommendation-heading { display:flex; justify-content:space-between; align-items:center; gap:14px; }
+.v2-recommendation-heading > div:first-child { flex:1; min-width:0; }
+.v2-recommendation-eyebrow { display:block; font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:10px; color:var(--v2-link); }
+.v2-recommendation-heading small { display:block; font-size:11px; opacity:.8; margin:3px 0; }
+.v2-recommendation-heading strong { display:block; font-size:16px; line-height:1.4; }
+.v2-recommendation-score { flex-shrink:0; text-align:right; }
+.v2-recommendation-score > strong { font-size:27px; font-family:Manrope,sans-serif; }
+.v2-confidence-level { display:block; font-size:10px; margin-top:4px; }
+.v2-confidence-level.high { font-weight:700; }
+.v2-recommendation details > summary { font-size:11px; padding:9px 0 0; margin-top:12px; }
+.v2-recommendation-facts { font-size:12px; line-height:1.65; }
+.v2-recommendation-facts ul { list-style:disc; margin:10px 0; padding-left:17px; }
+.v2-recommendation-facts p { font-size:11px; opacity:.85; margin-top:10px; }
+.spotlight .v2-recommendation { background:#254947; border-color:#43665c; }
+.spotlight .v2-recommendation-eyebrow, .spotlight .v2-recommendation summary { color:#b9ed99; }
+.v2-list-why { margin-bottom:5px; }
+@media(max-width:380px) { .v2-recommendation { padding:11px; } .v2-recommendation-heading { align-items:flex-start; gap:8px; } .v2-recommendation-score > strong { font-size:24px; } .v2-recommendation-heading > div:first-child > strong { font-size:14px; } }

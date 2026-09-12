@@ -79,7 +79,7 @@ export default function MatchBrowser({
             <option value="date">Kickoff</option>
             <option value="conf">Confidence</option>
             <option value="xg">Expected goals</option>
-            <option value="over15">Over 1.5 goals</option>
+            <option value="over15">Over 1.5 Goals</option>
           </select>
         </label>
       </div>

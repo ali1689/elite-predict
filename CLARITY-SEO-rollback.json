@@ -108,6 +108,74 @@
     {
       "path": "vite.config.js",
       "existed": true
+    },
+    {
+      "path": "package.json",
+      "existed": true
+    },
+    {
+      "path": "public/apple-touch-icon.png",
+      "existed": false
+    },
+    {
+      "path": "public/favicon-16x16.png",
+      "existed": false
+    },
+    {
+      "path": "public/favicon-32x32.png",
+      "existed": false
+    },
+    {
+      "path": "public/favicon-48x48.png",
+      "existed": false
+    },
+    {
+      "path": "public/favicon.ico",
+      "existed": false
+    },
+    {
+      "path": "public/favicon.svg",
+      "existed": false
+    },
+    {
+      "path": "scripts/refresh-badges.mjs",
+      "existed": false
+    },
+    {
+      "path": "src/components/Discovery.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/components/MatchBrowser.jsx",
+      "existed": true
+    },
+    {
+      "path": "src/components/Recommendation.jsx",
+      "existed": false
+    },
+    {
+      "path": "src/data/football-badges.json",
+      "existed": false
+    },
+    {
+      "path": "src/data/glossary.js",
+      "existed": true
+    },
+    {
+      "path": "src/lib/badge-utils.js",
+      "existed": false
+    },
+    {
+      "path": "src/lib/badges.js",
+      "existed": false
+    },
+    {
+      "path": "src/lib/recommendation.js",
+      "existed": false
+    },
+    {
+      "path": "src/lib/recommendation.test.js",
+      "existed": false
     }
   ]
 }

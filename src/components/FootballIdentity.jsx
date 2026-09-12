@@ -1,7 +1,48 @@
+import { useState } from "react";
+import { teamCrest, leagueEmblem } from "@/lib/badges";
+export { pickLabel } from "@/lib/recommendation";
 import { Link } from "react-router-dom";
 import { LEAGUES, leagueFor } from "@/lib/seo";
 import { leagueName } from "@/lib/presentation";
-// Initials are a fallback identity marker, not a club crest. The current feed supplies no crest URLs.
+// Badges come from a generated directory of the existing provider's public asset URLs.
+function AssetBadge({ src, name, className, style, children }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span
+      className={className + (src && !failed ? " has-image" : "")}
+      style={style}
+      aria-hidden={!src || failed ? true : undefined}
+    >
+      {src && !failed ? (
+        <img
+          src={src}
+          alt={name}
+          loading="lazy"
+          decoding="async"
+          width="48"
+          height="48"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        children
+      )}
+    </span>
+  );
+}
+export function LeagueBadge({ code, name, short }) {
+  const src = leagueEmblem(code);
+  return (
+    <AssetBadge
+      key={src || code}
+      src={src}
+      name={name + " competition logo"}
+      className="v2-league-mark"
+    >
+      {short || "⚽"}
+    </AssetBadge>
+  );
+}
 export function TeamBadge({ name }) {
   const words = String(name || "")
     .split(/\s+/)
@@ -19,22 +60,26 @@ export function TeamBadge({ name }) {
   ).toUpperCase();
   const hue = [...String(name)].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
   return (
-    <span
+    <AssetBadge
+      key={teamCrest(name) || name}
+      src={teamCrest(name)}
+      name={name + " club badge"}
       className="v2-team-badge"
       style={{ "--team-hue": hue }}
-      aria-hidden="true"
     >
       {initials || "?"}
-    </span>
+    </AssetBadge>
   );
 }
 export function Competition({ code }) {
   const league = leagueFor(code),
     content = (
       <>
-        <span className="v2-league-mark" aria-hidden="true">
-          {league?.short || "⚽"}
-        </span>
+        <LeagueBadge
+          code={league?.code || code}
+          name={leagueName(code)}
+          short={league?.short}
+        />
         {leagueName(code)}
       </>
     );
@@ -58,9 +103,7 @@ export function LeagueLinks() {
       >
         {LEAGUES.map((l) => (
           <Link to={`/leagues/${l.slug}`} key={l.code}>
-            <span className="v2-league-mark" aria-hidden="true">
-              {l.short}
-            </span>
+            <LeagueBadge code={l.code} name={l.name} short={l.short} />
             <span>
               <strong>{l.name}</strong>
               <small>{l.country}</small>
@@ -70,18 +113,5 @@ export function LeagueLinks() {
         ))}
       </nav>
     </section>
-  );
-}
-export function pickLabel(m) {
-  return (
-    {
-      "Home Over 0.5 Goals": `${m.home} to score`,
-      "Away Over 0.5 Goals": `${m.away} to score`,
-      "Over 1.5 Goals": "2+ total goals",
-      "Over 2.5 Goals": "3+ total goals",
-      "Under 2.5 Goals": "Under 3 total goals",
-      "Home Over 1.5 Goals": `${m.home}: 2+ goals`,
-      "Away Over 1.5 Goals": `${m.away}: 2+ goals`,
-    }[m.signal] || m.signal
   );
 }

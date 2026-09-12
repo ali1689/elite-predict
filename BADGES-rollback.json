@@ -1,0 +1,97 @@
+{
+  "files": [
+    {
+      "existed": true,
+      "path": "index.html"
+    },
+    {
+      "existed": true,
+      "path": "package.json"
+    },
+    {
+      "existed": false,
+      "path": "public/apple-touch-icon.png"
+    },
+    {
+      "existed": false,
+      "path": "public/favicon-16x16.png"
+    },
+    {
+      "existed": false,
+      "path": "public/favicon-32x32.png"
+    },
+    {
+      "existed": false,
+      "path": "public/favicon-48x48.png"
+    },
+    {
+      "existed": false,
+      "path": "public/favicon.ico"
+    },
+    {
+      "existed": false,
+      "path": "public/favicon.svg"
+    },
+    {
+      "existed": false,
+      "path": "scripts/refresh-badges.mjs"
+    },
+    {
+      "existed": true,
+      "path": "src/components/Discovery.jsx"
+    },
+    {
+      "existed": true,
+      "path": "src/components/FootballIdentity.jsx"
+    },
+    {
+      "existed": true,
+      "path": "src/components/MatchBrowser.jsx"
+    },
+    {
+      "existed": false,
+      "path": "src/components/Recommendation.jsx"
+    },
+    {
+      "existed": true,
+      "path": "src/components/V2.jsx"
+    },
+    {
+      "existed": false,
+      "path": "src/data/football-badges.json"
+    },
+    {
+      "existed": true,
+      "path": "src/data/glossary.js"
+    },
+    {
+      "existed": true,
+      "path": "src/index.css"
+    },
+    {
+      "existed": false,
+      "path": "src/lib/badge-utils.js"
+    },
+    {
+      "existed": false,
+      "path": "src/lib/badges.js"
+    },
+    {
+      "existed": false,
+      "path": "src/lib/recommendation.js"
+    },
+    {
+      "existed": false,
+      "path": "src/lib/recommendation.test.js"
+    },
+    {
+      "existed": true,
+      "path": "src/lib/usePredictions.js"
+    },
+    {
+      "existed": true,
+      "path": "src/pages/Guide.jsx"
+    }
+  ],
+  "backup": "C:\\Users\\alite\\OneDrive\\Documents\\Claude\\Projects\\V5FOO\\elite-predict-backup-before-badges-recommendations-20260912-095252"
+}

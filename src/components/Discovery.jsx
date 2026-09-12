@@ -1,3 +1,4 @@
+import {pickLabel} from '@/lib/recommendation';
 import { useEffect, useState } from "react";
 import { leagueName, matchKey, percent } from "@/lib/presentation";
 
@@ -40,13 +41,13 @@ export function Favourites({ matches, only, onOnly, onChange }) {
 
 export function Comparison({ matches, onRemove, onClear }) {
   if (!matches.length) return null;
-  const rows = [['Model pick','signal'],['Confidence','conf'],['Home win','homeWin'],['Draw','draw'],['Away win','awayWin'],['Both teams to score','btts'],['Over 1.5 goals','over15'],['Over 2.5 goals','over25'],['Expected goals','xgTotal']];
+  const rows = [['AI recommendation','signal'],['Confidence','conf'],['Home win','homeWin'],['Draw','draw'],['Away win','awayWin'],['Both teams to score','btts'],['Over 1.5 Goals · 2+ total goals','over15'],['Over 2.5 goals','over25'],['Expected goals','xgTotal']];
   return <section className="v2-panel v2-comparison" aria-label="Match comparison">
     <div className="v2-section-title"><h2>Compare matches · {matches.length}/3</h2><button className="v2-button secondary" onClick={onClear}>Clear comparison</button></div>
     <p className="v2-fine">Select up to three fixtures from this list. Confidence and market probabilities describe different estimates. Comparison resets when you leave this page or a fixture leaves the displayed list.</p>
     <div className="v2-comparison-scroll" tabIndex={0} aria-label="Scroll match comparison horizontally">
       <table><caption className="v2-announcement">Selected fixtures and model estimates</caption><thead><tr><th scope="col">Measure</th>{matches.map(m => <th scope="col" key={matchKey(m)}>{m.home} vs {m.away}<button onClick={() => onRemove(matchKey(m))} aria-label={`Remove ${m.home} vs ${m.away} from comparison`}>Remove</button></th>)}</tr></thead>
-        <tbody>{rows.map(([label,key]) => <tr key={key}><th scope="row">{label}</th>{matches.map(m => <td key={matchKey(m)}>{key === 'signal' ? m[key] || '—' : key === 'xgTotal' ? m[key] != null && Number.isFinite(Number(m[key])) ? Number(m[key]).toFixed(2) : '—' : percent(m[key])}</td>)}</tr>)}</tbody>
+        <tbody>{rows.map(([label,key]) => <tr key={key}><th scope="row">{label}</th>{matches.map(m => <td key={matchKey(m)}>{key === 'signal' ? pickLabel(m) : key === 'xgTotal' ? m[key] != null && Number.isFinite(Number(m[key])) ? Number(m[key]).toFixed(2) : '—' : percent(m[key])}</td>)}</tr>)}</tbody>
       </table>
     </div>
   </section>;

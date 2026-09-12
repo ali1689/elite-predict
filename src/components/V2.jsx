@@ -5,6 +5,8 @@ import { useSaved } from "@/context/SavedContext";
 import { dateLabel, leagueName, percent, matchKey } from "@/lib/presentation";
 import { TeamBadge, Competition, pickLabel } from "./FootballIdentity";
 import { matchPath } from "@/lib/seo";
+import Recommendation, { RecommendationFacts } from './Recommendation';
+import { recommendation } from '@/lib/recommendation';
 export function Icon({ children, ...props }) {
   return (
     <span className="material-symbols-outlined" aria-hidden="true" {...props}>
@@ -119,16 +121,16 @@ export function MatchDetails({ match: m, odds }) {
       "Team goals",
       [
         [`${m.home} to score`, m.homeOver05],
-        [`${m.home} 2+ goals`, m.homeOver15],
+        [`${m.home} · Over 1.5 Goals`, m.homeOver15],
         [`${m.away} to score`, m.awayOver05],
-        [`${m.away} 2+ goals`, m.awayOver15],
+        [`${m.away} · Over 1.5 Goals`, m.awayOver15],
       ],
     ],
     [
       "Match goals",
       [
         ["Both teams to score", m.btts, odds?.oddsBtts],
-        ["Over 1.5 goals", m.over15, odds?.oddsOver15],
+        ["Over 1.5 Goals · 2+ total goals", m.over15, odds?.oddsOver15],
         ["Over 2.5 goals", m.over25, odds?.oddsOver25],
         ["Under 2.5 goals", m.under25, odds?.oddsUnder25],
       ],
@@ -231,16 +233,7 @@ export function MatchCard({ match, spotlight = false, odds, showLink = true }) {
           {match.away}
         </h2>
       </div>
-      <div className="v2-signal">
-        <div>
-          <small>AI prediction</small>
-          <strong>{pickLabel(match)}</strong>
-        </div>
-        <div className="v2-confidence">
-          <strong>{percent(match.conf)}</strong>
-          <small>Model confidence</small>
-        </div>
-      </div>
+      <Recommendation match={match}/>
       <div className="v2-result-strip" aria-label="Match result probabilities">
         {[
           ["Home win", match.homeWin],
@@ -319,11 +312,11 @@ export function MatchList({ matches, oddsById = {} }) {
             </div>
             <div className="v2-line-signal">
               <span>{pickLabel(m)}</span>
-              <small>AI prediction</small>
+              <small>AI recommendation</small>
             </div>
             <div className="v2-line-score">
-              <strong>{percent(m.conf)}</strong>
-              <small>Confidence</small>
+              <strong>{percent(recommendation(m).score)}</strong>
+              <small>{recommendation(m).level} confidence</small>
             </div>
             <SaveButton match={m} />
           </div>
@@ -342,6 +335,7 @@ export function MatchList({ matches, oddsById = {} }) {
               ? "Added to comparison"
               : "Compare match"}
           </button>
+          <details className="v2-list-why"><summary>Why this pick? <Icon>expand_more</Icon></summary><RecommendationFacts match={m}/></details>
           <details>
             <summary>
               Match analysis <Icon>expand_more</Icon>

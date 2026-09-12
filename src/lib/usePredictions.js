@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
+import { pickProbabilityFromRow } from './recommendation';
 
 // ── Compute the best displayable signal from stored (Poisson) probabilities ──
 // The backend selects primary_signal using a blended probability (clf + Poisson),
@@ -106,6 +107,10 @@ export function normalize(row) {
     awayElo:     row.away_elo  ?? 1500,
     eloDiff:     (row.home_elo ?? 1500) - (row.away_elo ?? 1500),
     signal:      computeDisplaySignal(row),
+    modelSignal: row.primary_signal ?? null,
+    modelConfidence: row.conf ?? null,
+    modelPickProbability: pickProbabilityFromRow(row),
+    modelExpectedGoals: row.xg_total ?? null,
     tier:        deriveTier(row),
     conf:        row.conf           ?? 0,
     homeOver05:  row.home_over05    ?? 0,

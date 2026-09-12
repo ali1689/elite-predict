@@ -5,7 +5,7 @@
 
 export const GLOSSARY = {
   // Goals — totals
-  "O1.5":  { title: "Over 1.5 Goals",  desc: "3 or more goals are scored in the match by both teams combined." },
+  "O1.5":  { title: "Over 1.5 Goals",  desc: "2 or more total goals are scored in the match by both teams combined." },
   "O2.5":  { title: "Over 2.5 Goals",  desc: "3 or more total goals in the match." },
   "U2.5":  { title: "Under 2.5 Goals", desc: "2 or fewer total goals in the match." },
   "U1.5":  { title: "Under 1.5 Goals", desc: "1 or fewer total goals in the match." },

@@ -15,7 +15,7 @@ export default function Guide() {
       "Goals, in plain English",
       [
         "Team to score = at least 1 goal by that team.",
-        "2+ total goals = over 1.5 goals. 3+ = over 2.5.",
+        "Over 1.5 Goals = 2+ total goals. Over 2.5 Goals = 3+ total goals.",
         "Both teams to score = each team scores at least once.",
       ],
     ],
