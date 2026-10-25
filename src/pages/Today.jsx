@@ -20,12 +20,25 @@ import {
 } from "@/components/V2";
 import MatchBrowser from "@/components/MatchBrowser";
 import SignInGate from "@/components/SignInGate";
+import WinnerPicks from "@/components/WinnerPicks";
+import { selectWinnerPicks } from "@/lib/winnerPicks";
 export { markPackOpened, isPackOpenedToday } from "@/lib/presentation";
 export default function Today() {
   const { user, loading: authLoading } = useAuth(),
     { data, loading, error, lastFetch, refresh } = useTodayPredictions(),
     odds = useMatchOdds();
   const [opened, setOpened] = useState(false);
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const timer = setInterval(tick, 30000);
+    window.addEventListener("focus", tick);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", tick);
+    };
+  }, []);
+  const winnerPicks = useMemo(() => selectWinnerPicks(data, now), [data, now]);
   useEffect(() => {
     const sync = () => setOpened(isPackOpenedToday(user?.id));
     sync();
@@ -109,13 +122,13 @@ export default function Today() {
         <Loading />
       ) : error ? (
         <ErrorState retry={refresh} />
-      ) : !matches.length ? (
+      ) : !matches.length && !winnerPicks.length ? (
         <Empty title="No selected picks for today">
           Check Upcoming for the next fixtures or return after the next update.
         </Empty>
       ) : !user ? (
         <SignInGate
-          lockedLabel={`${matches.length} matchday picks`}
+          lockedLabel={matches.length ? `${matches.length} matchday picks` : "Match winner picks"}
           description="Create an account, then open your free daily pack to explore today’s predictions."
         />
       ) : !opened ? (
@@ -136,12 +149,17 @@ export default function Today() {
           </div>
         </section>
       ) : (
-        <MatchBrowser
-          matches={matches}
-          oddsById={odds}
-          defaultSort="conf"
-          showDates={false}
-        />
+        <>
+          <WinnerPicks picks={winnerPicks} />
+          {matches.length > 0 && (
+            <MatchBrowser
+              matches={matches}
+              oddsById={odds}
+              defaultSort="conf"
+              showDates={false}
+            />
+          )}
+        </>
       )}
       <Community />
     </main>
