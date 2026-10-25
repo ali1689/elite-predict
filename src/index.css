@@ -2479,6 +2479,34 @@ details[open] > summary > .material-symbols-outlined:last-child {
 .v2-list-why { margin-bottom:5px; }
 @media(max-width:380px) { .v2-recommendation { padding:11px; } .v2-recommendation-heading { align-items:flex-start; gap:8px; } .v2-recommendation-score > strong { font-size:24px; } .v2-recommendation-heading > div:first-child > strong { font-size:14px; } }
 
+/* Match-winner shortlist; existing match cards retain their own primary signal. */
+.v2-winners { margin:28px 0 36px; }
+.v2-winners .v2-section-title { flex-wrap:wrap; gap:12px; }
+.v2-winners-description { font-size:13px; line-height:1.7; margin:12px 0 18px; }
+.v2-winners-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.v2-winner-card { min-width:0; border:1px solid var(--color-outline-variant); border-radius:16px; padding:20px; background:var(--color-surface); }
+.v2-winner-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; }
+.v2-winner-fixture { display:block; margin:12px 0 18px; font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.v2-winner-fixture:hover { text-decoration:underline; }
+.v2-winner-fixture > span { color:var(--color-on-surface-variant); font-weight:400; margin:0 4px; }
+.v2-winner-selection { display:flex; align-items:center; gap:10px; padding:14px; background:var(--v2-soft); border-radius:12px; }
+.v2-winner-number { flex-shrink:0; display:grid; place-items:center; width:30px; height:30px; border-radius:8px; background:var(--v2-link); color:var(--color-surface); font-weight:800; }
+.v2-winner-selection .v2-team-badge { width:30px; height:34px; font-size:10px; }
+.v2-winner-team { flex:1; min-width:0; }
+.v2-winner-team h3 { font-size:14px; line-height:1.4; overflow-wrap:anywhere; }
+.v2-winner-selection small { display:block; color:var(--color-on-surface-variant); font-size:10px; }
+.v2-winner-probability { flex-shrink:0; text-align:right; }
+.v2-winner-probability strong { font:800 26px/1.3 Manrope,sans-serif; }
+.v2-winners-empty { border:1px dashed var(--color-outline-variant); padding:22px; border-radius:12px; font-size:13px; color:var(--color-on-surface-variant); }
+.v2-winner-card .v2-match-permalink { margin-bottom:0; }
+.v2-winner-card .material-symbols-outlined { width:24px; height:24px; overflow:hidden; flex-shrink:0; }
+@media(max-width:900px) { .v2-winners-grid { grid-template-columns:1fr; } }
+@media(max-width:420px) {
+ .v2-winner-card { padding:14px; }
+ .v2-winner-selection { flex-wrap:wrap; padding:12px; gap:8px; }
+ .v2-winner-probability { flex-basis:100%; display:flex; align-items:center; justify-content:space-between; text-align:left; }
+}
+
 /* Compact schedule hierarchy: fixture, aligned metadata, then model pick. */
 .v2-match-line .v2-line-overview { grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) 44px; gap:20px; }
 .v2-line-match-info { min-width:0; }
